@@ -65,7 +65,7 @@ public class DeleteProductTests {
 
         testProduct = new Product();
         testProduct.setName("Chips");
-        testProduct.setOwnerId(testUser.getId());
+        testProduct.setOwner(testUser);
         testProduct.setRunningLow(2);
         testProduct.setExpirationDaysDelta(200);
         testProduct.setCategory("Snack");
@@ -103,7 +103,7 @@ public class DeleteProductTests {
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
         Product p = new Product();
-        p.setOwnerId(testAdmin.getId());
+        p.setOwner(testAdmin);
         p.setName("test");
         productRepository.save(p);
 

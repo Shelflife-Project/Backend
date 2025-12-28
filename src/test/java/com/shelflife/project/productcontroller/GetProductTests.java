@@ -64,7 +64,7 @@ public class GetProductTests {
 
         testProduct = new Product();
         testProduct.setName("Chips");
-        testProduct.setOwnerId(testUser.getId());
+        testProduct.setOwner(testUser);
         testProduct.setRunningLow(2);
         testProduct.setExpirationDaysDelta(200);
         testProduct.setCategory("Snack");

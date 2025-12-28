@@ -54,7 +54,8 @@ public class UpdateProductTests {
     @Test
     void updateFailsOnNonOwnedProduct() {
         User current = testUser(1L, false);
-        Product productToUpdate = testProduct(1L, 2L);
+        User owner = testUser(2L, false);
+        Product productToUpdate = testProduct(1L, owner);
 
         when(userService.getUserByAuth(auth)).thenReturn(Optional.of(current));
         when(repo.findById(1L)).thenReturn(Optional.of(productToUpdate));
@@ -66,7 +67,7 @@ public class UpdateProductTests {
     @Test
     void throwsBarcodeExists() {
         User current = testUser(1L, false);
-        Product p = testProduct(1L, 1L);
+        Product p = testProduct(1L, current);
         UpdateProductRequest req = new UpdateProductRequest();
         req.setBarcode("12345");
 
@@ -81,7 +82,7 @@ public class UpdateProductTests {
     @Test
     void throwsIllegalArgumentForInvalidExpiration() {
         User current = testUser(1L, false);
-        Product p = testProduct(1L, 1L);
+        Product p = testProduct(1L, current);
         UpdateProductRequest req = new UpdateProductRequest();
         req.setExpirationDaysDelta(0);
 
@@ -95,7 +96,7 @@ public class UpdateProductTests {
     @Test
     void throwsIllegalArgumentForInvalidRunningLow() {
         User current = testUser(1L, false);
-        Product p = testProduct(1L, 1L);
+        Product p = testProduct(1L, current);
         UpdateProductRequest req = new UpdateProductRequest();
         req.setRunningLow(0);
 
@@ -109,7 +110,8 @@ public class UpdateProductTests {
     @Test
     void adminCanUpdateAny() {
         User current = testUser(1L, true);
-        Product p = testProduct(1L, 2L);
+        User owner = testUser(2L, true);
+        Product p = testProduct(1L, owner);
         UpdateProductRequest req = new UpdateProductRequest();
         req.setRunningLow(21);
 
@@ -123,7 +125,7 @@ public class UpdateProductTests {
     @Test
     void userCanUpdateOwned() {
         User current = testUser(1L, false);
-        Product p = testProduct(1L, 1L);
+        Product p = testProduct(1L, current);
         UpdateProductRequest req = new UpdateProductRequest();
         req.setExpirationDaysDelta(21);
 
@@ -137,7 +139,7 @@ public class UpdateProductTests {
     @Test
     void productIsUpdated() {
         User current = testUser(1L, false);
-        Product p = testProduct(1L, 1L);
+        Product p = testProduct(1L, current);
         UpdateProductRequest req = new UpdateProductRequest();
         req.setName("testName");
         req.setCategory("newCat");
@@ -169,10 +171,10 @@ public class UpdateProductTests {
         return u;
     }
 
-    private Product testProduct(long id, long ownerid) {
+    private Product testProduct(long id, User owner) {
         Product p = new Product();
-        p.setId(ownerid);
-        p.setOwnerId(ownerid);
+        p.setId(id);
+        p.setOwner(owner);
         p.setName("name");
         p.setCategory("cat");
         p.setBarcode("12345");

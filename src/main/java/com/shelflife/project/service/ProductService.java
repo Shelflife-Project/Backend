@@ -89,7 +89,7 @@ public class ProductService {
             throw new AccessDeniedException(null);
         }
 
-        product.setOwnerId(currentUser.get().getId());
+        product.setOwner(currentUser.get());
 
         if (request.getBarcode() != null) {
             if (!request.getBarcode().isBlank()) {

@@ -1,12 +1,16 @@
 package com.shelflife.project.model;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,4 +39,12 @@ public class User {
 
     @JsonProperty("isAdmin")
     private boolean isAdmin;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+    private List<StorageMember> membersIn;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.REMOVE)
+    private List<Storage> ownedStorages;
 }

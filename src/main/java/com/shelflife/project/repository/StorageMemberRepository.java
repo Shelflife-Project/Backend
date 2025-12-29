@@ -17,6 +17,4 @@ public interface StorageMemberRepository extends JpaRepository<StorageMember, Lo
     Optional<StorageMember> findByStorageIdAndUserId(long storageId, long userId);
 
     boolean existsByStorageIdAndUserId(long storageId, long userId);
-
-    void deleteByStorageIdAndUserId(long storageId, long userId);
 }

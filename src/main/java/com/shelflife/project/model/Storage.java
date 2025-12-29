@@ -2,6 +2,8 @@ package com.shelflife.project.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,13 +26,18 @@ public class Storage {
     @GeneratedValue
     private long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
 
     @Column(nullable = false)
     private String name;
 
+    @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "storage", cascade = CascadeType.REMOVE)
-    private List<StorageItem> storageItems;
+    private List<StorageItem> items;
+
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "storage", cascade = CascadeType.REMOVE)
+    private List<StorageMember> members;
 }

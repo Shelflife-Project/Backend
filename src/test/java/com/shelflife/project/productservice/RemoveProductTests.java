@@ -43,7 +43,7 @@ public class RemoveProductTests {
 
     @Test
     void throwsAccessDeniedAsAnonymous() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.empty());
+        when(userService.getUserByAuth(auth)).thenThrow(AccessDeniedException.class);
 
         assertThrows(AccessDeniedException.class, () -> productService.removeProduct(1, auth));
         verifyNoInteractions(repo);
@@ -55,7 +55,7 @@ public class RemoveProductTests {
         User owner = testUser(2, false);
         Product product = testProduct(1, owner);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        when(userService.getUserByAuth(auth)).thenReturn(user);
         when(repo.findById(1L)).thenReturn(Optional.of(product));
 
         assertThrows(AccessDeniedException.class, () -> productService.removeProduct(1, auth));
@@ -68,7 +68,7 @@ public class RemoveProductTests {
         User owner = testUser(2, false);
         Product product = testProduct(1, owner);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        when(userService.getUserByAuth(auth)).thenReturn(user);
         when(repo.findById(1L)).thenReturn(Optional.of(product));
 
         assertDoesNotThrow(() -> productService.removeProduct(1, auth));
@@ -80,7 +80,7 @@ public class RemoveProductTests {
         User user = testUser(1, false);
         Product product = testProduct(1, user);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        when(userService.getUserByAuth(auth)).thenReturn(user);
         when(repo.findById(1L)).thenReturn(Optional.of(product));
 
         assertDoesNotThrow(() -> productService.removeProduct(1, auth));
@@ -91,7 +91,7 @@ public class RemoveProductTests {
     void throwsItemNotFound() {
         User user = testUser(1, false);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        when(userService.getUserByAuth(auth)).thenReturn(user);
 
         assertThrows(ItemNotFoundException.class, () -> productService.removeProduct(1, auth));
         verify(repo, never()).deleteById(any());

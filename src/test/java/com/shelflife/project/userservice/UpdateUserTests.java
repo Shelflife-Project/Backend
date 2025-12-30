@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -41,7 +43,7 @@ public class UpdateUserTests {
 
     @Test
     void throwsAccessDeniedAsAnonymous() {
-        when(service.getUserByAuth(auth)).thenReturn(Optional.empty());
+        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
 
         assertThrows(AccessDeniedException.class, () -> service.updateUser(1L, emptyRequest(), auth));
         verifyNoInteractions(repo);
@@ -52,7 +54,7 @@ public class UpdateUserTests {
         User current = testUser(1L, false);
         User userToUpdate = testUser(2L, false);
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        doReturn(current).when(service).getUserByAuth(auth);
         when(repo.findById(2L)).thenReturn(Optional.of(userToUpdate));
 
         assertThrows(AccessDeniedException.class, () -> service.updateUser(2L, emptyRequest(), auth));
@@ -65,7 +67,7 @@ public class UpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setEmail("exists@test.test");
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        doReturn(current).when(service).getUserByAuth(auth);
         when(repo.findById(1L)).thenReturn(Optional.of(current));
         when(repo.existsByEmail("exists@test.test")).thenReturn(true);
 
@@ -81,7 +83,7 @@ public class UpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setIsAdmin(true);
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        doReturn(current).when(service).getUserByAuth(auth);
         when(repo.findById(2L)).thenReturn(Optional.of(userToUpdate));
 
         assertThrows(AccessDeniedException.class, () -> service.updateUser(2L, req, auth));
@@ -95,7 +97,7 @@ public class UpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setIsAdmin(false);
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(admin));
+        doReturn(admin).when(service).getUserByAuth(auth);
         when(repo.findById(1L)).thenReturn(Optional.of(admin));
 
         assertThrows(AccessDeniedException.class, () -> service.updateUser(1L, req, auth));
@@ -110,7 +112,7 @@ public class UpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setIsAdmin(true);
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(admin));
+        doReturn(admin).when(service).getUserByAuth(auth);
         when(repo.findById(2L)).thenReturn(Optional.of(userToUpdate));
 
         when(repo.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -127,7 +129,7 @@ public class UpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setUsername("newname");
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        doReturn(current).when(service).getUserByAuth(auth);
         when(repo.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(repo.findById(1L)).thenReturn(Optional.of(current));
 

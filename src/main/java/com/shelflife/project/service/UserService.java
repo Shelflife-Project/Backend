@@ -35,11 +35,41 @@ public class UserService {
     @Autowired
     private PasswordEncoder encoder;
 
-    public Optional<User> getUserByAuth(Authentication auth) {
+    public Optional<User> getOptionalUserByAuth(Authentication auth) {
         if (auth == null || !auth.isAuthenticated())
             return Optional.empty();
 
         return repo.findByEmail(auth.getName());
+    }
+
+    public User getUserByAuth(Authentication auth) throws AccessDeniedException {
+        if (auth == null || !auth.isAuthenticated())
+            throw new AccessDeniedException(null);
+
+        Optional<User> user = repo.findByEmail(auth.getName());
+
+        if (!user.isPresent())
+            throw new AccessDeniedException(null);
+
+        return user.get();
+    }
+
+    public boolean isAuthenticated(Authentication auth) {
+        try {
+            getUserByAuth(auth);
+            return true;
+        } catch (AccessDeniedException e) {
+            return false;
+        }
+    }
+
+    public boolean isAdmin(Authentication auth) {
+        try {
+            User user = getUserByAuth(auth);
+            return user.isAdmin();
+        } catch (AccessDeniedException e) {
+            return false;
+        }
     }
 
     public List<User> getUsers() {
@@ -47,12 +77,7 @@ public class UserService {
     }
 
     public List<User> getUsers(Authentication auth) throws AccessDeniedException {
-        Optional<User> currentUser = getUserByAuth(auth);
-
-        if (!currentUser.isPresent())
-            throw new AccessDeniedException(null);
-
-        if (!currentUser.get().isAdmin())
+        if (!isAdmin(auth))
             throw new AccessDeniedException(null);
 
         return repo.findAll();
@@ -68,12 +93,10 @@ public class UserService {
     }
 
     public User getUserById(long id, Authentication auth) throws ItemNotFoundException, AccessDeniedException {
-        Optional<User> currentUser = getUserByAuth(auth);
+        if (isAuthenticated(auth))
+            return getUserById(id);
 
-        if (!currentUser.isPresent())
-            throw new AccessDeniedException(null);
-
-        return getUserById(id);
+        throw new AccessDeniedException(null);
     }
 
     public User getUserByEmail(String email) throws ItemNotFoundException {
@@ -86,20 +109,17 @@ public class UserService {
     }
 
     public User getUserByEmail(String email, Authentication auth) throws ItemNotFoundException, AccessDeniedException {
-        Optional<User> currentUser = getUserByAuth(auth);
+        if (isAuthenticated(auth))
+            return getUserByEmail(email);
 
-        if (!currentUser.isPresent())
-            throw new AccessDeniedException(null);
-
-        return getUserByEmail(email);
+        throw new AccessDeniedException(null);
     }
 
     @Transactional
     public User signUp(@Valid SignUpRequest request, Authentication auth)
             throws AccessDeniedException, EmailExistsException, PasswordsDontMatchException {
-        Optional<User> currentUser = getUserByAuth(auth);
 
-        if (currentUser.isPresent())
+        if (isAuthenticated(auth))
             throw new AccessDeniedException(null);
 
         if (repo.existsByEmail(request.getEmail()))
@@ -120,9 +140,8 @@ public class UserService {
     @Transactional
     public String login(@Valid LoginRequest request, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException {
-        Optional<User> currentUser = getUserByAuth(auth);
 
-        if (currentUser.isPresent())
+        if (isAuthenticated(auth))
             throw new AccessDeniedException(null);
 
         User dbUser = getUserByEmail(request.getEmail());
@@ -134,9 +153,7 @@ public class UserService {
 
     @Transactional
     public void logout(Authentication auth) throws AccessDeniedException {
-        Optional<User> currentUser = getUserByAuth(auth);
-
-        if (!currentUser.isPresent())
+        if (!isAuthenticated(auth))
             throw new AccessDeniedException(null);
 
         jwtService.removeExpiredInvalidatedTokens();
@@ -146,44 +163,37 @@ public class UserService {
     @Transactional
     public void changePassword(@Valid ChangePasswordRequest request, Authentication auth)
             throws AccessDeniedException, InvalidPasswordException, PasswordsDontMatchException {
-        Optional<User> currentUser = getUserByAuth(auth);
+        User currentUser = getUserByAuth(auth);
 
-        if (!currentUser.isPresent())
-            throw new AccessDeniedException(null);
-
-        if (!encoder.matches(request.getOldPassword(), currentUser.get().getPassword()))
+        if (!encoder.matches(request.getOldPassword(), currentUser.getPassword()))
             throw new InvalidPasswordException();
 
         if (!request.getNewPassword().equals(request.getNewPasswordRepeat()))
             throw new PasswordsDontMatchException();
 
-        currentUser.get().setPassword(encoder.encode(request.getNewPassword()));
-        repo.save(currentUser.get());
+        currentUser.setPassword(encoder.encode(request.getNewPassword()));
+        repo.save(currentUser);
     }
 
     @Transactional
     public User updateUser(long id, ChangeUserDataRequest request, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException, EmailExistsException, IllegalArgumentException {
 
-        Optional<User> currentUser = getUserByAuth(auth);
-
-        if (!currentUser.isPresent())
-            throw new AccessDeniedException(null);
-
+        User currentUser = getUserByAuth(auth);
         User dbUser = getUserById(id);
 
-        if (!currentUser.get().isAdmin() && currentUser.get().getId() != dbUser.getId())
+        if (!currentUser.isAdmin() && currentUser.getId() != dbUser.getId())
             throw new AccessDeniedException(null);
 
         if (request.getUsername() != null) {
-            if(request.getUsername().isBlank())
+            if (request.getUsername().isBlank())
                 throw new IllegalArgumentException("username");
 
             dbUser.setUsername(request.getUsername());
         }
 
         if (request.getEmail() != null) {
-            if(request.getEmail().isBlank())
+            if (request.getEmail().isBlank())
                 throw new IllegalArgumentException("email");
 
             if (repo.existsByEmail(request.getEmail()))
@@ -194,10 +204,10 @@ public class UserService {
 
         if (request.getIsAdmin() != null) {
             // Cant set your own admin priviliges
-            if (currentUser.get().getId() == dbUser.getId())
+            if (currentUser.getId() == dbUser.getId())
                 throw new AccessDeniedException(null);
 
-            if (!currentUser.get().isAdmin())
+            if (!currentUser.isAdmin())
                 throw new AccessDeniedException(null);
 
             dbUser.setAdmin(request.getIsAdmin());
@@ -208,15 +218,12 @@ public class UserService {
 
     @Transactional
     public void removeUser(long id, Authentication auth) throws ItemNotFoundException, AccessDeniedException {
-        Optional<User> currentUser = getUserByAuth(auth);
+        User currentUser = getUserByAuth(auth);
 
-        if (!currentUser.isPresent())
+        if (!currentUser.isAdmin())
             throw new AccessDeniedException(null);
 
-        if (!currentUser.get().isAdmin())
-            throw new AccessDeniedException(null);
-
-        if (currentUser.get().getId() == id)
+        if (currentUser.getId() == id)
             throw new AccessDeniedException(null);
 
         if (!repo.existsById(id))

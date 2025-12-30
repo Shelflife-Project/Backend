@@ -46,15 +46,12 @@ public class StorageService {
     }
 
     public List<Storage> getStorages(Authentication auth) throws AccessDeniedException {
-        Optional<User> user = userService.getUserByAuth(auth);
+        User user = userService.getUserByAuth(auth);
 
-        if (user.isEmpty())
-            throw new AccessDeniedException(null);
-
-        if (user.get().isAdmin())
+        if (user.isAdmin())
             return getStorages();
 
-        return storageRepository.findAccessibleStorages(user.get().getId());
+        return storageRepository.findAccessibleStorages(user.getId());
     }
 
     public List<Storage> getAccessibleStorages(final long userId) {
@@ -73,12 +70,9 @@ public class StorageService {
     public Storage getStorage(Authentication auth, final long storageId)
             throws AccessDeniedException, ItemNotFoundException {
         Storage storage = getStorage(storageId);
-        Optional<User> user = userService.getUserByAuth(auth);
+        User user = userService.getUserByAuth(auth);
 
-        if (!user.isPresent())
-            throw new ItemNotFoundException();
-
-        if (!canAccessStorage(storageId, user.get().getId()))
+        if (!canAccessStorage(storageId, user.getId()))
             throw new AccessDeniedException(null);
 
         return storage;
@@ -90,12 +84,9 @@ public class StorageService {
 
     public List<StorageItem> getItemsInStorage(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
-        Optional<User> user = userService.getUserByAuth(auth);
+        User user = userService.getUserByAuth(auth);
 
-        if (!user.isPresent())
-            throw new AccessDeniedException(null);
-
-        if (!canAccessStorage(storageId, user.get().getId()))
+        if (!canAccessStorage(storageId, user.getId()))
             throw new AccessDeniedException(null);
 
         return getItemsInStorage(storageId);
@@ -116,12 +107,9 @@ public class StorageService {
 
     public List<StorageItem> getExpiredItemsInStorage(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
-        Optional<User> current = userService.getUserByAuth(auth);
+        User current = userService.getUserByAuth(auth);
 
-        if (!current.isPresent())
-            throw new AccessDeniedException(null);
-
-        if (canAccessStorage(storageId, current.get().getId()))
+        if (!canAccessStorage(storageId, current.getId()))
             throw new AccessDeniedException(null);
 
         return getExpiredItemsInStorage(storageId);
@@ -163,12 +151,9 @@ public class StorageService {
 
         Storage storage = getStorage(storageId);
         User target = userService.getUserById(userId);
-        Optional<User> current = userService.getUserByAuth(auth);
+        User current = userService.getUserByAuth(auth);
 
-        if (!current.isPresent())
-            throw new AccessDeniedException(null);
-
-        if (!current.get().isAdmin() && storage.getOwner().getId() != current.get().getId())
+        if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
             throw new AccessDeniedException(null);
 
         StorageMember member = new StorageMember();
@@ -180,12 +165,9 @@ public class StorageService {
 
     public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
-        Optional<User> user = userService.getUserByAuth(auth);
+        User user = userService.getUserByAuth(auth);
 
-        if (!user.isPresent())
-            throw new AccessDeniedException(null);
-
-        if (!canAccessStorage(storageId, user.get().getId()))
+        if (!canAccessStorage(storageId, user.getId()))
             throw new AccessDeniedException(null);
 
         return storageMemberRepository.findByStorageId(storageId);
@@ -196,12 +178,9 @@ public class StorageService {
             throws ItemNotFoundException, MemberException {
 
         Storage storage = getStorage(storageId);
-        Optional<User> current = userService.getUserByAuth(auth);
+        User current = userService.getUserByAuth(auth);
 
-        if (!current.isPresent())
-            throw new AccessDeniedException(null);
-
-        if (!current.get().isAdmin() && storage.getOwner().getId() != current.get().getId())
+        if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
             throw new AccessDeniedException(null);
 
         Optional<StorageMember> member = storageMemberRepository.findByStorageIdAndUserId(storageId, userId);
@@ -215,9 +194,10 @@ public class StorageService {
     @Transactional
     public StorageItem addItemToStorage(final long storageId, final long productId, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException {
-        Optional<User> current = userService.getUserByAuth(auth);
 
-        if (!current.isPresent())
+        User current = userService.getUserByAuth(auth);
+
+        if (!canAccessStorage(storageId, current.getId()))
             throw new AccessDeniedException(null);
 
         Storage storage = getStorage(storageId);
@@ -233,17 +213,14 @@ public class StorageService {
     @Transactional
     public void removeItemFromStorage(final long storageItemId, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException {
-        Optional<User> current = userService.getUserByAuth(auth);
-
-        if (!current.isPresent())
-            throw new AccessDeniedException(null);
+        User current = userService.getUserByAuth(auth);
 
         Optional<StorageItem> item = storageItemRepository.findById(storageItemId);
 
         if (!item.isPresent())
             throw new ItemNotFoundException();
 
-        if (!canAccessStorage(item.get().getStorage().getId(), current.get().getId()))
+        if (!canAccessStorage(item.get().getStorage().getId(), current.getId()))
             throw new AccessDeniedException(null);
 
         storageItemRepository.deleteById(storageItemId);

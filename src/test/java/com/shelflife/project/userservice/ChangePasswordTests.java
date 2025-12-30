@@ -3,12 +3,12 @@ package com.shelflife.project.userservice;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +44,7 @@ public class ChangePasswordTests {
 
     @Test
     void throwsAccessDeniedAsAnonymous() {
-        when(service.getUserByAuth(auth)).thenReturn(Optional.empty());
+        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
 
         assertThrows(AccessDeniedException.class, () -> service.changePassword(validRequest(), auth));
         verifyNoInteractions(repo);
@@ -55,8 +55,7 @@ public class ChangePasswordTests {
         User user = new User();
         user.setPassword("encoded-old");
 
-        when(service.getUserByAuth(auth))
-                .thenReturn(Optional.of(user));
+        doReturn(user).when(service).getUserByAuth(auth);
         when(encoder.matches("old", "encoded-old"))
                 .thenReturn(false);
 
@@ -72,8 +71,7 @@ public class ChangePasswordTests {
         ChangePasswordRequest req = validRequest();
         req.setNewPasswordRepeat("different");
 
-        when(service.getUserByAuth(auth))
-                .thenReturn(Optional.of(user));
+        doReturn(user).when(service).getUserByAuth(auth);
         when(encoder.matches("old", "encoded-old"))
                 .thenReturn(true);
 
@@ -86,8 +84,7 @@ public class ChangePasswordTests {
         User user = new User();
         user.setPassword("encoded-old");
 
-        when(service.getUserByAuth(auth))
-                .thenReturn(Optional.of(user));
+        doReturn(user).when(service).getUserByAuth(auth);
         when(encoder.matches("old", "encoded-old"))
                 .thenReturn(true);
         when(encoder.encode("new"))

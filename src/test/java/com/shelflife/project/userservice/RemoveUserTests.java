@@ -3,12 +3,12 @@ package com.shelflife.project.userservice;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,7 +42,7 @@ public class RemoveUserTests {
 
     @Test
     void throwsAccessDeniedAsAnonymous() {
-        when(service.getUserByAuth(auth)).thenReturn(Optional.empty());
+        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
 
         assertThrows(AccessDeniedException.class, () -> service.removeUser(1, auth));
         verifyNoInteractions(repo);
@@ -53,7 +53,7 @@ public class RemoveUserTests {
         User user = new User();
         user.setAdmin(false);
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        doReturn(user).when(service).getUserByAuth(auth);
 
         assertThrows(AccessDeniedException.class, () -> service.removeUser(1, auth));
         verifyNoInteractions(repo);
@@ -65,7 +65,7 @@ public class RemoveUserTests {
         user.setId(1);
         user.setAdmin(true);
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        doReturn(user).when(service).getUserByAuth(auth);
 
         assertThrows(AccessDeniedException.class, () -> service.removeUser(1, auth));
         verifyNoInteractions(repo);
@@ -77,7 +77,7 @@ public class RemoveUserTests {
         user.setId(1);
         user.setAdmin(true);
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        doReturn(user).when(service).getUserByAuth(auth);
 
         assertThrows(ItemNotFoundException.class, () -> service.removeUser(2, auth));
         verify(repo, never()).deleteById(any());
@@ -92,7 +92,7 @@ public class RemoveUserTests {
         User userToDelete = new User();
         userToDelete.setId(2);
 
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        doReturn(user).when(service).getUserByAuth(auth);
         when(repo.existsById(2L)).thenReturn(true);
 
         assertDoesNotThrow(() -> service.removeUser(2, auth));

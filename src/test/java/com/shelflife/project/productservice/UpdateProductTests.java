@@ -45,7 +45,7 @@ public class UpdateProductTests {
 
     @Test
     void throwsAccessDeniedAsAnonymous() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.empty());
+        when(userService.getUserByAuth(auth)).thenThrow(AccessDeniedException.class);
 
         assertThrows(AccessDeniedException.class, () -> productService.updateProduct(1L, emptyRequest(), auth));
         verifyNoInteractions(repo);
@@ -57,7 +57,7 @@ public class UpdateProductTests {
         User owner = testUser(2L, false);
         Product productToUpdate = testProduct(1L, owner);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(productToUpdate));
 
         assertThrows(AccessDeniedException.class, () -> productService.updateProduct(1L, emptyRequest(), auth));
@@ -71,7 +71,7 @@ public class UpdateProductTests {
         UpdateProductRequest req = new UpdateProductRequest();
         req.setBarcode("12345");
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
         when(productService.existsByBarcode("12345")).thenReturn(true);
 
@@ -86,7 +86,7 @@ public class UpdateProductTests {
         UpdateProductRequest req = new UpdateProductRequest();
         req.setExpirationDaysDelta(0);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
 
         assertThrows(IllegalArgumentException.class, () -> productService.updateProduct(1L, req, auth));
@@ -100,7 +100,7 @@ public class UpdateProductTests {
         UpdateProductRequest req = new UpdateProductRequest();
         req.setRunningLow(0);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
 
         assertThrows(IllegalArgumentException.class, () -> productService.updateProduct(1L, req, auth));
@@ -115,7 +115,7 @@ public class UpdateProductTests {
         UpdateProductRequest req = new UpdateProductRequest();
         req.setRunningLow(21);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
 
         assertDoesNotThrow(() -> productService.updateProduct(1L, req, auth));
@@ -129,7 +129,7 @@ public class UpdateProductTests {
         UpdateProductRequest req = new UpdateProductRequest();
         req.setExpirationDaysDelta(21);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
 
         assertDoesNotThrow(() -> productService.updateProduct(1L, req, auth));
@@ -147,7 +147,7 @@ public class UpdateProductTests {
         req.setRunningLow(10);
         req.setBarcode("6789");
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(current));
+        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
         when(repo.save(any(Product.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));

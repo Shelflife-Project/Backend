@@ -1,7 +1,8 @@
 package com.shelflife.project.userservice;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.model.User;
@@ -32,9 +34,7 @@ public class GetUserByAuthTests {
 
     @Test
     void returnsEmptyWhenAuthIsNull() {
-        Optional<User> result = service.getUserByAuth(null);
-
-        assertTrue(result.isEmpty());
+        assertThrows(AccessDeniedException.class, () -> service.getUserByAuth(null));
         verifyNoInteractions(repo);
     }
 
@@ -42,9 +42,7 @@ public class GetUserByAuthTests {
     void returnsEmptyWhenAuthIsNotAuthenticated() {
         when(authentication.isAuthenticated()).thenReturn(false);
 
-        Optional<User> result = service.getUserByAuth(authentication);
-
-        assertTrue(result.isEmpty());
+        assertThrows(AccessDeniedException.class, () -> service.getUserByAuth(authentication));
         verifyNoInteractions(repo);
     }
 
@@ -53,9 +51,7 @@ public class GetUserByAuthTests {
         when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getName()).thenReturn("test@test.test");
 
-        Optional<User> result = service.getUserByAuth(authentication);
-
-        assertTrue(result.isEmpty());
+        assertThrows(AccessDeniedException.class, () -> service.getUserByAuth(authentication));
     }
 
     @Test
@@ -70,9 +66,9 @@ public class GetUserByAuthTests {
         when(repo.findByEmail(email))
                 .thenReturn(Optional.of(user));
 
-        Optional<User> result = service.getUserByAuth(authentication);
+        User result = service.getUserByAuth(authentication);
 
-        assertTrue(result.isPresent());
-        assertEquals(email, result.get().getEmail());
+        assertNotNull(result);
+        assertEquals(email, result.getEmail());
     }
 }

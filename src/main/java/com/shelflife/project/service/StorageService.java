@@ -53,10 +53,6 @@ public class StorageService {
         return storageRepository.findAccessibleStorages(user.getId());
     }
 
-    public List<Storage> getAccessibleStorages(final long userId) {
-        return storageRepository.findAccessibleStorages(userId);
-    }
-
     public Storage getStorage(final long id) throws ItemNotFoundException {
         Optional<Storage> storage = storageRepository.findById(id);
 
@@ -68,8 +64,8 @@ public class StorageService {
 
     public Storage getStorage(Authentication auth, final long storageId)
             throws AccessDeniedException, ItemNotFoundException {
-        Storage storage = getStorage(storageId);
         User user = userService.getUserByAuth(auth);
+        Storage storage = getStorage(storageId);
 
         if (!canAccessStorage(storageId, user.getId()))
             throw new AccessDeniedException(null);

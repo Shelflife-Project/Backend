@@ -34,6 +34,9 @@ public class StorageItem {
     @JoinColumn(name = "product_id")
     private Product product;
 
+    @Column(nullable = false)
+    private LocalDateTime expiresAt;
+
     @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime createdAt;

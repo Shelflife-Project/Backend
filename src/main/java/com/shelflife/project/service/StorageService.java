@@ -3,7 +3,6 @@ package com.shelflife.project.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -93,16 +92,7 @@ public class StorageService {
     }
 
     public List<StorageItem> getExpiredItemsInStorage(final long storageId) throws ItemNotFoundException {
-        List<StorageItem> items = storageItemRepository.findByStorageId(storageId);
-
-        LocalDateTime now = LocalDateTime.now();
-        List<StorageItem> expired = items.stream()
-                .filter(p -> p.getCreatedAt()
-                        .plusDays(p.getProduct().getExpirationDaysDelta())
-                        .isBefore(now))
-                .collect(Collectors.toList());
-
-        return expired;
+        return storageItemRepository.findExpired(storageId);
     }
 
     public List<StorageItem> getExpiredItemsInStorage(final long storageId, Authentication auth)
@@ -116,16 +106,8 @@ public class StorageService {
     }
 
     public List<StorageItem> getItemsAboutToExpire(final long storageId) throws ItemNotFoundException {
-        List<StorageItem> items = storageItemRepository.findByStorageId(storageId);
-
-        LocalDateTime now = LocalDateTime.now();
-        List<StorageItem> aboutToExpire = items.stream()
-                .filter(p -> p.getCreatedAt()
-                        .plusDays(p.getProduct().getExpirationDaysDelta() - 1)
-                        .isBefore(now))
-                .collect(Collectors.toList());
-
-        return aboutToExpire;
+        LocalDateTime date = LocalDateTime.now().plusDays(1);
+        return storageItemRepository.findByExpiresAtBefore(storageId, date);
     }
 
     public boolean canAccessStorage(final long storageId, final long userId) {
@@ -140,7 +122,7 @@ public class StorageService {
                 return true;
 
             return storageMemberRepository.existsByStorageIdAndUserId(storageId, userId);
-        } catch (RuntimeException e) {
+        } catch (ItemNotFoundException e) {
             return false;
         }
     }
@@ -206,6 +188,7 @@ public class StorageService {
         StorageItem item = new StorageItem();
         item.setProduct(product);
         item.setStorage(storage);
+        item.setExpiresAt(LocalDateTime.now().plusDays(product.getExpirationDaysDelta()));
 
         return storageItemRepository.save(item);
     }

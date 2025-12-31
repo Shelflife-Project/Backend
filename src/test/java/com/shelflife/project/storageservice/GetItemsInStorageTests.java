@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,15 +16,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
-import com.shelflife.project.model.Storage;
+import com.shelflife.project.model.StorageItem;
+import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageRepository;
 import com.shelflife.project.service.StorageService;
 import com.shelflife.project.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
-public class GetStorageTests {
+public class GetItemsInStorageTests {
     @Mock
     private UserService userService;
+
+    @Mock
+    private StorageItemRepository storageItemRepository;
 
     @Mock
     private StorageRepository storageRepository;
@@ -35,17 +40,22 @@ public class GetStorageTests {
 
     @Test
     void throwsNotFound() {
-        when(storageRepository.findById(1L)).thenReturn(Optional.empty());
+        when(storageRepository.existsById(1L)).thenReturn(false);
 
-        assertThrows(ItemNotFoundException.class, () -> storageService.getStorage(1));
+        assertThrows(ItemNotFoundException.class, () -> storageService.getItemsInStorage(1));
     }
 
     @Test
-    void returnsStorage() {
-        Storage storage = new Storage();
-        when(storageRepository.findById(1L)).thenReturn(Optional.of(storage));
+    void returnsItems() {
+        List<StorageItem> items = new ArrayList<>();
+        items.add(new StorageItem());
+        items.add(new StorageItem());
 
-        assertDoesNotThrow(() -> storageService.getStorage(1));
-        assertEquals(storage, storageService.getStorage(1));
+        when(storageRepository.existsById(1L)).thenReturn(true);
+        when(storageItemRepository.findByStorageId(1L)).thenReturn(items);
+
+        assertDoesNotThrow(() -> storageService.getItemsInStorage(1));
+        assertEquals(items, storageService.getItemsInStorage(1));
     }
+
 }

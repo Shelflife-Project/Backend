@@ -64,24 +64,23 @@ public class StorageService {
 
     public Storage getStorage(Authentication auth, final long storageId)
             throws AccessDeniedException, ItemNotFoundException {
-        User user = userService.getUserByAuth(auth);
-        Storage storage = getStorage(storageId);
 
-        if (!canAccessStorage(storageId, user.getId()))
+        if (!canAccessStorage(storageId, auth))
             throw new AccessDeniedException(null);
 
-        return storage;
+        return getStorage(storageId);
     }
 
     public List<StorageItem> getItemsInStorage(final long storageId) throws ItemNotFoundException {
+        if (!storageRepository.existsById(storageId))
+            throw new ItemNotFoundException();
+
         return storageItemRepository.findByStorageId(storageId);
     }
 
     public List<StorageItem> getItemsInStorage(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
-        User user = userService.getUserByAuth(auth);
-
-        if (!canAccessStorage(storageId, user.getId()))
+        if (!canAccessStorage(storageId, auth))
             throw new AccessDeniedException(null);
 
         return getItemsInStorage(storageId);
@@ -93,9 +92,7 @@ public class StorageService {
 
     public List<StorageItem> getExpiredItemsInStorage(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
-        User current = userService.getUserByAuth(auth);
-
-        if (!canAccessStorage(storageId, current.getId()))
+        if (!canAccessStorage(storageId, auth))
             throw new AccessDeniedException(null);
 
         return getExpiredItemsInStorage(storageId);
@@ -106,10 +103,19 @@ public class StorageService {
         return storageItemRepository.findByExpiresAtBefore(storageId, date);
     }
 
+    public List<StorageItem> getItemsAboutToExpire(final long storageId, Authentication auth)
+            throws ItemNotFoundException, AccessDeniedException {
+
+        if (!canAccessStorage(storageId, auth))
+            throw new AccessDeniedException(null);
+
+        return getItemsAboutToExpire(storageId);
+    }
+
     public boolean canAccessStorage(final long storageId, final long userId) {
         try {
-            Storage storage = getStorage(storageId);
             User user = userService.getUserById(userId);
+            Storage storage = getStorage(storageId);
 
             if (user.isAdmin())
                 return true;
@@ -119,6 +125,25 @@ public class StorageService {
 
             return storageMemberRepository.existsByStorageIdAndUserId(storageId, userId);
         } catch (ItemNotFoundException e) {
+            return false;
+        }
+    }
+
+    public boolean canAccessStorage(final long storageId, Authentication auth) {
+        try {
+            User user = userService.getUserByAuth(auth);
+            Storage storage = getStorage(storageId);
+
+            if (user.isAdmin())
+                return true;
+
+            if (storage.getOwner().getId() == user.getId())
+                return true;
+
+            return storageMemberRepository.existsByStorageIdAndUserId(storageId, user.getId());
+        } catch (ItemNotFoundException e) {
+            return false;
+        } catch (AccessDeniedException e) {
             return false;
         }
     }

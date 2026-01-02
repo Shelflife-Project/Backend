@@ -102,14 +102,14 @@ public class UserService {
         if (currentUser.isPresent())
             throw new AccessDeniedException(null);
 
-        if (repo.existsByEmail(request.getEmail()))
+        if (repo.existsByEmail(request.getEmail().toLowerCase()))
             throw new EmailExistsException();
 
         if (!request.getPassword().equals(request.getPasswordRepeat()))
             throw new PasswordsDontMatchException();
 
         User newUser = new User();
-        newUser.setEmail(request.getEmail());
+        newUser.setEmail(request.getEmail().toLowerCase());
         newUser.setUsername(request.getUsername());
         newUser.setPassword(encoder.encode(request.getPassword()));
         newUser.setAdmin(false);
@@ -125,7 +125,7 @@ public class UserService {
         if (currentUser.isPresent())
             throw new AccessDeniedException(null);
 
-        User dbUser = getUserByEmail(request.getEmail());
+        User dbUser = getUserByEmail(request.getEmail().toLowerCase());
         if (!encoder.matches(request.getPassword(), dbUser.getPassword()))
             throw new AccessDeniedException(null);
 
@@ -186,10 +186,10 @@ public class UserService {
             if(request.getEmail().isBlank())
                 throw new IllegalArgumentException("email");
 
-            if (repo.existsByEmail(request.getEmail()))
+            if (repo.existsByEmail(request.getEmail().toLowerCase()))
                 throw new EmailExistsException();
 
-            dbUser.setEmail(request.getEmail());
+            dbUser.setEmail(request.getEmail().toLowerCase());
         }
 
         if (request.getIsAdmin() != null) {

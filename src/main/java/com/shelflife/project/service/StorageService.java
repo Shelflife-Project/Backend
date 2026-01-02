@@ -87,6 +87,9 @@ public class StorageService {
     }
 
     public List<StorageItem> getExpiredItemsInStorage(final long storageId) throws ItemNotFoundException {
+        if (!storageRepository.existsById(storageId))
+            throw new ItemNotFoundException();
+
         return storageItemRepository.findExpired(storageId);
     }
 
@@ -168,9 +171,7 @@ public class StorageService {
 
     public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
-        User user = userService.getUserByAuth(auth);
-
-        if (!canAccessStorage(storageId, user.getId()))
+        if (!canAccessStorage(storageId, auth))
             throw new AccessDeniedException(null);
 
         return storageMemberRepository.findByStorageId(storageId);
@@ -198,9 +199,7 @@ public class StorageService {
     public StorageItem addItemToStorage(final long storageId, final long productId, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException {
 
-        User current = userService.getUserByAuth(auth);
-
-        if (!canAccessStorage(storageId, current.getId()))
+        if (!canAccessStorage(storageId, auth))
             throw new AccessDeniedException(null);
 
         Storage storage = getStorage(storageId);

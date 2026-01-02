@@ -1,5 +1,6 @@
 package com.shelflife.project.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -26,7 +27,7 @@ public class Storage {
     @GeneratedValue
     private long id;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "owner_id")
     private User owner;
 
@@ -34,10 +35,10 @@ public class Storage {
     private String name;
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "storage", cascade = CascadeType.REMOVE)
-    private List<StorageItem> items;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "storage", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StorageItem> items = new ArrayList<>();
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "storage", cascade = CascadeType.REMOVE)
-    private List<StorageMember> members;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "storage", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StorageMember> members = new ArrayList<>();
 }

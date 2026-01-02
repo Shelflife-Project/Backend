@@ -156,6 +156,10 @@ public class StorageService {
             throws ItemNotFoundException, MemberException {
 
         Storage storage = getStorage(storageId);
+
+        if(storageMemberRepository.existsByStorageIdAndUserId(storageId, userId))
+            throw new MemberException(true);
+
         User target = userService.getUserById(userId);
         User current = userService.getUserByAuth(auth);
 

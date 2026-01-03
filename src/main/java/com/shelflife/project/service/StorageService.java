@@ -157,7 +157,7 @@ public class StorageService {
 
         Storage storage = getStorage(storageId);
 
-        if(storageMemberRepository.existsByStorageIdAndUserId(storageId, userId))
+        if (storageMemberRepository.existsByStorageIdAndUserId(storageId, userId))
             throw new MemberException(true);
 
         User target = userService.getUserById(userId);
@@ -175,6 +175,10 @@ public class StorageService {
 
     public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
+
+        if (!storageRepository.existsById(storageId))
+            throw new ItemNotFoundException();
+
         if (!canAccessStorage(storageId, auth))
             throw new AccessDeniedException(null);
 
@@ -185,16 +189,16 @@ public class StorageService {
     public void removeMemberFromStorage(final long storageId, final long userId, Authentication auth)
             throws ItemNotFoundException, MemberException {
 
-        Storage storage = getStorage(storageId);
-        User current = userService.getUserByAuth(auth);
-
-        if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
-            throw new AccessDeniedException(null);
-
         Optional<StorageMember> member = storageMemberRepository.findByStorageIdAndUserId(storageId, userId);
 
         if (!member.isPresent())
             throw new ItemNotFoundException();
+
+        User current = userService.getUserByAuth(auth);
+        Storage storage = getStorage(storageId);
+
+        if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
+            throw new AccessDeniedException(null);
 
         storageMemberRepository.deleteById(member.get().getId());
     }

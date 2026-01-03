@@ -67,4 +67,25 @@ public class StorageController {
         }
     }
 
+    @GetMapping("/{id}/expired")
+    public ResponseEntity<List<StorageItem>> getExpired(@PathVariable long id, Authentication auth) {
+        try {
+            return ResponseEntity.ok(storageService.getExpiredItemsInStorage(id, auth));
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/{id}/abouttoexpire")
+    public ResponseEntity<List<StorageItem>> getAboutToExpire(@PathVariable long id, Authentication auth) {
+        try {
+            return ResponseEntity.ok(storageService.getItemsAboutToExpire(id, auth));
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 }

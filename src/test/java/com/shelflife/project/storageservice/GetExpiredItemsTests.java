@@ -117,7 +117,7 @@ public class GetExpiredItemsTests {
         StorageItem item = new StorageItem();
         item.setStorage(storage);
         item.setProduct(product);
-        item.setExpiresAt(LocalDateTime.now().plusDays(1));
+        item.setExpiresAt(LocalDateTime.now());
 
         storage.getItems().add(item);
         storageRepository.save(storage);

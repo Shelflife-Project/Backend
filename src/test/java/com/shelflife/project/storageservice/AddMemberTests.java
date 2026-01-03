@@ -1,6 +1,7 @@
 package com.shelflife.project.storageservice;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -112,8 +113,12 @@ public class AddMemberTests {
         doReturn(target).when(userService).getUserById(1);
         doReturn(other).when(userService).getUserByAuth(auth);
 
-        assertDoesNotThrow(() -> storageService.addMemberToStorage(1, 1, auth));
-        verify(storageMemberRepository).save(any(StorageMember.class));
+        when(storageMemberRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        StorageMember result = storageService.addMemberToStorage(1, 1, auth);
+        assertNotNull(result);
+        assertEquals(storage, result.getStorage());
+        assertEquals(target, result.getUser());
     }
 
     @Test
@@ -133,18 +138,22 @@ public class AddMemberTests {
         doReturn(target).when(userService).getUserById(1);
         doReturn(owner).when(userService).getUserByAuth(auth);
 
-        assertDoesNotThrow(() -> storageService.addMemberToStorage(1, 1, auth));
-        verify(storageMemberRepository).save(any(StorageMember.class));
+        when(storageMemberRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        StorageMember result = storageService.addMemberToStorage(1, 1, auth);
+        assertNotNull(result);
+        assertEquals(storage, result.getStorage());
+        assertEquals(target, result.getUser());
     }
 
     @Test
     void throwsMemberExceptionForDuplicateAdd() {
         Storage storage = new Storage();
         storage.setId(1);
-        
+
         doReturn(storage).when(storageService).getStorage(1L);
         when(storageMemberRepository.existsByStorageIdAndUserId(1, 1)).thenReturn(true);
-        
+
         assertThrows(MemberException.class, () -> storageService.addMemberToStorage(1, 1, auth));
         verify(storageMemberRepository, never()).save(any(StorageMember.class));
     }

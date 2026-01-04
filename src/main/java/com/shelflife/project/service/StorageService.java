@@ -76,8 +76,12 @@ public class StorageService {
     public Storage getStorage(Authentication auth, final long storageId)
             throws AccessDeniedException, ItemNotFoundException {
 
-        if (!canAccessStorage(storageId, auth))
+        if (!canAccessStorage(storageId, auth)) {
+            if (!storageRepository.existsById(storageId))
+                throw new ItemNotFoundException("id", "Storage with this id was not found");
+
             throw new AccessDeniedException(null);
+        }
 
         return getStorage(storageId);
     }

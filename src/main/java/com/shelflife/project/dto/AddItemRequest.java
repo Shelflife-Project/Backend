@@ -9,9 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AddItemRequest {
-    @Min(value = 0, message = "Storage ID must be larger than 0")
-    private long storageId;
-
     @Min(value = 0, message = "Product ID must be larger than 0")
     private long productId;
 }

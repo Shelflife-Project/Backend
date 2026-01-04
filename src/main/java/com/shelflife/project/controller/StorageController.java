@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -107,11 +108,11 @@ public class StorageController {
     }
 
     @PostMapping("/{id}/members")
-    public ResponseEntity<?> inviteMember(@Valid @RequestBody InviteMemberRequest request,
+    public ResponseEntity<?> inviteMember(@PathVariable long id, @Valid @RequestBody InviteMemberRequest request,
             Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageService.addMemberToStorage(request.getStorageId(), request.getUserEmail(), auth));
+                    .ok(storageService.addMemberToStorage(id, request.getUserEmail(), auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -122,10 +123,11 @@ public class StorageController {
     }
 
     @PostMapping("/{id}/items")
-    public ResponseEntity<?> addItem(@Valid @RequestBody AddItemRequest request, Authentication auth) {
+    public ResponseEntity<?> addItem(@PathVariable long id, @Valid @RequestBody AddItemRequest request,
+            Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageService.addItemToStorage(request.getStorageId(), request.getProductId(), auth));
+                    .ok(storageService.addItemToStorage(id, request.getProductId(), auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -133,4 +135,41 @@ public class StorageController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteStorage(@PathVariable long id, Authentication auth) {
+        try {
+            storageService.deleteStorage(id, auth);
+            return ResponseEntity.ok().build();
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @DeleteMapping("/{storageId}/members/{userId}")
+    public ResponseEntity<?> deleteMember(@PathVariable long storageId, @PathVariable long userId,
+            Authentication auth) {
+        try {
+            storageService.removeMemberFromStorage(storageId, userId, auth);
+            return ResponseEntity.ok().build();
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @DeleteMapping("/{storageId}/items/{itemId}")
+    public ResponseEntity<?> deleteItem(@PathVariable long storageId, @PathVariable long itemId,
+            Authentication auth) {
+        try {
+            storageService.removeItemFromStorage(itemId, auth);
+            return ResponseEntity.ok().build();
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
 }

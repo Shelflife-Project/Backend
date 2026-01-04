@@ -47,7 +47,7 @@ public class ProductService {
         Optional<Product> product = productRepository.findById(id);
 
         if (!product.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "Product with this id was not found");
 
         return product.get();
     }
@@ -56,7 +56,7 @@ public class ProductService {
         Optional<Product> product = productRepository.findByBarcode(barcode);
 
         if (!product.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("barcode", "Product with this barcode was not found");
 
         return product.get();
     }

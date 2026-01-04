@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.exception.MemberException;
+import com.shelflife.project.dto.CreateStorageRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.Storage;
@@ -40,6 +41,16 @@ public class StorageService {
     @Autowired
     private ProductService productService;
 
+    @Transactional
+    public Storage createStorage(CreateStorageRequest request, Authentication auth) throws AccessDeniedException {
+        User current = userService.getUserByAuth(auth);
+        Storage storage = new Storage();
+        storage.setOwner(current);
+        storage.setName(request.getName());
+
+        return storageRepository.save(storage);
+    }
+
     public List<Storage> getStorages() {
         return storageRepository.findAll();
     }
@@ -57,7 +68,7 @@ public class StorageService {
         Optional<Storage> storage = storageRepository.findById(id);
 
         if (!storage.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "Storage with this id was not found");
 
         return storage.get();
     }
@@ -73,7 +84,7 @@ public class StorageService {
 
     public List<StorageItem> getItemsInStorage(final long storageId) throws ItemNotFoundException {
         if (!storageRepository.existsById(storageId))
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "Storage with this id was not found");
 
         return storageItemRepository.findByStorageId(storageId);
     }
@@ -88,7 +99,7 @@ public class StorageService {
 
     public List<StorageItem> getExpiredItemsInStorage(final long storageId) throws ItemNotFoundException {
         if (!storageRepository.existsById(storageId))
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "Storage with this id was not found");
 
         return storageItemRepository.findExpired(storageId);
     }
@@ -153,7 +164,7 @@ public class StorageService {
 
     @Transactional
     public StorageMember addMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
-            throws ItemNotFoundException, MemberException {
+            throws ItemNotFoundException, MemberException, AccessDeniedException {
 
         Storage storage = getStorage(storageId);
         User target = userService.getUserByEmail(memberEmail);
@@ -177,7 +188,7 @@ public class StorageService {
             throws ItemNotFoundException, AccessDeniedException {
 
         if (!storageRepository.existsById(storageId))
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "Storage with this id was not found");
 
         if (!canAccessStorage(storageId, auth))
             throw new AccessDeniedException(null);
@@ -192,7 +203,7 @@ public class StorageService {
         Optional<StorageMember> member = storageMemberRepository.findByStorageIdAndUserId(storageId, userId);
 
         if (!member.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("Member was not found");
 
         User current = userService.getUserByAuth(auth);
         Storage storage = getStorage(storageId);
@@ -229,7 +240,7 @@ public class StorageService {
         Optional<StorageItem> item = storageItemRepository.findById(storageItemId);
 
         if (!item.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "Storage item with this id was not found");
 
         if (!canAccessStorage(item.get().getStorage().getId(), current.getId()))
             throw new AccessDeniedException(null);

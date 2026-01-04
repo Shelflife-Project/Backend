@@ -87,7 +87,7 @@ public class UserService {
         Optional<User> user = repo.findById(id);
 
         if (!user.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "User with this id was not found");
 
         return user.get();
     }
@@ -103,7 +103,7 @@ public class UserService {
         Optional<User> user = repo.findByEmail(email);
 
         if (!user.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("email", "User with this email was not found");
 
         return user.get();
     }
@@ -227,7 +227,7 @@ public class UserService {
             throw new AccessDeniedException(null);
 
         if (!repo.existsById(id))
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "User ID was not found");
         repo.deleteById(id);
     }
 }

@@ -152,15 +152,15 @@ public class StorageService {
     }
 
     @Transactional
-    public StorageMember addMemberToStorage(final long storageId, final long userId, Authentication auth)
+    public StorageMember addMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
             throws ItemNotFoundException, MemberException {
 
         Storage storage = getStorage(storageId);
+        User target = userService.getUserByEmail(memberEmail);
 
-        if (storageMemberRepository.existsByStorageIdAndUserId(storageId, userId))
+        if (storageMemberRepository.existsByStorageIdAndUserId(storageId, target.getId()))
             throw new MemberException(true);
 
-        User target = userService.getUserById(userId);
         User current = userService.getUserByAuth(auth);
 
         if (!current.isAdmin() && storage.getOwner().getId() != current.getId())

@@ -1,4 +1,4 @@
-package com.shelflife.project.productcontroller;
+package com.shelflife.project.storagecontroller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,9 +9,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.shelflife.project.model.Product;
+import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
-import com.shelflife.project.repository.ProductRepository;
+import com.shelflife.project.repository.StorageRepository;
 import com.shelflife.project.repository.UserRepository;
 import com.shelflife.project.service.JwtService;
 
@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetProductTests {
+public class GetStorageTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -39,12 +39,13 @@ public class GetProductTests {
     private JwtService jwtService;
 
     @Autowired
-    private ProductRepository productRepository;
+    private StorageRepository storageRepository;
 
     private User testAdmin;
     private User testUser;
 
-    private Product testProduct;
+    private Storage testUserStorage;
+    private Storage testAdminStorage;
 
     @BeforeEach
     void setup() {
@@ -62,63 +63,64 @@ public class GetProductTests {
         testUser.setAdmin(false);
         testUser = userRepository.save(testUser);
 
-        testProduct = new Product();
-        testProduct.setName("Chips");
-        testProduct.setOwner(testUser);
-        testProduct.setRunningLow(2);
-        testProduct.setExpirationDaysDelta(200);
-        testProduct.setCategory("Snack");
-        testProduct.setBarcode("12345");
-        testProduct = productRepository.save(testProduct);
+        testUserStorage = new Storage();
+        testUserStorage.setOwner(testUser);
+        testUserStorage.setName("userTest");
+        testUserStorage = storageRepository.save(testUserStorage);
+
+        testAdminStorage = new Storage();
+        testAdminStorage.setOwner(testAdmin);
+        testAdminStorage.setName("adminTest");
+        testAdminStorage = storageRepository.save(testAdminStorage);
     }
 
     @Test
-    void getProductAsAdmin() throws Exception {
+    void getStorageAsAdmin() throws Exception {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products/" + testProduct.getId())
+        mockMvc.perform(get("/api/storages/" + testAdminStorage.getId())
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(testProduct.getId()))
-                .andExpect(jsonPath("$.name").value(testProduct.getName()))
-                .andExpect(jsonPath("$.barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("$.category").value(testProduct.getCategory()))
-                .andExpect(jsonPath("$.ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$.runningLow").value(testProduct.getRunningLow()))
-                .andExpect(jsonPath("$.expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+                .andExpect(jsonPath("$.id").value(testAdminStorage.getId()))
+                .andExpect(jsonPath("$.name").value(testAdminStorage.getName()));
     }
 
     @Test
-    void getProductAsUser() throws Exception {
+    void getStorageAsUser() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products/" + testProduct.getId())
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId())
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(testProduct.getId()))
-                .andExpect(jsonPath("$.name").value(testProduct.getName()))
-                .andExpect(jsonPath("$.barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("$.category").value(testProduct.getCategory()))
-                .andExpect(jsonPath("$.ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$.runningLow").value(testProduct.getRunningLow()))
-                .andExpect(jsonPath("$.expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+                .andExpect(jsonPath("$.id").value(testUserStorage.getId()))
+                .andExpect(jsonPath("$.name").value(testUserStorage.getName()));
     }
 
     @Test
     void returnsNotFound() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
+        String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products/" + testProduct.getId() + 1)
+        mockMvc.perform(get("/api/storages/" + testAdminStorage.getId() + 1)
                 .cookie(jwtCookie))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void cantGetProductAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/products/" + testProduct.getId()))
+    void cantGetNotOwnedStorage() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(get("/api/storages/" + testAdminStorage.getId())
+                .cookie(jwtCookie))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void cantGetStorageAsAnonymous() throws Exception {
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId()))
                 .andExpect(status().isForbidden());
     }
 }

@@ -1,10 +1,13 @@
 package com.shelflife.project.model;
 
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -14,35 +17,27 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Setter
 @Getter
-@Table(name = "products")
-public class Product {
+@Setter
+@Table(name = "storage_items")
+public class StorageItem {
     @Id
     @GeneratedValue
     private long id;
 
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id")
-    private User owner;
+    @ManyToOne
+    @JoinColumn(name = "storage_id")
+    private Storage storage;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
 
     @Column(nullable = false)
-    private String name;
+    private LocalDateTime expiresAt;
 
+    @CreationTimestamp
     @Column(nullable = false)
-    private String category;
-
-    @Column(nullable = false)
-    private int expirationDaysDelta;
-
-    @Column(nullable = false)
-    private int runningLow;
-
-    @Column(unique = true, nullable = true)
-    private String barcode;
-
-    public long getOwnerId() {
-        return getOwner().getId();
-    }
+    private LocalDateTime createdAt;
 }

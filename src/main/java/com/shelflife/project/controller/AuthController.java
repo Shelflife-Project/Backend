@@ -93,7 +93,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<User> getMe(HttpServletResponse response, Authentication auth) {
-        Optional<User> self = userService.getUserByAuth(auth);
+        Optional<User> self = userService.getOptionalUserByAuth(auth);
 
         if (!self.isPresent())
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

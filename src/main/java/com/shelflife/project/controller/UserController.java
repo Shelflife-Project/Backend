@@ -79,7 +79,7 @@ public class UserController {
             HttpServletResponse response) {
 
         try {
-            long selfId = service.getUserByAuth(auth).get().getId();
+            long selfId = service.getUserByAuth(auth).getId();
             User updated = service.updateUser(id, request, auth);
 
             if (request.getEmail() != null && updated.getId() == selfId) {

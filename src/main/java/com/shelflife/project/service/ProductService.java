@@ -47,7 +47,7 @@ public class ProductService {
         Optional<Product> product = productRepository.findById(id);
 
         if (!product.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("id", "Product with this id was not found");
 
         return product.get();
     }
@@ -56,7 +56,7 @@ public class ProductService {
         Optional<Product> product = productRepository.findByBarcode(barcode);
 
         if (!product.isPresent())
-            throw new ItemNotFoundException();
+            throw new ItemNotFoundException("barcode", "Product with this barcode was not found");
 
         return product.get();
     }
@@ -82,14 +82,10 @@ public class ProductService {
     public Product saveProduct(CreateProductRequest request, Authentication auth)
             throws AccessDeniedException, BarcodeExistsException, IllegalArgumentException {
 
-        Optional<User> currentUser = userService.getUserByAuth(auth);
+        User currentUser = userService.getUserByAuth(auth);
         Product product = new Product();
 
-        if (!currentUser.isPresent()) {
-            throw new AccessDeniedException(null);
-        }
-
-        product.setOwnerId(currentUser.get().getId());
+        product.setOwner(currentUser);
 
         if (request.getBarcode() != null) {
             if (!request.getBarcode().isBlank()) {
@@ -131,13 +127,10 @@ public class ProductService {
     @Transactional
     public Product updateProduct(long productId, UpdateProductRequest request, Authentication auth)
             throws BarcodeExistsException, AccessDeniedException, IllegalArgumentException {
-        Optional<User> currentUser = userService.getUserByAuth(auth);
-
-        if (!currentUser.isPresent())
-            throw new AccessDeniedException(null);
+        User currentUser = userService.getUserByAuth(auth);
 
         Product productDB = getProductByID(productId);
-        if (currentUser.get().getId() != productDB.getOwnerId() && !currentUser.get().isAdmin())
+        if (currentUser.getId() != productDB.getOwnerId() && !currentUser.isAdmin())
             throw new AccessDeniedException(null);
 
         if (request.getName() != null) {
@@ -183,13 +176,10 @@ public class ProductService {
 
     @Transactional
     public void removeProduct(long id, Authentication auth) throws AccessDeniedException, ItemNotFoundException {
-        Optional<User> currentUser = userService.getUserByAuth(auth);
-
-        if (!currentUser.isPresent())
-            throw new AccessDeniedException(null);
+        User currentUser = userService.getUserByAuth(auth);
 
         Product product = getProductByID(id);
-        if (!currentUser.get().isAdmin() && currentUser.get().getId() != product.getOwnerId())
+        if (!currentUser.isAdmin() && currentUser.getId() != product.getOwnerId())
             throw new AccessDeniedException(null);
 
         productRepository.deleteById(id);

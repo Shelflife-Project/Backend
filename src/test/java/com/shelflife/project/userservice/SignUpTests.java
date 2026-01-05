@@ -5,12 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,7 +47,7 @@ public class SignUpTests {
 
     @Test
     void throwsAccessDeniedAsAuthenticated() {
-        when(service.getUserByAuth(auth)).thenReturn(Optional.of(new User()));
+        doReturn(new User()).when(service).getUserByAuth(auth);
 
         assertThrows(AccessDeniedException.class, () -> {
             service.signUp(validRequest(), auth);
@@ -58,7 +58,7 @@ public class SignUpTests {
 
     @Test
     void throwsEmailExistsWhenEmailAlreadyUsed() {
-        when(service.getUserByAuth(auth)).thenReturn(Optional.empty());
+        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
         when(repo.existsByEmail("test@test.test")).thenReturn(true);
 
         assertThrows(EmailExistsException.class, () -> {
@@ -74,8 +74,7 @@ public class SignUpTests {
         SignUpRequest req = validRequest();
         req.setPasswordRepeat("12345");
 
-        when(service.getUserByAuth(auth))
-                .thenReturn(Optional.empty());
+        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
         when(repo.existsByEmail(req.getEmail()))
                 .thenReturn(false);
 
@@ -90,8 +89,7 @@ public class SignUpTests {
     void createsAndSavesNewUser() {
         SignUpRequest req = validRequest();
 
-        when(service.getUserByAuth(auth))
-                .thenReturn(Optional.empty());
+        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
         when(repo.existsByEmail(req.getEmail()))
                 .thenReturn(false);
         when(encoder.encode("password"))

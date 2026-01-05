@@ -68,7 +68,7 @@ public class UpdateProductTests {
         p.setName("Chips");
         p.setCategory("Snack");
         p.setBarcode("12345");
-        p.setOwnerId(testUser.getId());
+        p.setOwner(testUser);
         p.setRunningLow(2);
         p.setExpirationDaysDelta(200);
         testProduct = productRepository.save(p);
@@ -132,7 +132,7 @@ public class UpdateProductTests {
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
         Product p = new Product();
-        p.setOwnerId(0);
+        p.setOwner(testAdmin);
         p.setName("test");
         productRepository.save(p);
 

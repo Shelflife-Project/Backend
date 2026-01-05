@@ -69,7 +69,7 @@ public class CreateProductTests {
         p.setName("Chips");
         p.setCategory("Snack");
         p.setBarcode("12345");
-        p.setOwnerId(testUser.getId());
+        p.setOwner(testUser);
         p.setRunningLow(2);
         p.setExpirationDaysDelta(200);
         testProduct = productRepository.save(p);

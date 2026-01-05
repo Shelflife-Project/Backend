@@ -43,7 +43,7 @@ public class RemoveProductTests {
 
     @Test
     void throwsAccessDeniedAsAnonymous() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.empty());
+        when(userService.getUserByAuth(auth)).thenThrow(AccessDeniedException.class);
 
         assertThrows(AccessDeniedException.class, () -> productService.removeProduct(1, auth));
         verifyNoInteractions(repo);
@@ -52,46 +52,48 @@ public class RemoveProductTests {
     @Test
     void throwsAccessDeniedAsNonOwner() {
         User user = testUser(1, false);
-        Product product = testProduct(2, 2);
+        User owner = testUser(2, false);
+        Product product = testProduct(1, owner);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(user));
-        when(repo.findById(2L)).thenReturn(Optional.of(product));
+        when(userService.getUserByAuth(auth)).thenReturn(user);
+        when(repo.findById(1L)).thenReturn(Optional.of(product));
 
-        assertThrows(AccessDeniedException.class, () -> productService.removeProduct(2, auth));
+        assertThrows(AccessDeniedException.class, () -> productService.removeProduct(1, auth));
         verify(repo, never()).deleteById(any());
     }
 
     @Test
     void canRemoveAnyAsAdmin() {
         User user = testUser(1, true);
-        Product product = testProduct(2, 2);
+        User owner = testUser(2, false);
+        Product product = testProduct(1, owner);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(user));
-        when(repo.findById(2L)).thenReturn(Optional.of(product));
+        when(userService.getUserByAuth(auth)).thenReturn(user);
+        when(repo.findById(1L)).thenReturn(Optional.of(product));
 
-        assertDoesNotThrow(() -> productService.removeProduct(2, auth));
-        verify(repo).deleteById(2L);
+        assertDoesNotThrow(() -> productService.removeProduct(1, auth));
+        verify(repo).deleteById(1L);
     }
 
     @Test
-    void canRemoveAnyAsOwner() {
-        User user = testUser(2, false);
-        Product product = testProduct(2, 2);
+    void canRemoveAsOwner() {
+        User user = testUser(1, false);
+        Product product = testProduct(1, user);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(user));
-        when(repo.findById(2L)).thenReturn(Optional.of(product));
+        when(userService.getUserByAuth(auth)).thenReturn(user);
+        when(repo.findById(1L)).thenReturn(Optional.of(product));
 
-        assertDoesNotThrow(() -> productService.removeProduct(2, auth));
-        verify(repo).deleteById(2L);
+        assertDoesNotThrow(() -> productService.removeProduct(1, auth));
+        verify(repo).deleteById(1L);
     }
 
     @Test
     void throwsItemNotFound() {
-        User user = testUser(2, false);
+        User user = testUser(1, false);
 
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(user));
+        when(userService.getUserByAuth(auth)).thenReturn(user);
 
-        assertThrows(ItemNotFoundException.class, () -> productService.removeProduct(2, auth));
+        assertThrows(ItemNotFoundException.class, () -> productService.removeProduct(1, auth));
         verify(repo, never()).deleteById(any());
     }
 
@@ -104,10 +106,10 @@ public class RemoveProductTests {
         return u;
     }
 
-    private Product testProduct(long id, long ownerid) {
+    private Product testProduct(long id, User owner) {
         Product p = new Product();
-        p.setId(ownerid);
-        p.setOwnerId(ownerid);
+        p.setId(id);
+        p.setOwner(owner);
         p.setName("name");
         p.setCategory("cat");
         p.setBarcode("12345");

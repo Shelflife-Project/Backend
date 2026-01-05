@@ -9,8 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -45,7 +43,7 @@ public class SaveProductTests {
 
     @Test
     void successfulCreation() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
         when(repo.save(any(Product.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -58,7 +56,7 @@ public class SaveProductTests {
 
     @Test
     void throwsAccessDeniedAsAnonymous() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.empty());
+        when(userService.getUserByAuth(auth)).thenThrow(AccessDeniedException.class);
 
         assertThrows(AccessDeniedException.class, () -> productService.saveProduct(validRequest(), auth));
         verifyNoInteractions(repo);
@@ -66,7 +64,7 @@ public class SaveProductTests {
 
     @Test
     void throwsBarcodeExists() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
         when(productService.existsByBarcode(validRequest().getBarcode())).thenReturn(true);
 
         assertThrows(BarcodeExistsException.class, () -> {
@@ -78,7 +76,7 @@ public class SaveProductTests {
 
     @Test
     void throwsIllegalArgumentForNullCategory() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
         CreateProductRequest request = validRequest();
         request.setCategory(null);
@@ -92,7 +90,7 @@ public class SaveProductTests {
 
     @Test
     void throwsIllegalArgumentForEmptyCategory() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
         CreateProductRequest request = validRequest();
         request.setCategory("");
@@ -106,7 +104,7 @@ public class SaveProductTests {
 
     @Test
     void throwsIllegalArgumentForNullName() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
         CreateProductRequest request = validRequest();
         request.setName(null);
@@ -120,7 +118,7 @@ public class SaveProductTests {
 
     @Test
     void throwsIllegalArgumentForEmptyName() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
         CreateProductRequest request = validRequest();
         request.setName("");
@@ -134,7 +132,7 @@ public class SaveProductTests {
 
     @Test
     void throwsIllegalArgumentForZeroRunningLow() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
         CreateProductRequest request = validRequest();
         request.setRunningLow(0);
@@ -148,7 +146,7 @@ public class SaveProductTests {
 
     @Test
     void throwsIllegalArgumentForNegativeRunningLow() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
         CreateProductRequest request = validRequest();
         request.setRunningLow(-5);
@@ -162,7 +160,7 @@ public class SaveProductTests {
 
     @Test
     void throwsIllegalArgumentForZeroExpiration() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
         CreateProductRequest request = validRequest();
         request.setExpirationDaysDelta(0);
@@ -176,7 +174,7 @@ public class SaveProductTests {
 
     @Test
     void throwsIllegalArgumentForNegativeExpiration() {
-        when(userService.getUserByAuth(auth)).thenReturn(Optional.of(testUser(1, false)));
+        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
         CreateProductRequest request = validRequest();
         request.setExpirationDaysDelta(-5);

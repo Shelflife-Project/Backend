@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.exception.MemberException;
+import com.shelflife.project.dto.ChangeStorageNameRequest;
 import com.shelflife.project.dto.CreateStorageRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
@@ -42,7 +43,8 @@ public class StorageService {
     private ProductService productService;
 
     @Transactional
-    public Storage createStorage(CreateStorageRequest request, Authentication auth) throws AccessDeniedException {
+    public Storage createStorage(CreateStorageRequest request, Authentication auth)
+            throws AccessDeniedException, IllegalArgumentException {
         User current = userService.getUserByAuth(auth);
         Storage storage = new Storage();
         storage.setOwner(current);
@@ -51,12 +53,27 @@ public class StorageService {
         return storageRepository.save(storage);
     }
 
+    public Storage changeName(final long id, ChangeStorageNameRequest request, Authentication auth)
+            throws AccessDeniedException {
+        Storage storage = getStorage(id);
+        User current = userService.getUserByAuth(auth);
+
+        if (storage.getOwner().getId() != current.getId() && !current.isAdmin())
+            throw new AccessDeniedException(null);
+
+        if (request.getName() == null || request.getName().isBlank())
+            throw new IllegalArgumentException("name");
+
+        storage.setName(request.getName());
+        return storageRepository.save(storage);
+    }
+
     @Transactional
     public void deleteStorage(final long id, Authentication auth) throws AccessDeniedException, ItemNotFoundException {
         Storage storage = getStorage(id);
         User current = userService.getUserByAuth(auth);
 
-        if(storage.getOwner().getId() != current.getId() && !current.isAdmin())
+        if (storage.getOwner().getId() != current.getId() && !current.isAdmin())
             throw new AccessDeniedException(null);
 
         storageRepository.deleteById(id);

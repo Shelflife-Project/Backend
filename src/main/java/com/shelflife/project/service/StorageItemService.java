@@ -36,7 +36,7 @@ public class StorageItemService {
     @Autowired
     private StorageRepository storageRepository;
 
-    private Storage getStorage(final long id) throws ItemNotFoundException {
+    public Storage getStorage(final long id) throws ItemNotFoundException {
         Optional<Storage> storage = storageRepository.findById(id);
 
         if (!storage.isPresent())
@@ -46,6 +46,9 @@ public class StorageItemService {
     }
 
     public List<StorageItem> getItemsInStorage(final long storageId) throws ItemNotFoundException {
+        if (!storageRepository.existsById(storageId))
+            throw new ItemNotFoundException("id", "Storage with this id was not found");
+
         return storageItemRepository.findByStorageId(storageId);
     }
 
@@ -58,6 +61,9 @@ public class StorageItemService {
     }
 
     public List<StorageItem> getExpiredItemsInStorage(final long storageId) throws ItemNotFoundException {
+        if (!storageRepository.existsById(storageId))
+            throw new ItemNotFoundException("id", "Storage with this id was not found");
+
         return storageItemRepository.findExpired(storageId);
     }
 

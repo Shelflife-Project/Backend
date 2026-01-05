@@ -10,6 +10,8 @@ import com.shelflife.project.dto.InviteMemberRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.MemberException;
 import com.shelflife.project.model.Storage;
+import com.shelflife.project.service.StorageItemService;
+import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.StorageService;
 
 import jakarta.validation.Valid;
@@ -35,6 +37,12 @@ public class StorageController {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    private StorageItemService storageItemService;
+
+    @Autowired
+    private StorageMemberService storageMemberService;
+
     @GetMapping
     public ResponseEntity<List<Storage>> getStorages(Authentication auth) {
         try {
@@ -58,7 +66,7 @@ public class StorageController {
     @GetMapping("/{id}/items")
     public ResponseEntity<?> getStorageItems(@PathVariable long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageService.getItemsInStorage(id, auth));
+            return ResponseEntity.ok(storageItemService.getItemsInStorage(id, auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -69,7 +77,7 @@ public class StorageController {
     @GetMapping("/{id}/members")
     public ResponseEntity<?> getStorageMembers(@PathVariable long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageService.getStorageMembers(id, auth));
+            return ResponseEntity.ok(storageMemberService.getStorageMembers(id, auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -80,7 +88,7 @@ public class StorageController {
     @GetMapping("/{id}/expired")
     public ResponseEntity<?> getExpired(@PathVariable long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageService.getExpiredItemsInStorage(id, auth));
+            return ResponseEntity.ok(storageItemService.getExpiredItemsInStorage(id, auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -91,7 +99,7 @@ public class StorageController {
     @GetMapping("/{id}/abouttoexpire")
     public ResponseEntity<?> getAboutToExpire(@PathVariable long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageService.getItemsAboutToExpire(id, auth));
+            return ResponseEntity.ok(storageItemService.getItemsAboutToExpire(id, auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -114,7 +122,7 @@ public class StorageController {
             Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageService.addMemberToStorage(id, request.getUserEmail(), auth));
+                    .ok(storageMemberService.addMemberToStorage(id, request.getUserEmail(), auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -129,7 +137,7 @@ public class StorageController {
             Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageService.addItemToStorage(id, request.getProductId(), auth));
+                    .ok(storageItemService.addItemToStorage(id, request.getProductId(), auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -165,7 +173,7 @@ public class StorageController {
     public ResponseEntity<?> deleteMember(@PathVariable long storageId, @PathVariable long userId,
             Authentication auth) {
         try {
-            storageService.removeMemberFromStorage(storageId, userId, auth);
+            storageMemberService.removeMemberFromStorage(storageId, userId, auth);
             return ResponseEntity.ok().build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
@@ -178,7 +186,7 @@ public class StorageController {
     public ResponseEntity<?> deleteItem(@PathVariable long storageId, @PathVariable long itemId,
             Authentication auth) {
         try {
-            storageService.removeItemFromStorage(itemId, auth);
+            storageItemService.removeItemFromStorage(itemId, auth);
             return ResponseEntity.ok().build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));

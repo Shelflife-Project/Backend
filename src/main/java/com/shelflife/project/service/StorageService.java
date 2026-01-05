@@ -32,6 +32,10 @@ public class StorageService {
     @Transactional
     public Storage createStorage(CreateStorageRequest request, Authentication auth)
             throws AccessDeniedException, IllegalArgumentException {
+
+        if (request.getName() == null || request.getName().isBlank())
+            throw new IllegalArgumentException("name");
+
         User current = userService.getUserByAuth(auth);
         Storage storage = new Storage();
         storage.setOwner(current);
@@ -42,15 +46,15 @@ public class StorageService {
 
     @Transactional
     public Storage changeName(final long id, ChangeStorageNameRequest request, Authentication auth)
-            throws AccessDeniedException {
-        Storage storage = getStorage(id);
+            throws AccessDeniedException, IllegalArgumentException {
+        if (request.getName() == null || request.getName().isBlank())
+            throw new IllegalArgumentException("name");
+
         User current = userService.getUserByAuth(auth);
+        Storage storage = getStorage(id);
 
         if (storage.getOwner().getId() != current.getId() && !current.isAdmin())
             throw new AccessDeniedException(null);
-
-        if (request.getName() == null || request.getName().isBlank())
-            throw new IllegalArgumentException("name");
 
         storage.setName(request.getName());
         return storageRepository.save(storage);

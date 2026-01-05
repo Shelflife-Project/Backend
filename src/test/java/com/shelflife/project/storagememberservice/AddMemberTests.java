@@ -1,4 +1,4 @@
-package com.shelflife.project.storageservice;
+package com.shelflife.project.storagememberservice;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

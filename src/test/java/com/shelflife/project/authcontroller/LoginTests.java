@@ -70,7 +70,7 @@ public class LoginTests {
     void loginInvalidEmail() throws Exception {
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(getLoginJson("test@Test.test", "test123")))
+                .content(getLoginJson("test1@est.test", "test123")))
                 .andExpect(status().isBadRequest())
                 .andExpect(cookie().doesNotExist("jwt"))
                 .andReturn();

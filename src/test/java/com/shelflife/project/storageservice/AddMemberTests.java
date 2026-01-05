@@ -26,7 +26,7 @@ import com.shelflife.project.model.StorageMember;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageMemberRepository;
 import com.shelflife.project.repository.StorageRepository;
-import com.shelflife.project.service.StorageService;
+import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,14 +42,14 @@ public class AddMemberTests {
 
     @Spy
     @InjectMocks
-    private StorageService storageService;
+    private StorageMemberService service;
 
     private Authentication auth;
 
     @Test
     void throwsItemNotFoundForStorage() {
-        doThrow(ItemNotFoundException.class).when(storageService).getStorage(1L);
-        assertThrows(ItemNotFoundException.class, () -> storageService.addMemberToStorage(1, "test", auth));
+        doThrow(ItemNotFoundException.class).when(service).getStorage(1L);
+        assertThrows(ItemNotFoundException.class, () -> service.addMemberToStorage(1, "test", auth));
     }
 
     @Test
@@ -57,10 +57,10 @@ public class AddMemberTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        doReturn(storage).when(storageService).getStorage(1L);
+        doReturn(storage).when(service).getStorage(1L);
         doThrow(ItemNotFoundException.class).when(userService).getUserByEmail("test");
 
-        assertThrows(ItemNotFoundException.class, () -> storageService.addMemberToStorage(1, "test", auth));
+        assertThrows(ItemNotFoundException.class, () -> service.addMemberToStorage(1, "test", auth));
     }
 
     @Test
@@ -71,11 +71,11 @@ public class AddMemberTests {
         User target = new User();
         target.setId(1);
 
-        doReturn(storage).when(storageService).getStorage(1L);
+        doReturn(storage).when(service).getStorage(1L);
         doReturn(target).when(userService).getUserByEmail("test");
         doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
 
-        assertThrows(AccessDeniedException.class, () -> storageService.addMemberToStorage(1, "test", auth));
+        assertThrows(AccessDeniedException.class, () -> service.addMemberToStorage(1, "test", auth));
     }
 
     @Test
@@ -93,11 +93,11 @@ public class AddMemberTests {
         owner.setId(3);
         storage.setOwner(owner);
 
-        doReturn(storage).when(storageService).getStorage(1L);
+        doReturn(storage).when(service).getStorage(1L);
         doReturn(target).when(userService).getUserByEmail("test");
         doReturn(other).when(userService).getUserByAuth(auth);
 
-        assertThrows(AccessDeniedException.class, () -> storageService.addMemberToStorage(1, "test", auth));
+        assertThrows(AccessDeniedException.class, () -> service.addMemberToStorage(1, "test", auth));
     }
 
     @Test
@@ -109,13 +109,13 @@ public class AddMemberTests {
         other.setId(2);
         other.setAdmin(true);
 
-        doReturn(storage).when(storageService).getStorage(1L);
+        doReturn(storage).when(service).getStorage(1L);
         doReturn(target).when(userService).getUserByEmail("test");
         doReturn(other).when(userService).getUserByAuth(auth);
 
         when(storageMemberRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        StorageMember result = storageService.addMemberToStorage(1, "test", auth);
+        StorageMember result = service.addMemberToStorage(1, "test", auth);
         assertNotNull(result);
         assertEquals(storage, result.getStorage());
         assertEquals(target, result.getUser());
@@ -134,13 +134,13 @@ public class AddMemberTests {
         storage.setOwner(owner);
 
         when(storageMemberRepository.existsByStorageIdAndUserId(1, 1)).thenReturn(false);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
         doReturn(target).when(userService).getUserByEmail("test");
         doReturn(owner).when(userService).getUserByAuth(auth);
 
         when(storageMemberRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        StorageMember result = storageService.addMemberToStorage(1, "test", auth);
+        StorageMember result = service.addMemberToStorage(1, "test", auth);
         assertNotNull(result);
         assertEquals(storage, result.getStorage());
         assertEquals(target, result.getUser());
@@ -154,11 +154,11 @@ public class AddMemberTests {
         User target = new User();
         target.setId(1);
 
-        doReturn(storage).when(storageService).getStorage(1L);
+        doReturn(storage).when(service).getStorage(1L);
         doReturn(target).when(userService).getUserByEmail("test");
         when(storageMemberRepository.existsByStorageIdAndUserId(1, 1)).thenReturn(true);
 
-        assertThrows(MemberException.class, () -> storageService.addMemberToStorage(1, "test", auth));
+        assertThrows(MemberException.class, () -> service.addMemberToStorage(1, "test", auth));
         verify(storageMemberRepository, never()).save(any(StorageMember.class));
     }
 }

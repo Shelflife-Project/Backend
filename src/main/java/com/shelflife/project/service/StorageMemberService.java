@@ -30,7 +30,7 @@ public class StorageMemberService {
     @Autowired
     private StorageRepository storageRepository;
 
-    private Storage getStorage(final long id) throws ItemNotFoundException {
+    public Storage getStorage(final long id) throws ItemNotFoundException {
         Optional<Storage> storage = storageRepository.findById(id);
 
         if (!storage.isPresent())
@@ -43,10 +43,7 @@ public class StorageMemberService {
     public StorageMember addMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
             throws ItemNotFoundException, MemberException, AccessDeniedException {
 
-        Optional<Storage> storage = storageRepository.findById(storageId);
-        if (!storage.isPresent())
-            throw new ItemNotFoundException("id", "Storage with this id was not found");
-
+        Storage storage = getStorage(storageId);
         User target = userService.getUserByEmail(memberEmail);
 
         if (storageMemberRepository.existsByStorageIdAndUserId(storageId, target.getId()))
@@ -54,12 +51,12 @@ public class StorageMemberService {
 
         User current = userService.getUserByAuth(auth);
 
-        if (!current.isAdmin() && storage.get().getOwner().getId() != current.getId())
+        if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
             throw new AccessDeniedException(null);
 
         StorageMember member = new StorageMember();
         member.setUser(target);
-        member.setStorage(storage.get());
+        member.setStorage(storage);
 
         return storageMemberRepository.save(member);
     }

@@ -12,5 +12,5 @@ import lombok.Setter;
 public class InviteMemberRequest {
     @Email(message = "Invalid format")
     @NotEmpty(message = "User Email must not be empty")
-    private String userEmail;
+    private String email;
 }

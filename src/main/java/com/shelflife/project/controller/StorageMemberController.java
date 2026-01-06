@@ -28,7 +28,7 @@ public class StorageMemberController {
     @Autowired
     private StorageMemberService storageMemberService;
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<?> getStorageMembers(@PathVariable long storageId, Authentication auth) {
         try {
             return ResponseEntity.ok(storageMemberService.getStorageMembers(storageId, auth));
@@ -39,12 +39,12 @@ public class StorageMemberController {
         }
     }
 
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<?> inviteMember(@PathVariable long storageId, @Valid @RequestBody InviteMemberRequest request,
             Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageMemberService.addMemberToStorage(storageId, request.getUserEmail(), auth));
+                    .ok(storageMemberService.addMemberToStorage(storageId, request.getEmail(), auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {

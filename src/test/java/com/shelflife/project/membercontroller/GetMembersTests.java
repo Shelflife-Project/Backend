@@ -1,4 +1,4 @@
-package com.shelflife.project.storagecontroller;
+package com.shelflife.project.membercontroller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,11 +22,13 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import static org.hamcrest.Matchers.*;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class DeleteStorageTests {
+public class GetMembersTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -34,13 +36,13 @@ public class DeleteStorageTests {
     private UserRepository userRepository;
 
     @Autowired
+    private JwtService jwtService;
+
+    @Autowired
     private StorageRepository storageRepository;
 
     @Autowired
     private StorageMemberRepository storageMemberRepository;
-
-    @Autowired
-    private JwtService jwtService;
 
     private User testAdmin;
     private User testUser;
@@ -91,48 +93,50 @@ public class DeleteStorageTests {
     }
 
     @Test
-    void successfulDeleteAsOwner() throws Exception {
+    void successfulGetMembersAsOwner() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(delete("/api/storages/" + testUserStorage.getId())
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
                 .cookie(jwtCookie))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
+                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
+                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
     }
 
     @Test
-    void successfulDeleteAsAdmin() throws Exception {
+    void successfulGetMembersAsAdmin() throws Exception {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(delete("/api/storages/" + testUserStorage.getId())
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
                 .cookie(jwtCookie))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
+                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
+                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
     }
 
     @Test
-    void successfulLeaveAsMember() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
+    void successfulGetMembersAsMember() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(delete("/api/storages/" + testUserStorage.getId())
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
                 .cookie(jwtCookie))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void notFound() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(delete("/api/storages/" + testAdminStorage.getId() + 1)
-                .cookie(jwtCookie))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
+                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
+                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(delete("/api/storages/" + testUserStorage.getId()))
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members"))
                 .andExpect(status().isForbidden());
     }
 }

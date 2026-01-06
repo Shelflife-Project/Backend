@@ -160,7 +160,7 @@ public class StorageController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteStorage(@PathVariable long id, Authentication auth) {
         try {
-            storageService.deleteStorage(id, auth);
+            storageService.deleteStorageRequest(id, auth);
             return ResponseEntity.ok().build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));

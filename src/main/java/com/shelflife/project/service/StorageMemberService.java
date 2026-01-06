@@ -61,6 +61,10 @@ public class StorageMemberService {
         return storageMemberRepository.save(member);
     }
 
+    public boolean isMemberOfStorage(final long storageId, final long userId) {
+        return storageMemberRepository.existsByStorageIdAndUserId(storageId, userId);
+    }
+
     public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
 
@@ -71,6 +75,16 @@ public class StorageMemberService {
             throw new AccessDeniedException(null);
 
         return storageMemberRepository.findByStorageId(storageId);
+    }
+
+    @Transactional
+    public void removeMemberFromStorage(final long storageId, final long userId) throws ItemNotFoundException {
+        Optional<StorageMember> member = storageMemberRepository.findByStorageIdAndUserId(storageId, userId);
+
+        if (!member.isPresent())
+            throw new ItemNotFoundException("Member was not found");
+
+        storageMemberRepository.deleteById(member.get().getId());
     }
 
     @Transactional

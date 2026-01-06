@@ -63,16 +63,16 @@ public class StorageService {
     @Transactional
     public void deleteStorageRequest(final long id, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException {
-        Storage storage = getStorage(id);
         User current = userService.getUserByAuth(auth);
+        Storage storage = getStorage(id);
 
-        if (storage.getOwner().getId() == current.getId() || current.isAdmin()) { // Delete storage
+        if (current.isAdmin() || storage.getOwner().getId() == current.getId()) { // Delete storage
             storageRepository.deleteById(id);
         } else if (storageMemberService.isMemberOfStorage(id, current.getId())) { // Leave storage
             storageMemberService.removeMemberFromStorage(id, current.getId());
+        } else {
+            throw new AccessDeniedException(null);
         }
-
-        throw new AccessDeniedException(null);
     }
 
     public List<Storage> getStorages() {

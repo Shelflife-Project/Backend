@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,9 +31,6 @@ public class CreateStorageTests {
     private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder encoder;
-
-    @Autowired
     private JwtService jwtService;
 
     private User testUser;
@@ -44,7 +40,7 @@ public class CreateStorageTests {
         testUser = new User();
         testUser.setEmail("testuser@test.test");
         testUser.setUsername("testuser");
-        testUser.setPassword(encoder.encode("test123"));
+        testUser.setPassword("test123");
         testUser.setAdmin(false);
         testUser = userRepository.save(testUser);
     }

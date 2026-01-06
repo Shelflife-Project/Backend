@@ -45,16 +45,15 @@ public class RemoveMemberTests {
     private Authentication auth;
 
     @Test
-    void throwsItemNotFoundForMember() {
+    void noauth_throwsItemNotFound() {
         when(storageMemberRepository.findByStorageIdAndUserId(1, 1)).thenReturn(Optional.empty());
-        assertThrows(ItemNotFoundException.class, () -> service.removeMemberFromStorage(1, 1, auth));
+        assertThrows(ItemNotFoundException.class, () -> service.removeMemberFromStorage(1, 1));
     }
 
     @Test
-    void throwsItemNotFoundForStorage() {
+    void auth_throwsItemNotFoundForStorage() {
         User user = new User();
 
-        when(storageMemberRepository.findByStorageIdAndUserId(1, 1)).thenReturn(Optional.of(new StorageMember()));
         when(storageRepository.findById(1L)).thenReturn(Optional.empty());
         doReturn(user).when(userService).getUserByAuth(auth);
 
@@ -62,14 +61,13 @@ public class RemoveMemberTests {
     }
 
     @Test
-    void throwsAccessDeniedAsAnonymous() {
-        when(storageMemberRepository.findByStorageIdAndUserId(1, 1)).thenReturn(Optional.of(new StorageMember()));
+    void auth_throwsAccessDeniedAsAnonymous() {
         doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
         assertThrows(AccessDeniedException.class, () -> service.removeMemberFromStorage(1, 1, auth));
     }
 
     @Test
-    void throwsAccessDeniedAsNonOwner() {
+    void auth_throwsAccessDeniedAsNonOwner() {
         Storage storage = new Storage();
         storage.setId(1);
 
@@ -80,7 +78,6 @@ public class RemoveMemberTests {
         User user = new User();
         user.setId(2);
 
-        when(storageMemberRepository.findByStorageIdAndUserId(1, 1)).thenReturn(Optional.of(new StorageMember()));
         when(storageRepository.findById(1L)).thenReturn(Optional.of(storage));
         doReturn(user).when(userService).getUserByAuth(auth);
 
@@ -88,7 +85,7 @@ public class RemoveMemberTests {
     }
 
     @Test
-    void successfulRemoveAsAdmin() {
+    void auth_successfulRemoveAsAdmin() {
         Storage storage = new Storage();
         User memberUser = new User();
         memberUser.setId(1);
@@ -115,7 +112,7 @@ public class RemoveMemberTests {
     }
 
     @Test
-    void successfulRemoveAsOwner() {
+    void auth_successfulRemoveAsOwner() {
         Storage storage = new Storage();
         User memberUser = new User();
         memberUser.setId(1);

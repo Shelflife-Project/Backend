@@ -39,6 +39,18 @@ public class StorageMemberService {
         return storage.get();
     }
 
+    public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
+            throws ItemNotFoundException, AccessDeniedException {
+
+        if (!storageRepository.existsById(storageId))
+            throw new ItemNotFoundException("id", "Storage with this id was not found");
+
+        if (!canAccessStorage(storageId, auth))
+            throw new AccessDeniedException(null);
+
+        return storageMemberRepository.findByStorageId(storageId);
+    }
+
     @Transactional
     public StorageMember addMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
             throws ItemNotFoundException, MemberException, AccessDeniedException {
@@ -61,22 +73,6 @@ public class StorageMemberService {
         return storageMemberRepository.save(member);
     }
 
-    public boolean isMemberOfStorage(final long storageId, final long userId) {
-        return storageMemberRepository.existsByStorageIdAndUserId(storageId, userId);
-    }
-
-    public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
-            throws ItemNotFoundException, AccessDeniedException {
-
-        if (!storageRepository.existsById(storageId))
-            throw new ItemNotFoundException("id", "Storage with this id was not found");
-
-        if (!canAccessStorage(storageId, auth))
-            throw new AccessDeniedException(null);
-
-        return storageMemberRepository.findByStorageId(storageId);
-    }
-
     @Transactional
     public void removeMemberFromStorage(final long storageId, final long userId) throws ItemNotFoundException {
         Optional<StorageMember> member = storageMemberRepository.findByStorageIdAndUserId(storageId, userId);
@@ -91,18 +87,13 @@ public class StorageMemberService {
     public void removeMemberFromStorage(final long storageId, final long userId, Authentication auth)
             throws ItemNotFoundException, MemberException {
 
-        Optional<StorageMember> member = storageMemberRepository.findByStorageIdAndUserId(storageId, userId);
-
-        if (!member.isPresent())
-            throw new ItemNotFoundException("Member was not found");
-
         User current = userService.getUserByAuth(auth);
         Storage storage = getStorage(storageId);
 
         if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
             throw new AccessDeniedException(null);
 
-        storageMemberRepository.deleteById(member.get().getId());
+        removeMemberFromStorage(storageId, userId);
     }
 
     public boolean canAccessStorage(final long storageId, final long userId) {
@@ -140,4 +131,9 @@ public class StorageMemberService {
             return false;
         }
     }
+
+    public boolean isMemberOfStorage(final long storageId, final long userId) {
+        return storageMemberRepository.existsByStorageIdAndUserId(storageId, userId);
+    }
+
 }

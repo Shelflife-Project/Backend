@@ -78,14 +78,14 @@ public class StorageMemberService {
         Optional<StorageMember> member = storageMemberRepository.findByStorageIdAndUserId(storageId, userId);
 
         if (!member.isPresent())
-            throw new ItemNotFoundException("Member was not found");
+            throw new ItemNotFoundException("member", "Member was not found");
 
         storageMemberRepository.deleteById(member.get().getId());
     }
 
     @Transactional
     public void removeMemberFromStorage(final long storageId, final long userId, Authentication auth)
-            throws ItemNotFoundException, MemberException {
+            throws ItemNotFoundException, AccessDeniedException {
 
         User current = userService.getUserByAuth(auth);
         Storage storage = getStorage(storageId);

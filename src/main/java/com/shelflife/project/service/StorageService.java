@@ -46,7 +46,7 @@ public class StorageService {
 
     @Transactional
     public Storage changeName(final long id, ChangeStorageNameRequest request, Authentication auth)
-            throws AccessDeniedException, IllegalArgumentException {
+            throws AccessDeniedException, IllegalArgumentException, ItemNotFoundException {
         if (request.getName() == null || request.getName().isBlank())
             throw new IllegalArgumentException("name");
 

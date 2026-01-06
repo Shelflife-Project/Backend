@@ -59,7 +59,7 @@ public class StorageController {
             return ResponseEntity.ok(storageService.createStorage(request, auth));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("name", "Name cannot be empty"));
         }
     }
@@ -73,6 +73,8 @@ public class StorageController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(e.getMessage(), "Name cannot be empty"));
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 

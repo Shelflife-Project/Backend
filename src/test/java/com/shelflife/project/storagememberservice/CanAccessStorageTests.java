@@ -1,4 +1,4 @@
-package com.shelflife.project.storageservice;
+package com.shelflife.project.storagememberservice;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,7 +22,7 @@ import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageMemberRepository;
 import com.shelflife.project.repository.StorageRepository;
-import com.shelflife.project.service.StorageService;
+import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +38,7 @@ public class CanAccessStorageTests {
 
     @Spy
     @InjectMocks
-    private StorageService storageService;
+    private StorageMemberService service;
 
     Authentication auth;
 
@@ -46,7 +46,7 @@ public class CanAccessStorageTests {
     void noauth_returnsFalseAsAnonymous() {
         when(userService.getUserById(1)).thenThrow(ItemNotFoundException.class);
 
-        assertFalse(storageService.canAccessStorage(1L, 1L));
+        assertFalse(service.canAccessStorage(1L, 1L));
         verifyNoInteractions(storageRepository);
         verifyNoInteractions(storageMemberRepository);
     }
@@ -64,9 +64,9 @@ public class CanAccessStorageTests {
 
         when(userService.getUserById(1)).thenReturn(user);
         when(storageMemberRepository.existsByStorageIdAndUserId(1, 1)).thenReturn(false);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
 
-        assertFalse(storageService.canAccessStorage(1L, 1L));
+        assertFalse(service.canAccessStorage(1L, 1L));
     }
 
     @Test
@@ -78,9 +78,9 @@ public class CanAccessStorageTests {
         storage.setOwner(owner);
 
         when(userService.getUserById(1)).thenReturn(owner);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
 
-        assertTrue(storageService.canAccessStorage(1L, 1L));
+        assertTrue(service.canAccessStorage(1L, 1L));
         verifyNoInteractions(storageMemberRepository);
     }
 
@@ -97,9 +97,9 @@ public class CanAccessStorageTests {
 
         when(userService.getUserById(1)).thenReturn(user);
         when(storageMemberRepository.existsByStorageIdAndUserId(1L, 1L)).thenReturn(true);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
 
-        assertTrue(storageService.canAccessStorage(1L, 1L));
+        assertTrue(service.canAccessStorage(1L, 1L));
         verify(storageMemberRepository).existsByStorageIdAndUserId(1L, 1L);
     }
 
@@ -116,9 +116,9 @@ public class CanAccessStorageTests {
         storage.setOwner(owner);
 
         when(userService.getUserById(1)).thenReturn(user);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
 
-        assertTrue(storageService.canAccessStorage(1L, 1L));
+        assertTrue(service.canAccessStorage(1L, 1L));
         verifyNoInteractions(storageMemberRepository);
     }
 
@@ -127,7 +127,7 @@ public class CanAccessStorageTests {
     void auth_returnsFalseAsAnonymous() {
         doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
 
-        assertFalse(storageService.canAccessStorage(1L, auth));
+        assertFalse(service.canAccessStorage(1L, auth));
         verifyNoInteractions(storageRepository);
         verifyNoInteractions(storageMemberRepository);
     }
@@ -145,9 +145,9 @@ public class CanAccessStorageTests {
 
         doReturn(user).when(userService).getUserByAuth(auth);
         when(storageMemberRepository.existsByStorageIdAndUserId(1, 1)).thenReturn(false);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
 
-        assertFalse(storageService.canAccessStorage(1L, auth));
+        assertFalse(service.canAccessStorage(1L, auth));
     }
 
     @Test
@@ -159,9 +159,9 @@ public class CanAccessStorageTests {
         storage.setOwner(owner);
 
         doReturn(owner).when(userService).getUserByAuth(auth);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
 
-        assertTrue(storageService.canAccessStorage(1L, auth));
+        assertTrue(service.canAccessStorage(1L, auth));
         verifyNoInteractions(storageMemberRepository);
     }
 
@@ -178,9 +178,9 @@ public class CanAccessStorageTests {
 
         doReturn(user).when(userService).getUserByAuth(auth);
         when(storageMemberRepository.existsByStorageIdAndUserId(1L, 1L)).thenReturn(true);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
 
-        assertTrue(storageService.canAccessStorage(1L, auth));
+        assertTrue(service.canAccessStorage(1L, auth));
         verify(storageMemberRepository).existsByStorageIdAndUserId(1L, 1L);
     }
 
@@ -197,9 +197,9 @@ public class CanAccessStorageTests {
         storage.setOwner(owner);
 
         doReturn(user).when(userService).getUserByAuth(auth);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(service).getStorage(1);
 
-        assertTrue(storageService.canAccessStorage(1L, auth));
+        assertTrue(service.canAccessStorage(1L, auth));
         verifyNoInteractions(storageMemberRepository);
     }
 

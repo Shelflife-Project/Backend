@@ -1,4 +1,4 @@
-package com.shelflife.project.storageservice;
+package com.shelflife.project.storageitemservice;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +22,7 @@ import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageRepository;
 import com.shelflife.project.repository.UserRepository;
-import com.shelflife.project.service.StorageService;
+import com.shelflife.project.service.StorageItemService;
 
 import jakarta.transaction.Transactional;
 
@@ -41,7 +41,7 @@ public class GetExpiredItemsTests {
     private UserRepository userRepository;
 
     @Autowired
-    private StorageService storageService;
+    private StorageItemService service;
 
     Authentication auth;
 
@@ -89,7 +89,7 @@ public class GetExpiredItemsTests {
 
     @Test
     void throwsNotFound() {
-        assertThrows(ItemNotFoundException.class, () -> storageService.getExpiredItemsInStorage(storage.getId() - 1));
+        assertThrows(ItemNotFoundException.class, () -> service.getExpiredItemsInStorage(storage.getId() - 1));
     }
 
     @Test
@@ -105,11 +105,11 @@ public class GetExpiredItemsTests {
         storageRepository.flush();
         storageItemRepository.flush();
 
-        assertDoesNotThrow(() -> storageService.getExpiredItemsInStorage(storage.getId()));
-        assertEquals(2, storageService.getItemsInStorage(storage.getId()).size());
-        assertEquals(1, storageService.getExpiredItemsInStorage(storage.getId()).size());
+        assertDoesNotThrow(() -> service.getExpiredItemsInStorage(storage.getId()));
+        assertEquals(2, service.getItemsInStorage(storage.getId()).size());
+        assertEquals(1, service.getExpiredItemsInStorage(storage.getId()).size());
         assertEquals(item.getExpiresAt(),
-                storageService.getExpiredItemsInStorage(storage.getId()).get(0).getExpiresAt());
+                service.getExpiredItemsInStorage(storage.getId()).get(0).getExpiresAt());
     }
 
     @Test
@@ -125,10 +125,10 @@ public class GetExpiredItemsTests {
         storageRepository.flush();
         storageItemRepository.flush();
 
-        assertDoesNotThrow(() -> storageService.getExpiredItemsInStorage(storage.getId()));
-        assertEquals(2, storageService.getItemsInStorage(storage.getId()).size());
-        assertEquals(1, storageService.getItemsAboutToExpire(storage.getId()).size());
+        assertDoesNotThrow(() -> service.getExpiredItemsInStorage(storage.getId()));
+        assertEquals(2, service.getItemsInStorage(storage.getId()).size());
+        assertEquals(1, service.getItemsAboutToExpire(storage.getId()).size());
         assertEquals(item.getExpiresAt(),
-                storageService.getItemsAboutToExpire(storage.getId()).get(0).getExpiresAt());
+                service.getItemsAboutToExpire(storage.getId()).get(0).getExpiresAt());
     }
 }

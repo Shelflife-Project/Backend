@@ -1,8 +1,9 @@
-package com.shelflife.project.storageservice;
+package com.shelflife.project.storageitemservice;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -13,13 +14,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageRepository;
-import com.shelflife.project.service.StorageService;
+import com.shelflife.project.service.StorageItemService;
+import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,20 +36,23 @@ public class GetItemsInStorageTests {
     @Mock
     private StorageRepository storageRepository;
 
+    @Mock
+    private StorageMemberService storageMemberService;
+
     @InjectMocks
-    private StorageService storageService;
+    private StorageItemService service;
 
     Authentication auth;
 
     @Test
-    void throwsNotFound() {
+    void noauth_throwsNotFound() {
         when(storageRepository.existsById(1L)).thenReturn(false);
 
-        assertThrows(ItemNotFoundException.class, () -> storageService.getItemsInStorage(1));
+        assertThrows(ItemNotFoundException.class, () -> service.getItemsInStorage(1));
     }
 
     @Test
-    void returnsItems() {
+    void noauth_returnsItems() {
         List<StorageItem> items = new ArrayList<>();
         items.add(new StorageItem());
         items.add(new StorageItem());
@@ -54,8 +60,14 @@ public class GetItemsInStorageTests {
         when(storageRepository.existsById(1L)).thenReturn(true);
         when(storageItemRepository.findByStorageId(1L)).thenReturn(items);
 
-        assertDoesNotThrow(() -> storageService.getItemsInStorage(1));
-        assertEquals(items, storageService.getItemsInStorage(1));
+        assertDoesNotThrow(() -> service.getItemsInStorage(1));
+        assertEquals(items, service.getItemsInStorage(1));
     }
 
+    @Test
+    void auth_throwsAccessDenied() {
+        doReturn(false).when(storageMemberService).canAccessStorage(1, auth);
+
+        assertThrows(AccessDeniedException.class, () -> service.getItemsInStorage(1, auth));
+    }
 }

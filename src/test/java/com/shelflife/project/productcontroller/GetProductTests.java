@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -33,9 +32,6 @@ public class GetProductTests {
     private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder encoder;
-
-    @Autowired
     private JwtService jwtService;
 
     @Autowired
@@ -51,14 +47,14 @@ public class GetProductTests {
         testAdmin = new User();
         testAdmin.setEmail("test@test.test");
         testAdmin.setUsername("test");
-        testAdmin.setPassword(encoder.encode("test123"));
+        testAdmin.setPassword("test123");
         testAdmin.setAdmin(true);
         testAdmin = userRepository.save(testAdmin);
 
         testUser = new User();
         testUser.setEmail("testuser@test.test");
         testUser.setUsername("testuser");
-        testUser.setPassword(encoder.encode("test123"));
+        testUser.setPassword("test123");
         testUser.setAdmin(false);
         testUser = userRepository.save(testUser);
 

@@ -1,4 +1,4 @@
-package com.shelflife.project.storageservice;
+package com.shelflife.project.storageitemservice;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -23,20 +23,24 @@ import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageItemRepository;
-import com.shelflife.project.service.StorageService;
+import com.shelflife.project.service.StorageItemService;
+import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
 public class RemoveItemTests {
-    @Spy
-    @InjectMocks
-    private StorageService storageService;
-
     @Mock
     private StorageItemRepository storageItemRepository;
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private StorageMemberService storageMemberService;
+
+    @Spy
+    @InjectMocks
+    private StorageItemService storageItemService;
 
     private Authentication auth;
 
@@ -55,9 +59,9 @@ public class RemoveItemTests {
         when(userService.getUserByAuth(auth)).thenReturn(user);
         when(storageItemRepository.findById(3L)).thenReturn(Optional.of(item));
 
-        doReturn(true).when(storageService).canAccessStorage(2, user.getId());
+        doReturn(true).when(storageMemberService).canAccessStorage(2, user.getId());
 
-        storageService.removeItemFromStorage(3, auth);
+        storageItemService.removeItemFromStorage(3, auth);
 
         verify(storageItemRepository).deleteById(3L);
     }
@@ -67,7 +71,7 @@ public class RemoveItemTests {
         when(userService.getUserByAuth(auth)).thenReturn(new User());
         when(storageItemRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ItemNotFoundException.class, () -> storageService.removeItemFromStorage(1L, auth));
+        assertThrows(ItemNotFoundException.class, () -> storageItemService.removeItemFromStorage(1L, auth));
 
         verify(storageItemRepository, never()).deleteById(anyLong());
     }
@@ -86,9 +90,9 @@ public class RemoveItemTests {
 
         when(userService.getUserByAuth(auth)).thenReturn(user);
         when(storageItemRepository.findById(3L)).thenReturn(Optional.of(item));
-        doReturn(false).when(storageService).canAccessStorage(2, user.getId());
+        doReturn(false).when(storageMemberService).canAccessStorage(2, user.getId());
 
-        assertThrows(AccessDeniedException.class, () -> storageService.removeItemFromStorage(3, auth));
+        assertThrows(AccessDeniedException.class, () -> storageItemService.removeItemFromStorage(3, auth));
         verify(storageItemRepository, never()).deleteById(anyLong());
     }
 

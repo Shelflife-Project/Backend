@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public interface StorageItemRepository extends JpaRepository<StorageItem, Long> {
     List<StorageItem> findByStorageId(long storageId);
 
-    @Query("SELECT s FROM StorageItem s WHERE s.storage.id = :storageId AND s.expiresAt < CURRENT_TIMESTAMP")
+    @Query("SELECT s FROM StorageItem s WHERE s.storage.id = :storageId AND s.expiresAt < CURRENT_DATE")
     List<StorageItem> findExpired(long storageId);
 
     @Query("SELECT s FROM StorageItem s WHERE s.storage.id = :storageId AND s.expiresAt < :time")

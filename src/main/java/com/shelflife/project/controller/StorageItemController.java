@@ -39,11 +39,11 @@ public class StorageItemController {
     }
 
     @PostMapping("/items")
-    public ResponseEntity<?> addItem(@PathVariable long id, @Valid @RequestBody AddItemRequest request,
+    public ResponseEntity<?> addItem(@PathVariable long storageId, @Valid @RequestBody AddItemRequest request,
             Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageItemService.addItemToStorage(id, request.getProductId(), auth));
+                    .ok(storageItemService.addItemToStorage(storageId, request.getProductId(), auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {

@@ -1,12 +1,15 @@
 package com.shelflife.project.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.shelflife.project.dto.ChangeUserDataRequest;
 import com.shelflife.project.exception.EmailExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.User;
+import com.shelflife.project.service.ImageService;
 import com.shelflife.project.service.JwtService;
 import com.shelflife.project.service.UserService;
 
@@ -15,10 +18,12 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,6 +33,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping("/api/users")
@@ -38,6 +44,9 @@ public class UserController {
 
     @Autowired
     private UserService service;
+
+    @Autowired
+    private ImageService imageService;
 
     @GetMapping()
     public ResponseEntity<List<User>> getUsers(Authentication auth) {
@@ -58,6 +67,26 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/pfp")
+    public Resource getPfp(@PathVariable long id) {
+        return imageService.loadImage(id + "_user", "classpath:avatar-default.svg");
+    }
+
+    @PostMapping("/{id}/pfp")
+    public ResponseEntity<?> uploadPfp(@PathVariable long id, @RequestParam("pfp") MultipartFile file,
+            Authentication auth) {
+        try {
+            User user = service.getUserByAuth(auth);
+            if (user.getId() != id)
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+
+            imageService.uploadImage(file, user.getId() + "_user");
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
         }
     }
 

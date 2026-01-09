@@ -29,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.InvalidMimeTypeException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -72,17 +73,17 @@ public class UserController {
     }
 
     @GetMapping("/{id}/pfp")
-    public ResponseEntity<?> getPfp(@PathVariable long id) {
-        Resource resource = imageService.loadImage(id + "_user", "classpath:avatar-default.svg");
+    public ResponseEntity<Resource> getPfp(@PathVariable long id) {
+        String filename = id + "_user";
+        Resource resource = imageService.loadImage(filename, "classpath:avatar-default.svg");
 
         try {
-            Image image = imageService.getImage(id + "_user");
+            Image image = imageService.getImage(filename);
             return ResponseEntity.ok().header("Content-Type", image.getMimetype()).body(resource);
 
         } catch (ItemNotFoundException e) {
             return ResponseEntity.ok(resource);
         }
-
     }
 
     @PostMapping("/{id}/pfp")
@@ -97,6 +98,8 @@ public class UserController {
             return ResponseEntity.ok().build();
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(e.getMessage());
+        } catch (InvalidMimeTypeException e) {
+            return ResponseEntity.badRequest().body(Map.of("pfp", "Invalid mime type"));
         }
     }
 

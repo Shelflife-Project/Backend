@@ -12,6 +12,7 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
+import org.springframework.util.InvalidMimeTypeException;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.shelflife.project.exception.ItemNotFoundException;
@@ -36,11 +37,14 @@ public class ImageService {
     }
 
     public void uploadImage(MultipartFile file, String filename)
-            throws IOException {
+            throws IOException, InvalidMimeTypeException {
 
         Path dirPath = Paths.get(uploadPath);
         Path path = Paths.get(uploadPath, filename);
         Image image;
+
+        if(!file.getContentType().startsWith("image/"))
+            throw new InvalidMimeTypeException(file.getContentType(), "Invalid type");
 
         if (!Files.exists(dirPath))
             Files.createDirectory(dirPath);
@@ -62,7 +66,6 @@ public class ImageService {
         ResourceLoader loader = new DefaultResourceLoader();
 
         Path path = Paths.get(uploadPath, filename);
-        System.out.println(path.toAbsolutePath().toString());
 
         if (!imageExists(filename))
             return loader.getResource(placeholderPath);

@@ -1,12 +1,16 @@
 package com.shelflife.project.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.shelflife.project.dto.ChangeUserDataRequest;
 import com.shelflife.project.exception.EmailExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.model.Image;
 import com.shelflife.project.model.User;
+import com.shelflife.project.service.ImageService;
 import com.shelflife.project.service.JwtService;
 import com.shelflife.project.service.UserService;
 
@@ -15,19 +19,23 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.InvalidMimeTypeException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping("/api/users")
@@ -38,6 +46,9 @@ public class UserController {
 
     @Autowired
     private UserService service;
+
+    @Autowired
+    private ImageService imageService;
 
     @GetMapping()
     public ResponseEntity<List<User>> getUsers(Authentication auth) {
@@ -58,6 +69,41 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/pfp")
+    public ResponseEntity<Resource> getPfp(@PathVariable long id) {
+        String filename = id + "_user";
+        Resource resource = imageService.loadImage(filename, "classpath:avatar-default.svg");
+
+        try {
+            Image image = imageService.getImage(filename);
+
+            if (!resource.getFilename().equals(filename))
+                throw new ItemNotFoundException("image", "Image file was not found");
+
+            return ResponseEntity.ok().header("Content-Type", image.getMimetype()).body(resource);
+
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.ok().header("Content-Type", "image/svg+xml").body(resource);
+        }
+    }
+
+    @PostMapping("/{id}/pfp")
+    public ResponseEntity<?> uploadPfp(@PathVariable long id, @RequestParam("pfp") MultipartFile file,
+            Authentication auth) {
+        try {
+            User user = service.getUserByAuth(auth);
+            if (user.getId() != id)
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+
+            imageService.uploadImage(file, user.getId() + "_user");
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        } catch (InvalidMimeTypeException e) {
+            return ResponseEntity.badRequest().body(Map.of("pfp", "Invalid mime type"));
         }
     }
 

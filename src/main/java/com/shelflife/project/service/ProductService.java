@@ -78,6 +78,18 @@ public class ProductService {
         return productRepository.findByBarcode(barcode).isPresent();
     }
 
+    public boolean canEditProduct(final long productId, Authentication auth) {
+        try {
+            User user = userService.getUserByAuth(auth);
+            Product p = getProductByID(productId);
+
+            return p.getOwnerId() == user.getId() || user.isAdmin();
+
+        } catch (ItemNotFoundException | AccessDeniedException e) {
+            return false;
+        }
+    }
+
     @Transactional
     public Product saveProduct(CreateProductRequest request, Authentication auth)
             throws AccessDeniedException, BarcodeExistsException, IllegalArgumentException {
@@ -127,12 +139,10 @@ public class ProductService {
     @Transactional
     public Product updateProduct(long productId, UpdateProductRequest request, Authentication auth)
             throws BarcodeExistsException, AccessDeniedException, IllegalArgumentException {
-        User currentUser = userService.getUserByAuth(auth);
-
-        Product productDB = getProductByID(productId);
-        if (currentUser.getId() != productDB.getOwnerId() && !currentUser.isAdmin())
+        if (!canEditProduct(productId, auth))
             throw new AccessDeniedException(null);
 
+        Product productDB = getProductByID(productId);
         if (request.getName() != null) {
             if (request.getName().isBlank())
                 throw new IllegalArgumentException("name");
@@ -151,7 +161,7 @@ public class ProductService {
             if (request.getBarcode().isBlank())
                 throw new IllegalArgumentException("barcode");
 
-            if(existsByBarcode(request.getBarcode()))
+            if (existsByBarcode(request.getBarcode()))
                 throw new BarcodeExistsException(request.getBarcode());
 
             productDB.setBarcode(request.getBarcode());

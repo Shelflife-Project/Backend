@@ -79,6 +79,10 @@ public class UserController {
 
         try {
             Image image = imageService.getImage(filename);
+
+            if (resource.getFilename().equals("avatar-default.svg"))
+                return ResponseEntity.ok(resource);
+
             return ResponseEntity.ok().header("Content-Type", image.getMimetype()).body(resource);
 
         } catch (ItemNotFoundException e) {

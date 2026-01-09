@@ -65,6 +65,10 @@ public class ProductController {
 
         try {
             Image image = imageService.getImage(filename);
+
+            if (resource.getFilename().equals("product-svgrepo-com.svg"))
+                return ResponseEntity.ok(resource);
+
             return ResponseEntity.ok().header("Content-Type", image.getMimetype()).body(resource);
 
         } catch (ItemNotFoundException e) {
@@ -73,7 +77,7 @@ public class ProductController {
     }
 
     @PostMapping("/{id}/icon")
-    public ResponseEntity<?> uploadPfp(@PathVariable long id, @RequestParam("pfp") MultipartFile file,
+    public ResponseEntity<?> uploadIcon(@PathVariable long id, @RequestParam("pfp") MultipartFile file,
             Authentication auth) {
         try {
             if (!productService.canEditProduct(id, auth))

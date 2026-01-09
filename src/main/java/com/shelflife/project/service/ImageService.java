@@ -25,7 +25,7 @@ public class ImageService {
     private ImageRepository imageRepository;
 
     @Value("${images.path}")
-    private String uploadPath;
+    private String uploadPath = "";
 
     public Image getImage(String filename) throws ItemNotFoundException {
         Optional<Image> image = imageRepository.findByFilename(filename);
@@ -43,7 +43,7 @@ public class ImageService {
         Path path = Paths.get(uploadPath, filename);
         Image image;
 
-        if(!file.getContentType().startsWith("image/"))
+        if (!file.getContentType().startsWith("image/"))
             throw new InvalidMimeTypeException(file.getContentType(), "Invalid type");
 
         if (!Files.exists(dirPath))
@@ -84,5 +84,8 @@ public class ImageService {
 
         Path path = Paths.get(uploadPath, filename);
         Files.delete(path);
+
+        Image image = getImage(filename);
+        imageRepository.delete(image);
     }
 }

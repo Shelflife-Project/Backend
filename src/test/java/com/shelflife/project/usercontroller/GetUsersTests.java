@@ -67,7 +67,7 @@ public class GetUsersTests {
                 .andExpect(jsonPath("$[0].id").exists())
                 .andExpect(jsonPath("$[0].email").value(testAdmin.getEmail()))
                 .andExpect(jsonPath("$[0].username").value(testAdmin.getUsername()))
-                .andExpect(jsonPath("$[0].isAdmin").value(true));
+                .andExpect(jsonPath("$[0].admin").value(true));
     }
 
     @Test

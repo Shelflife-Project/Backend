@@ -65,7 +65,7 @@ public class GetUserTests {
                 .andExpect(jsonPath("$.id").value(user.getId()))
                 .andExpect(jsonPath("$.email").value(user.getEmail()))
                 .andExpect(jsonPath("$.username").value(user.getUsername()))
-                .andExpect(jsonPath("$.isAdmin").value(user.isAdmin()));
+                .andExpect(jsonPath("$.admin").value(user.isAdmin()));
     }
 
     @Test
@@ -81,7 +81,7 @@ public class GetUserTests {
                 .andExpect(jsonPath("$.id").value(user.getId()))
                 .andExpect(jsonPath("$.email").value(user.getEmail()))
                 .andExpect(jsonPath("$.username").value(user.getUsername()))
-                .andExpect(jsonPath("$.isAdmin").value(user.isAdmin()));
+                .andExpect(jsonPath("$.admin").value(user.isAdmin()));
     }
 
     @Test

@@ -59,7 +59,7 @@ public class SignupTests {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("test1@test.test"))
                 .andExpect(jsonPath("$.username").value("test1"))
-                .andExpect(jsonPath("$.isAdmin").value("false"))
+                .andExpect(jsonPath("$.admin").value("false"))
                 .andExpect(jsonPath("$.id").isNumber());
 
         assertTrue(userRepository.existsByEmail("test1@test.test"));
@@ -237,7 +237,7 @@ public class SignupTests {
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$.username").value(testUser.getUsername()))
-                .andExpect(jsonPath("$.isAdmin").value(testUser.isAdmin()));
+                .andExpect(jsonPath("$.admin").value(testUser.isAdmin()));
 
         mockMvc.perform(post("/api/auth/signup")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.shelflife.project.dto.ChangeUserDataRequest;
 import com.shelflife.project.exception.EmailExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.model.Image;
 import com.shelflife.project.model.User;
 import com.shelflife.project.service.ImageService;
 import com.shelflife.project.service.JwtService;
@@ -71,8 +72,17 @@ public class UserController {
     }
 
     @GetMapping("/{id}/pfp")
-    public Resource getPfp(@PathVariable long id) {
-        return imageService.loadImage(id + "_user", "classpath:avatar-default.svg");
+    public ResponseEntity<?> getPfp(@PathVariable long id) {
+        Resource resource = imageService.loadImage(id + "_user", "classpath:avatar-default.svg");
+
+        try {
+            Image image = imageService.getImage(id + "_user");
+            return ResponseEntity.ok().header("Content-Type", image.getMimetype()).body(resource);
+
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.ok(resource);
+        }
+
     }
 
     @PostMapping("/{id}/pfp")

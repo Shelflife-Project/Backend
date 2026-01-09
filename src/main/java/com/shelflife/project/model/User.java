@@ -39,7 +39,6 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @JsonProperty("isAdmin")
     private boolean isAdmin;
 
     @JsonIgnore

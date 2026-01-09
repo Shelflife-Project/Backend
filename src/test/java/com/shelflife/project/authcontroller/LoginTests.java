@@ -63,7 +63,7 @@ public class LoginTests {
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$.username").value(testUser.getUsername()))
-                .andExpect(jsonPath("$.isAdmin").value(testUser.isAdmin()));
+                .andExpect(jsonPath("$.admin").value(testUser.isAdmin()));
     }
 
     @Test
@@ -123,7 +123,7 @@ public class LoginTests {
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
                 .andExpect(jsonPath("$.email").value(testUser.getEmail()))
                 .andExpect(jsonPath("$.username").value(testUser.getUsername()))
-                .andExpect(jsonPath("$.isAdmin").value(testUser.isAdmin()));
+                .andExpect(jsonPath("$.admin").value(testUser.isAdmin()));
 
         mockMvc.perform(post("/api/auth/login")
                 .cookie(jwtCookie)

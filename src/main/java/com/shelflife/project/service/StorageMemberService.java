@@ -39,6 +39,15 @@ public class StorageMemberService {
         return storage.get();
     }
 
+    public StorageMember getMember(final long id) throws ItemNotFoundException {
+        Optional<StorageMember> member = storageMemberRepository.findById(id);
+
+        if (!member.isPresent())
+            throw new ItemNotFoundException("id", "Member with this id was not found");
+
+        return member.get();
+    }
+
     public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
 
@@ -52,7 +61,30 @@ public class StorageMemberService {
     }
 
     @Transactional
-    public StorageMember addMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
+    public void acceptInvite(final long memberId, Authentication auth) throws ItemNotFoundException {
+        User current = userService.getUserByAuth(auth);
+        StorageMember member = getMember(memberId);
+
+        if (member.getUser().getId() != current.getId())
+            throw new AccessDeniedException("You cant accept other users invites!");
+
+        member.setAccepted(true);
+        storageMemberRepository.save(member);
+    }
+
+    @Transactional
+    public void declineInvite(final long memberId, Authentication auth) throws ItemNotFoundException {
+        User current = userService.getUserByAuth(auth);
+        StorageMember member = getMember(memberId);
+
+        if (member.getUser().getId() != current.getId())
+            throw new AccessDeniedException("You cant decline other users invites!");
+
+        storageMemberRepository.delete(member);
+    }
+
+    @Transactional
+    public StorageMember inviteMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
             throws ItemNotFoundException, MemberException, AccessDeniedException {
 
         Storage storage = getStorage(storageId);
@@ -69,6 +101,7 @@ public class StorageMemberService {
         StorageMember member = new StorageMember();
         member.setUser(target);
         member.setStorage(storage);
+        member.setAccepted(false);
 
         return storageMemberRepository.save(member);
     }

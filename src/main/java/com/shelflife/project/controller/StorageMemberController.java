@@ -44,7 +44,7 @@ public class StorageMemberController {
             Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageMemberService.addMemberToStorage(storageId, request.getEmail(), auth));
+                    .ok(storageMemberService.inviteMemberToStorage(storageId, request.getEmail(), auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {

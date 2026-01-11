@@ -60,6 +60,12 @@ public class StorageMemberService {
         return storageMemberRepository.findByStorageId(storageId);
     }
 
+    public List<StorageMember> getInvites(Authentication auth) throws AccessDeniedException {
+        User user = userService.getUserByAuth(auth);
+
+        return storageMemberRepository.findInvitesByUserId(user.getId());
+    }
+
     @Transactional
     public void acceptInvite(final long memberId, Authentication auth) throws ItemNotFoundException {
         User current = userService.getUserByAuth(auth);
@@ -140,7 +146,7 @@ public class StorageMemberService {
             if (storage.getOwner().getId() == userId)
                 return true;
 
-            return storageMemberRepository.existsByStorageIdAndUserId(storageId, userId);
+            return storageMemberRepository.isMember(storageId, userId);
         } catch (ItemNotFoundException e) {
             return false;
         }
@@ -157,7 +163,7 @@ public class StorageMemberService {
             if (storage.getOwner().getId() == user.getId())
                 return true;
 
-            return storageMemberRepository.existsByStorageIdAndUserId(storageId, user.getId());
+            return storageMemberRepository.isMember(storageId, user.getId());
         } catch (ItemNotFoundException e) {
             return false;
         } catch (AccessDeniedException e) {

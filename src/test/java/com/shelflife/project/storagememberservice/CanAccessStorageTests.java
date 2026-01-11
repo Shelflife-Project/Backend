@@ -63,7 +63,7 @@ public class CanAccessStorageTests {
         storage.setOwner(owner);
 
         when(userService.getUserById(1)).thenReturn(user);
-        when(storageMemberRepository.existsByStorageIdAndUserId(1, 1)).thenReturn(false);
+        when(storageMemberRepository.isMember(1, 1)).thenReturn(false);
         doReturn(storage).when(service).getStorage(1);
 
         assertFalse(service.canAccessStorage(1L, 1L));
@@ -96,11 +96,11 @@ public class CanAccessStorageTests {
         storage.setOwner(owner);
 
         when(userService.getUserById(1)).thenReturn(user);
-        when(storageMemberRepository.existsByStorageIdAndUserId(1L, 1L)).thenReturn(true);
+        when(storageMemberRepository.isMember(1L, 1L)).thenReturn(true);
         doReturn(storage).when(service).getStorage(1);
 
         assertTrue(service.canAccessStorage(1L, 1L));
-        verify(storageMemberRepository).existsByStorageIdAndUserId(1L, 1L);
+        verify(storageMemberRepository).isMember(1L, 1L);
     }
 
     @Test
@@ -144,7 +144,7 @@ public class CanAccessStorageTests {
         storage.setOwner(owner);
 
         doReturn(user).when(userService).getUserByAuth(auth);
-        when(storageMemberRepository.existsByStorageIdAndUserId(1, 1)).thenReturn(false);
+        when(storageMemberRepository.isMember(1, 1)).thenReturn(false);
         doReturn(storage).when(service).getStorage(1);
 
         assertFalse(service.canAccessStorage(1L, auth));
@@ -177,11 +177,11 @@ public class CanAccessStorageTests {
         storage.setOwner(owner);
 
         doReturn(user).when(userService).getUserByAuth(auth);
-        when(storageMemberRepository.existsByStorageIdAndUserId(1L, 1L)).thenReturn(true);
+        when(storageMemberRepository.isMember(1L, 1L)).thenReturn(true);
         doReturn(storage).when(service).getStorage(1);
 
         assertTrue(service.canAccessStorage(1L, auth));
-        verify(storageMemberRepository).existsByStorageIdAndUserId(1L, 1L);
+        verify(storageMemberRepository).isMember(1L, 1L);
     }
 
     @Test

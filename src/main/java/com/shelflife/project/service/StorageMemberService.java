@@ -67,7 +67,8 @@ public class StorageMemberService {
     }
 
     @Transactional
-    public void acceptInvite(final long memberId, Authentication auth) throws ItemNotFoundException {
+    public void acceptInvite(final long memberId, Authentication auth)
+            throws ItemNotFoundException, AccessDeniedException {
         User current = userService.getUserByAuth(auth);
         StorageMember member = getMember(memberId);
 
@@ -79,7 +80,8 @@ public class StorageMemberService {
     }
 
     @Transactional
-    public void declineInvite(final long memberId, Authentication auth) throws ItemNotFoundException {
+    public void declineInvite(final long memberId, Authentication auth)
+            throws ItemNotFoundException, AccessDeniedException {
         User current = userService.getUserByAuth(auth);
         StorageMember member = getMember(memberId);
 

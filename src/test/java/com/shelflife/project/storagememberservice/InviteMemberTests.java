@@ -30,7 +30,7 @@ import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
-public class AddMemberTests {
+public class InviteMemberTests {
     @Mock
     private UserService userService;
 

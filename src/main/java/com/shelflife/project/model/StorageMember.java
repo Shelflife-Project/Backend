@@ -26,4 +26,6 @@ public class StorageMember {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    private boolean isAccepted;
 }

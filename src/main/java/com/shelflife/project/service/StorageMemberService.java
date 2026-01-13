@@ -39,6 +39,15 @@ public class StorageMemberService {
         return storage.get();
     }
 
+    public StorageMember getMember(final long id) throws ItemNotFoundException {
+        Optional<StorageMember> member = storageMemberRepository.findById(id);
+
+        if (!member.isPresent())
+            throw new ItemNotFoundException("id", "Member with this id was not found");
+
+        return member.get();
+    }
+
     public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
 
@@ -51,8 +60,39 @@ public class StorageMemberService {
         return storageMemberRepository.findByStorageId(storageId);
     }
 
+    public List<StorageMember> getInvites(Authentication auth) throws AccessDeniedException {
+        User user = userService.getUserByAuth(auth);
+
+        return storageMemberRepository.findInvitesByUserId(user.getId());
+    }
+
     @Transactional
-    public StorageMember addMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
+    public void acceptInvite(final long memberId, Authentication auth)
+            throws ItemNotFoundException, AccessDeniedException {
+        User current = userService.getUserByAuth(auth);
+        StorageMember member = getMember(memberId);
+
+        if (member.getUser().getId() != current.getId())
+            throw new AccessDeniedException("You cant accept other users invites!");
+
+        member.setAccepted(true);
+        storageMemberRepository.save(member);
+    }
+
+    @Transactional
+    public void declineInvite(final long memberId, Authentication auth)
+            throws ItemNotFoundException, AccessDeniedException {
+        User current = userService.getUserByAuth(auth);
+        StorageMember member = getMember(memberId);
+
+        if (member.getUser().getId() != current.getId())
+            throw new AccessDeniedException("You cant decline other users invites!");
+
+        storageMemberRepository.delete(member);
+    }
+
+    @Transactional
+    public StorageMember inviteMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
             throws ItemNotFoundException, MemberException, AccessDeniedException {
 
         Storage storage = getStorage(storageId);
@@ -69,6 +109,7 @@ public class StorageMemberService {
         StorageMember member = new StorageMember();
         member.setUser(target);
         member.setStorage(storage);
+        member.setAccepted(false);
 
         return storageMemberRepository.save(member);
     }
@@ -107,7 +148,7 @@ public class StorageMemberService {
             if (storage.getOwner().getId() == userId)
                 return true;
 
-            return storageMemberRepository.existsByStorageIdAndUserId(storageId, userId);
+            return storageMemberRepository.isMember(storageId, userId);
         } catch (ItemNotFoundException e) {
             return false;
         }
@@ -124,7 +165,7 @@ public class StorageMemberService {
             if (storage.getOwner().getId() == user.getId())
                 return true;
 
-            return storageMemberRepository.existsByStorageIdAndUserId(storageId, user.getId());
+            return storageMemberRepository.isMember(storageId, user.getId());
         } catch (ItemNotFoundException e) {
             return false;
         } catch (AccessDeniedException e) {

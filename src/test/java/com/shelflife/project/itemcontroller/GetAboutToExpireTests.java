@@ -100,6 +100,7 @@ public class GetAboutToExpireTests {
         testMemberObj = new StorageMember();
         testMemberObj.setStorage(testUserStorage);
         testMemberObj.setUser(testMember);
+        testMemberObj.setAccepted(true);
         testMemberObj = storageMemberRepository.save(testMemberObj);
 
         testAdminStorage = new Storage();

@@ -1,4 +1,4 @@
-package com.shelflife.project.membercontroller;
+package com.shelflife.project.invitecontroller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,16 +19,16 @@ import com.shelflife.project.service.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetMembersTests {
+public class DeclineInviteTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -49,9 +49,8 @@ public class GetMembersTests {
     private User testMember;
 
     private Storage testUserStorage;
-    private Storage testAdminStorage;
 
-    private StorageMember testMemberObj;
+    private StorageMember testInvite;
 
     @BeforeEach
     void setup() {
@@ -81,63 +80,51 @@ public class GetMembersTests {
         testUserStorage.setName("userTest");
         testUserStorage = storageRepository.save(testUserStorage);
 
-        testMemberObj = new StorageMember();
-        testMemberObj.setStorage(testUserStorage);
-        testMemberObj.setUser(testMember);
-        testMemberObj.setAccepted(true);
-        testMemberObj = storageMemberRepository.save(testMemberObj);
-
-        testAdminStorage = new Storage();
-        testAdminStorage.setOwner(testAdmin);
-        testAdminStorage.setName("adminTest");
-        testAdminStorage = storageRepository.save(testAdminStorage);
+        testInvite = new StorageMember();
+        testInvite.setStorage(testUserStorage);
+        testInvite.setUser(testMember);
+        testInvite.setAccepted(false);
+        testInvite = storageMemberRepository.save(testInvite);
     }
 
     @Test
-    void successfulGetMembersAsOwner() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
-                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
-                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
-    }
-
-    @Test
-    void successfulGetMembersAsAdmin() throws Exception {
-        String jwt = jwtService.generateToken(testAdmin.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
-                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
-                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
-    }
-
-    @Test
-    void successfulGetMembersAsMember() throws Exception {
+    void successfulDecline() throws Exception {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
-                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
-                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
+        mockMvc.perform(delete("/api/storages/invites/" + testInvite.getId())
+                .cookie(jwtCookie));
+
+        assertFalse(storageMemberRepository.existsById(testInvite.getId()));
+    }
+
+    @Test
+    void accessDeniedAsNotYourInvite() throws Exception {
+        String jwt = jwtService.generateToken(testAdmin.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(delete("/api/storages/invites/" + testInvite.getId())
+                .cookie(jwtCookie));
+
+        assertTrue(storageMemberRepository.existsById(testInvite.getId()));
+    }
+
+    @Test
+    void itemNotFoundForInvalidId() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(delete("/api/storages/invites/" + testInvite.getId() + 1)
+                .cookie(jwtCookie));
+
+        assertTrue(storageMemberRepository.existsById(testInvite.getId()));
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members"))
+        mockMvc.perform(delete("/api/storages/invites/" + testInvite.getId()))
                 .andExpect(status().isForbidden());
+
+        assertTrue(storageMemberRepository.existsById(testInvite.getId()));
     }
 }

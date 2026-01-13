@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -27,11 +26,10 @@ public class User {
     @GeneratedValue
     private long id;
 
-    @JsonProperty("email")
+    @JsonIgnore
     @Column(unique = true, nullable = false)
     private String email;
 
-    @JsonProperty("username")
     @Column(nullable = false)
     private String username;
 

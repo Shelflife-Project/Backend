@@ -63,7 +63,7 @@ public class GetUserTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId()))
-                .andExpect(jsonPath("$.email").value(user.getEmail()))
+                .andExpect(jsonPath("$.email").doesNotExist())
                 .andExpect(jsonPath("$.username").value(user.getUsername()))
                 .andExpect(jsonPath("$.admin").value(user.isAdmin()));
     }
@@ -79,7 +79,7 @@ public class GetUserTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId()))
-                .andExpect(jsonPath("$.email").value(user.getEmail()))
+                .andExpect(jsonPath("$.email").doesNotExist())
                 .andExpect(jsonPath("$.username").value(user.getUsername()))
                 .andExpect(jsonPath("$.admin").value(user.isAdmin()));
     }

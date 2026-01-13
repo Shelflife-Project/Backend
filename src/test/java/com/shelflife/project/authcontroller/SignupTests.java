@@ -57,7 +57,7 @@ public class SignupTests {
                 .content(
                         "{\"email\":\"test1@test.test\", \"username\":\"test1\", \"password\":\"Test123\", \"passwordRepeat\":\"Test123\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("test1@test.test"))
+                .andExpect(jsonPath("$.email").doesNotExist())
                 .andExpect(jsonPath("$.username").value("test1"))
                 .andExpect(jsonPath("$.admin").value("false"))
                 .andExpect(jsonPath("$.id").isNumber());
@@ -235,7 +235,7 @@ public class SignupTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(testUser.getId()))
-                .andExpect(jsonPath("$.email").value(testUser.getEmail()))
+                .andExpect(jsonPath("$.email").doesNotExist())
                 .andExpect(jsonPath("$.username").value(testUser.getUsername()))
                 .andExpect(jsonPath("$.admin").value(testUser.isAdmin()));
 

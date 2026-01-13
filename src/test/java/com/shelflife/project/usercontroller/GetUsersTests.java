@@ -65,7 +65,7 @@ public class GetUsersTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").exists())
-                .andExpect(jsonPath("$[0].email").value(testAdmin.getEmail()))
+                .andExpect(jsonPath("$[0].email").doesNotExist())
                 .andExpect(jsonPath("$[0].username").value(testAdmin.getUsername()))
                 .andExpect(jsonPath("$[0].admin").value(true));
     }

@@ -9,6 +9,7 @@ import com.shelflife.project.dto.CreateProductRequest;
 import com.shelflife.project.dto.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.filter.ProductFilter;
 import com.shelflife.project.model.Image;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.service.ImageService;
@@ -45,8 +46,17 @@ public class ProductController {
     private ImageService imageService;
 
     @GetMapping()
-    public List<Product> getProducts() {
-        return productService.getAllProducts();
+    public List<Product> getProducts(
+            @RequestParam(required = false) String barcode,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String category) {
+
+        ProductFilter filter = new ProductFilter();
+        filter.setName(name);
+        filter.setCategory(category);
+        filter.setBarcode(barcode);
+
+        return productService.findProducts(filter);
     }
 
     @GetMapping("/{id}")
@@ -89,15 +99,6 @@ public class ProductController {
             return ResponseEntity.internalServerError().body(e.getMessage());
         } catch (InvalidMimeTypeException e) {
             return ResponseEntity.badRequest().body(Map.of("pfp", "Invalid mime type"));
-        }
-    }
-
-    @GetMapping("/barcode/{code}")
-    public ResponseEntity<?> getProductByBarcode(@PathVariable String code) {
-        try {
-            return ResponseEntity.ok(productService.getProductByBarcode(code));
-        } catch (ItemNotFoundException e) {
-            return ResponseEntity.notFound().build();
         }
     }
 

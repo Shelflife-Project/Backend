@@ -1,5 +1,6 @@
 package com.shelflife.project.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import com.shelflife.project.dto.CreateProductRequest;
 import com.shelflife.project.dto.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.filter.ProductFilter;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ProductRepository;
@@ -27,16 +29,28 @@ public class ProductService {
     @Autowired
     private UserService userService;
 
-    public List<Product> getAllProducts() {
+    public List<Product> findProducts(ProductFilter filter) {
+
+        if (filter.getBarcode() != null) {
+            List<Product> products = new ArrayList<>();
+            Optional<Product> p = productRepository.findByBarcode(filter.getBarcode());
+
+            if (p.isPresent())
+                products.add(p.get());
+
+            return products;
+        }
+
+        if (filter.getName() != null && filter.getCategory() != null)
+            return productRepository.findByNameAndCategory(filter.getName(), filter.getCategory());
+
+        if (filter.getName() != null)
+            return productRepository.findByName(filter.getName());
+
+        if (filter.getCategory() != null)
+            return productRepository.findByCategory(filter.getCategory());
+
         return productRepository.findAll();
-    }
-
-    public List<Product> getProductsByName(String name) {
-        return productRepository.findByName(name);
-    }
-
-    public List<Product> getProductsByCategory(String category) {
-        return productRepository.findByCategory(category);
     }
 
     public List<String> getCategories() {

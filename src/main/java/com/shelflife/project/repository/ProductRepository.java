@@ -17,6 +17,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByOwnerId(long ownerId);
     Optional<Product> findByBarcode(String barcode);
 
+    List<Product> findByNameAndCategory(String name, String category);
+
     @Query("select p.category from Product p")
     List<String> getCategories();
 }

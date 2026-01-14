@@ -1,6 +1,5 @@
 package com.shelflife.project.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,24 +30,24 @@ public class ProductService {
 
     public List<Product> findProducts(ProductFilter filter) {
 
-        if (filter.getBarcode() != null) {
-            List<Product> products = new ArrayList<>();
-            Optional<Product> p = productRepository.findByBarcode(filter.getBarcode());
-
-            if (p.isPresent())
-                products.add(p.get());
-
-            return products;
+        if (filter.getName() != null && filter.getCategory() != null && filter.getBarcode() != null) {
+            return productRepository
+                    .findByNameContainingIgnoreCaseAndCategoryContainingIgnoreCaseAndBarcodeContainingIgnoreCase(
+                            filter.getName(), filter.getCategory(), filter.getBarcode());
         }
 
         if (filter.getName() != null && filter.getCategory() != null)
-            return productRepository.findByNameAndCategory(filter.getName(), filter.getCategory());
+            return productRepository.findByNameContainingIgnoreCaseAndCategoryContainingIgnoreCase(filter.getName(),
+                    filter.getCategory());
 
         if (filter.getName() != null)
-            return productRepository.findByName(filter.getName());
+            return productRepository.findByNameContainingIgnoreCase(filter.getName());
 
         if (filter.getCategory() != null)
-            return productRepository.findByCategory(filter.getCategory());
+            return productRepository.findByCategoryContainingIgnoreCase(filter.getCategory());
+
+        if (filter.getBarcode() != null)
+            return productRepository.findByBarcodeContainingIgnoreCase(filter.getBarcode());
 
         return productRepository.findAll();
     }
@@ -66,30 +65,8 @@ public class ProductService {
         return product.get();
     }
 
-    public Product getProductByBarcode(final String barcode) throws ItemNotFoundException {
-        Optional<Product> product = productRepository.findByBarcode(barcode);
-
-        if (!product.isPresent())
-            throw new ItemNotFoundException("barcode", "Product with this barcode was not found");
-
-        return product.get();
-    }
-
-    public boolean existsByBarcode(final String barcode) {
-        try {
-            getProductByBarcode(barcode);
-            return true;
-        } catch (ItemNotFoundException e) {
-            return false;
-        }
-    }
-
     public boolean productExistsByID(final long id) {
         return productRepository.existsById(id);
-    }
-
-    public boolean productExistsByBarcode(final String barcode) {
-        return productRepository.findByBarcode(barcode).isPresent();
     }
 
     public boolean canEditProduct(final long productId, Authentication auth) {
@@ -115,7 +92,7 @@ public class ProductService {
 
         if (request.getBarcode() != null) {
             if (!request.getBarcode().isBlank()) {
-                if (existsByBarcode(request.getBarcode()))
+                if (productRepository.existsByBarcode(request.getBarcode()))
                     throw new BarcodeExistsException(request.getBarcode());
 
                 product.setBarcode(request.getBarcode());
@@ -175,7 +152,7 @@ public class ProductService {
             if (request.getBarcode().isBlank())
                 throw new IllegalArgumentException("barcode");
 
-            if (existsByBarcode(request.getBarcode()))
+            if (productRepository.existsByBarcode(request.getBarcode()))
                 throw new BarcodeExistsException(request.getBarcode());
 
             productDB.setBarcode(request.getBarcode());

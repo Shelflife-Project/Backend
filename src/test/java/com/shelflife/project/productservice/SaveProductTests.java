@@ -29,17 +29,17 @@ import com.shelflife.project.service.UserService;
 @ExtendWith(MockitoExtension.class)
 public class SaveProductTests {
     @Mock
-    ProductRepository repo;
+    private ProductRepository repo;
 
     @Mock
-    UserService userService;
+    private UserService userService;
 
     @Mock
-    Authentication auth;
+    private Authentication auth;
 
     @Spy
     @InjectMocks
-    ProductService productService;
+    private ProductService productService;
 
     @Test
     void successfulCreation() {
@@ -65,7 +65,7 @@ public class SaveProductTests {
     @Test
     void throwsBarcodeExists() {
         when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
-        when(productService.existsByBarcode(validRequest().getBarcode())).thenReturn(true);
+        when(repo.existsByBarcode(validRequest().getBarcode())).thenReturn(true);
 
         assertThrows(BarcodeExistsException.class, () -> {
             productService.saveProduct(validRequest(), auth);

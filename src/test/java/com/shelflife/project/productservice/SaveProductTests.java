@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
-import com.shelflife.project.dto.CreateProductRequest;
+import com.shelflife.project.dto.product.CreateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.User;

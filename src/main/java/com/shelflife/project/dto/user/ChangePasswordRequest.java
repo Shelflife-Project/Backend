@@ -1,4 +1,4 @@
-package com.shelflife.project.dto;
+package com.shelflife.project.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

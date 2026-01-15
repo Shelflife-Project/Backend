@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.shelflife.project.dto.AddItemRequest;
+import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.service.StorageItemService;
 

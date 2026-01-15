@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
-import com.shelflife.project.dto.CreateStorageRequest;
+import com.shelflife.project.dto.storage.CreateStorageRequest;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageRepository;

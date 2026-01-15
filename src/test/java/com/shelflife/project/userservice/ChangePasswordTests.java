@@ -20,7 +20,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.shelflife.project.dto.ChangePasswordRequest;
+import com.shelflife.project.dto.user.ChangePasswordRequest;
 import com.shelflife.project.exception.InvalidPasswordException;
 import com.shelflife.project.exception.PasswordsDontMatchException;
 import com.shelflife.project.model.User;

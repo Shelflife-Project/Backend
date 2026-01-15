@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.shelflife.project.dto.ChangeUserDataRequest;
+import com.shelflife.project.dto.user.ChangeUserDataRequest;
 import com.shelflife.project.exception.EmailExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Image;

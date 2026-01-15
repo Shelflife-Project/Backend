@@ -8,8 +8,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import com.shelflife.project.dto.CreateProductRequest;
-import com.shelflife.project.dto.UpdateProductRequest;
+import com.shelflife.project.dto.product.CreateProductRequest;
+import com.shelflife.project.dto.product.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.filter.ProductFilter;

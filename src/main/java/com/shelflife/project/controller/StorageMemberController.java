@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.shelflife.project.dto.InviteMemberRequest;
+import com.shelflife.project.dto.storage.InviteMemberRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.MemberException;
 import com.shelflife.project.service.StorageMemberService;

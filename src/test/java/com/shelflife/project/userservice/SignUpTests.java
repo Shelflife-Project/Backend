@@ -22,7 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.shelflife.project.dto.SignUpRequest;
+import com.shelflife.project.dto.user.SignUpRequest;
 import com.shelflife.project.exception.EmailExistsException;
 import com.shelflife.project.exception.PasswordsDontMatchException;
 import com.shelflife.project.model.User;

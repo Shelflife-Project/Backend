@@ -1,4 +1,4 @@
-package com.shelflife.project.dto;
+package com.shelflife.project.dto.storage;
 
 import org.hibernate.validator.constraints.Length;
 

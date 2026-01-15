@@ -12,6 +12,7 @@ import com.shelflife.project.dto.CreateProductRequest;
 import com.shelflife.project.dto.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.filter.ProductFilter;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ProductRepository;
@@ -27,16 +28,28 @@ public class ProductService {
     @Autowired
     private UserService userService;
 
-    public List<Product> getAllProducts() {
+    public List<Product> findProducts(ProductFilter filter) {
+
+        if (filter.getName() != null && filter.getCategory() != null && filter.getBarcode() != null) {
+            return productRepository
+                    .findByNameContainingIgnoreCaseAndCategoryContainingIgnoreCaseAndBarcodeContainingIgnoreCase(
+                            filter.getName(), filter.getCategory(), filter.getBarcode());
+        }
+
+        if (filter.getName() != null && filter.getCategory() != null)
+            return productRepository.findByNameContainingIgnoreCaseAndCategoryContainingIgnoreCase(filter.getName(),
+                    filter.getCategory());
+
+        if (filter.getName() != null)
+            return productRepository.findByNameContainingIgnoreCase(filter.getName());
+
+        if (filter.getCategory() != null)
+            return productRepository.findByCategoryContainingIgnoreCase(filter.getCategory());
+
+        if (filter.getBarcode() != null)
+            return productRepository.findByBarcodeContainingIgnoreCase(filter.getBarcode());
+
         return productRepository.findAll();
-    }
-
-    public List<Product> getProductsByName(String name) {
-        return productRepository.findByName(name);
-    }
-
-    public List<Product> getProductsByCategory(String category) {
-        return productRepository.findByCategory(category);
     }
 
     public List<String> getCategories() {
@@ -52,30 +65,8 @@ public class ProductService {
         return product.get();
     }
 
-    public Product getProductByBarcode(final String barcode) throws ItemNotFoundException {
-        Optional<Product> product = productRepository.findByBarcode(barcode);
-
-        if (!product.isPresent())
-            throw new ItemNotFoundException("barcode", "Product with this barcode was not found");
-
-        return product.get();
-    }
-
-    public boolean existsByBarcode(final String barcode) {
-        try {
-            getProductByBarcode(barcode);
-            return true;
-        } catch (ItemNotFoundException e) {
-            return false;
-        }
-    }
-
     public boolean productExistsByID(final long id) {
         return productRepository.existsById(id);
-    }
-
-    public boolean productExistsByBarcode(final String barcode) {
-        return productRepository.findByBarcode(barcode).isPresent();
     }
 
     public boolean canEditProduct(final long productId, Authentication auth) {
@@ -101,7 +92,7 @@ public class ProductService {
 
         if (request.getBarcode() != null) {
             if (!request.getBarcode().isBlank()) {
-                if (existsByBarcode(request.getBarcode()))
+                if (productRepository.existsByBarcode(request.getBarcode()))
                     throw new BarcodeExistsException(request.getBarcode());
 
                 product.setBarcode(request.getBarcode());
@@ -161,7 +152,7 @@ public class ProductService {
             if (request.getBarcode().isBlank())
                 throw new IllegalArgumentException("barcode");
 
-            if (existsByBarcode(request.getBarcode()))
+            if (productRepository.existsByBarcode(request.getBarcode()))
                 throw new BarcodeExistsException(request.getBarcode());
 
             productDB.setBarcode(request.getBarcode());

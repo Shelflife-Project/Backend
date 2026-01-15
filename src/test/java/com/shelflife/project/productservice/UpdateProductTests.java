@@ -31,17 +31,17 @@ import com.shelflife.project.service.UserService;
 @ExtendWith(MockitoExtension.class)
 public class UpdateProductTests {
     @Mock
-    ProductRepository repo;
+    private ProductRepository repo;
 
     @Mock
-    UserService userService;
+    private UserService userService;
 
     @Mock
-    Authentication auth;
+    private Authentication auth;
 
     @Spy
     @InjectMocks
-    ProductService productService;
+    private ProductService productService;
 
     @Test
     void throwsAccessDeniedWhenCantEdit() {
@@ -72,7 +72,7 @@ public class UpdateProductTests {
 
         when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
-        when(productService.existsByBarcode("12345")).thenReturn(true);
+        when(repo.existsByBarcode("12345")).thenReturn(true);
 
         assertThrows(BarcodeExistsException.class, () -> productService.updateProduct(1L, req, auth));
         verify(repo, never()).save(any());

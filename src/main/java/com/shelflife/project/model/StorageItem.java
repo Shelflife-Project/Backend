@@ -1,5 +1,6 @@
 package com.shelflife.project.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,7 +36,7 @@ public class StorageItem {
     private Product product;
 
     @Column(nullable = false)
-    private LocalDateTime expiresAt;
+    private LocalDate expiresAt;
 
     @CreationTimestamp
     @Column(nullable = false)

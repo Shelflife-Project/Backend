@@ -26,7 +26,7 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.*;
 
@@ -119,13 +119,13 @@ public class GetExpiredTests {
         testExpiredItem = new StorageItem();
         testExpiredItem.setProduct(testProduct);
         testExpiredItem.setStorage(testUserStorage);
-        testExpiredItem.setExpiresAt(LocalDateTime.now().minusDays(2));
+        testExpiredItem.setExpiresAt(LocalDate.now().minusDays(2));
         testExpiredItem = storageItemRepository.save(testExpiredItem);
 
         testItem = new StorageItem();
         testItem.setProduct(testProduct);
         testItem.setStorage(testUserStorage);
-        testItem.setExpiresAt(LocalDateTime.now());
+        testItem.setExpiresAt(LocalDate.now());
         testItem = storageItemRepository.save(testItem);
     }
 

@@ -11,6 +11,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
+import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.Storage;
@@ -65,7 +68,49 @@ public class AddItemTests {
         doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
         when(storageItemRepository.save(any(StorageItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        StorageItem result = storageItemService.addItemToStorage(1, 1, auth);
+        StorageItem result = storageItemService.addItemToStorage(1, validRequest(1), auth);
+
+        assertNotNull(result);
+        assertEquals(storage, result.getStorage());
+        assertEquals(product, result.getProduct());
+        assertNotNull(result.getExpiresAt());
+
+        verify(storageItemRepository).save(any(StorageItem.class));
+    }
+
+    @Test
+    void throwsIllegalArgumentForYesterday() {
+        Storage storage = new Storage();
+        storage.setId(1);
+
+        AddItemRequest request = validRequest(1);
+        request.setExpiresAt(LocalDate.now().minusDays(1));
+
+        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+
+        assertThrows(IllegalArgumentException.class, () -> storageItemService.addItemToStorage(1, request, auth));
+
+        verify(storageItemRepository, never()).save(any());
+    }
+
+    @Test
+    void successfulForToday() {
+        Storage storage = new Storage();
+        storage.setId(1);
+
+        Product product = new Product();
+        product.setId(1);
+        product.setExpirationDaysDelta(5);
+
+        doReturn(storage).when(storageItemService).getStorage(1);
+        doReturn(product).when(productService).getProductByID(1);
+        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        when(storageItemRepository.save(any(StorageItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AddItemRequest request = validRequest(1);
+        request.setExpiresAt(LocalDate.now());
+
+        StorageItem result = storageItemService.addItemToStorage(1, request, auth);
 
         assertNotNull(result);
         assertEquals(storage, result.getStorage());
@@ -79,7 +124,7 @@ public class AddItemTests {
     void throwsAccessDenied() {
         doReturn(false).when(storageMemberService).canAccessStorage(1, auth);
 
-        assertThrows(AccessDeniedException.class, () -> storageItemService.addItemToStorage(1, 1, auth));
+        assertThrows(AccessDeniedException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), auth));
 
         verify(storageItemRepository, never()).save(any());
         verify(productService, never()).getProductByID(anyLong());
@@ -90,7 +135,7 @@ public class AddItemTests {
         doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
 
         doThrow(ItemNotFoundException.class).when(storageItemService).getStorage(1);
-        assertThrows(ItemNotFoundException.class, () -> storageItemService.addItemToStorage(1, 1, auth));
+        assertThrows(ItemNotFoundException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), auth));
 
         verify(storageItemRepository, never()).save(any());
     }
@@ -104,9 +149,16 @@ public class AddItemTests {
         doReturn(storage).when(storageItemService).getStorage(1);
         doThrow(ItemNotFoundException.class).when(productService).getProductByID(1);
 
-        assertThrows(ItemNotFoundException.class, () -> storageItemService.addItemToStorage(1, 1, auth));
+        assertThrows(ItemNotFoundException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), auth));
 
         verify(storageItemRepository, never()).save(any());
     }
 
+    AddItemRequest validRequest(int productId) {
+        AddItemRequest request = new AddItemRequest();
+        request.setProductId(productId);
+        request.setExpiresAt(LocalDate.now().plusDays(2));
+
+        return request;
+    }
 }

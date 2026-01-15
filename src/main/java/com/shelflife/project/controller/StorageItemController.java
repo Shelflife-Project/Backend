@@ -43,11 +43,13 @@ public class StorageItemController {
             Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageItemService.addItemToStorage(storageId, request.getProductId(), auth));
+                    .ok(storageItemService.addItemToStorage(storageId, request, auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(e.getMessage(), "Invalid value"));
         }
     }
 

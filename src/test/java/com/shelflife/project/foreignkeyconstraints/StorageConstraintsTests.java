@@ -3,6 +3,7 @@ package com.shelflife.project.foreignkeyconstraints;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +76,7 @@ public class StorageConstraintsTests {
         storageItem = new StorageItem();
         storageItem.setStorage(storage);
         storageItem.setProduct(product);
-        storageItem.setExpiresAt(LocalDateTime.now().plusDays(1));
+        storageItem.setExpiresAt(LocalDate.now().plusDays(1));
         storageItem.setCreatedAt(LocalDateTime.now());
 
         member = new StorageMember();

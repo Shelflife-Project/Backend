@@ -77,7 +77,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/password")
+    @PostMapping("/password/change")
     public ResponseEntity<?> changePassword(Authentication auth, @Valid @RequestBody ChangePasswordRequest request) {
         try {
             userService.changePassword(request, auth);

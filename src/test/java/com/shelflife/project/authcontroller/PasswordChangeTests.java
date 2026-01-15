@@ -63,7 +63,7 @@ public class PasswordChangeTests {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(post("/api/auth/password")
+        mockMvc.perform(post("/api/auth/password/change")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -79,7 +79,7 @@ public class PasswordChangeTests {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(post("/api/auth/password")
+        mockMvc.perform(post("/api/auth/password/change")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -95,7 +95,7 @@ public class PasswordChangeTests {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(post("/api/auth/password")
+        mockMvc.perform(post("/api/auth/password/change")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(
@@ -112,7 +112,7 @@ public class PasswordChangeTests {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(post("/api/auth/password")
+        mockMvc.perform(post("/api/auth/password/change")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(

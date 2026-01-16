@@ -25,6 +25,8 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDate;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -150,6 +152,19 @@ public class AddItemTests {
     }
 
     @Test
+    void invalidDate() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/items")
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"productId\":" + testProduct.getId() + ", \"expiresAt\":\"" + LocalDate.now().minusDays(1) + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.expiresAt").exists());
+    }
+
+    @Test
     void accessDeniedAsAnonymous() throws Exception {
         mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -158,6 +173,6 @@ public class AddItemTests {
     }
 
     private String validJson(final long productId) {
-        return "{\"productId\":" + productId + "}";
+        return "{\"productId\":" + productId + ", \"expiresAt\":\"" + LocalDate.now().plusDays(2) + "\"}";
     }
 }

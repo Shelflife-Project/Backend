@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import com.shelflife.project.model.StorageItem;
 
 import java.util.List;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 
 @Repository
@@ -18,5 +18,5 @@ public interface StorageItemRepository extends JpaRepository<StorageItem, Long> 
     List<StorageItem> findExpired(long storageId);
 
     @Query("SELECT s FROM StorageItem s WHERE s.storage.id = :storageId AND s.expiresAt < :time")
-    List<StorageItem> findByExpiresAtBefore(long storageId, LocalDateTime time);
+    List<StorageItem> findByExpiresAtBefore(long storageId, LocalDate time);
 }

@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.shelflife.project.dto.CreateProductRequest;
-import com.shelflife.project.dto.UpdateProductRequest;
+import com.shelflife.project.dto.product.CreateProductRequest;
+import com.shelflife.project.dto.product.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.filter.ProductFilter;

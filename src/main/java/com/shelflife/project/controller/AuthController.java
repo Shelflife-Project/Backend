@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.shelflife.project.dto.ChangePasswordRequest;
-import com.shelflife.project.dto.LoginRequest;
-import com.shelflife.project.dto.SignUpRequest;
+import com.shelflife.project.dto.user.ChangePasswordRequest;
+import com.shelflife.project.dto.user.LoginRequest;
+import com.shelflife.project.dto.user.SignUpRequest;
 import com.shelflife.project.exception.EmailExistsException;
 import com.shelflife.project.exception.InvalidPasswordException;
 import com.shelflife.project.exception.PasswordsDontMatchException;

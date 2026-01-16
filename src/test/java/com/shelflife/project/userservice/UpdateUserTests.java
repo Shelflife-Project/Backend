@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
-import com.shelflife.project.dto.ChangeUserDataRequest;
+import com.shelflife.project.dto.user.ChangeUserDataRequest;
 import com.shelflife.project.exception.EmailExistsException;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.UserRepository;

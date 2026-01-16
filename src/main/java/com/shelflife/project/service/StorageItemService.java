@@ -1,6 +1,6 @@
 package com.shelflife.project.service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,6 +9,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import com.shelflife.project.dto.storage.AddItemRequest;
+import com.shelflife.project.dto.storage.EditItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.Storage;
@@ -76,7 +78,7 @@ public class StorageItemService {
     }
 
     public List<StorageItem> getItemsAboutToExpire(final long storageId) throws ItemNotFoundException {
-        LocalDateTime date = LocalDateTime.now().plusDays(1);
+        LocalDate date = LocalDate.now().plusDays(1);
         return storageItemRepository.findByExpiresAtBefore(storageId, date);
     }
 
@@ -90,21 +92,42 @@ public class StorageItemService {
     }
 
     @Transactional
-    public StorageItem addItemToStorage(final long storageId, final long productId, Authentication auth)
-            throws AccessDeniedException, ItemNotFoundException {
+    public StorageItem addItemToStorage(final long storageId, AddItemRequest request, Authentication auth)
+            throws AccessDeniedException, ItemNotFoundException, IllegalArgumentException {
 
         if (!storageMemberService.canAccessStorage(storageId, auth))
             throw new AccessDeniedException(null);
 
+        if (request.getExpiresAt().isBefore(LocalDate.now()))
+            throw new IllegalArgumentException("expiresAt");
+
         Storage storage = getStorage(storageId);
-        Product product = productService.getProductByID(productId);
+        Product product = productService.getProductByID(request.getProductId());
 
         StorageItem item = new StorageItem();
         item.setProduct(product);
         item.setStorage(storage);
-        item.setExpiresAt(LocalDateTime.now().plusDays(product.getExpirationDaysDelta()));
+        item.setExpiresAt(request.getExpiresAt());
 
         return storageItemRepository.save(item);
+    }
+
+    @Transactional
+    public StorageItem editItem(final long storageItemId, EditItemRequest request, Authentication auth)
+            throws AccessDeniedException, ItemNotFoundException, IllegalArgumentException {
+        Optional<StorageItem> item = storageItemRepository.findById(storageItemId);
+
+        if (!item.isPresent())
+            throw new ItemNotFoundException("id", "Storage item with this id was not found");
+
+        if (!storageMemberService.canAccessStorage(item.get().getStorage().getId(), auth))
+            throw new AccessDeniedException(null);
+
+        if (request.getExpiresAt().isBefore(LocalDate.now()))
+            throw new IllegalArgumentException("expiresAt");
+
+        item.get().setExpiresAt(request.getExpiresAt());
+        return storageItemRepository.save(item.get());
     }
 
     @Transactional

@@ -26,7 +26,7 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.*;
 
@@ -118,7 +118,7 @@ public class GetItemsTests {
         testItem = new StorageItem();
         testItem.setProduct(testProduct);
         testItem.setStorage(testUserStorage);
-        testItem.setExpiresAt(LocalDateTime.now().plusDays(2));
+        testItem.setExpiresAt(LocalDate.now().plusDays(2));
         testItem = storageItemRepository.save(testItem);
     }
 

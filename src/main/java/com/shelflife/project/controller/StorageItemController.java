@@ -9,13 +9,15 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.shelflife.project.dto.AddItemRequest;
+import com.shelflife.project.dto.storage.AddItemRequest;
+import com.shelflife.project.dto.storage.EditItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.service.StorageItemService;
 
@@ -43,11 +45,27 @@ public class StorageItemController {
             Authentication auth) {
         try {
             return ResponseEntity
-                    .ok(storageItemService.addItemToStorage(storageId, request.getProductId(), auth));
+                    .ok(storageItemService.addItemToStorage(storageId, request, auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(e.getMessage(), "Invalid value"));
+        }
+    }
+
+    @PatchMapping("/items/{itemId}")
+    public ResponseEntity<?> editItem(@PathVariable long itemId, @Valid @RequestBody EditItemRequest request,
+            Authentication auth) {
+        try {
+            return ResponseEntity.ok(storageItemService.editItem(itemId, request, auth));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of(e.getMessage(), "Illegal argument"));
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 

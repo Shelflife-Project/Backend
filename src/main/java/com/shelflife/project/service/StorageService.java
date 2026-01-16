@@ -8,8 +8,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import com.shelflife.project.dto.ChangeStorageNameRequest;
-import com.shelflife.project.dto.CreateStorageRequest;
+import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
+import com.shelflife.project.dto.storage.CreateStorageRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;

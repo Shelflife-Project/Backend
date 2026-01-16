@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,7 +73,7 @@ public class GetExpiredItemsTests {
         storageItem = new StorageItem();
         storageItem.setStorage(storage);
         storageItem.setProduct(product);
-        storageItem.setExpiresAt(LocalDateTime.now().plusDays(10));
+        storageItem.setExpiresAt(LocalDate.now().plusDays(10));
 
         storage.getItems().add(storageItem);
 
@@ -97,7 +97,7 @@ public class GetExpiredItemsTests {
         StorageItem item = new StorageItem();
         item.setStorage(storage);
         item.setProduct(product);
-        item.setExpiresAt(LocalDateTime.now().minusDays(1));
+        item.setExpiresAt(LocalDate.now().minusDays(1));
 
         storage.getItems().add(item);
         storageRepository.save(storage);
@@ -117,7 +117,7 @@ public class GetExpiredItemsTests {
         StorageItem item = new StorageItem();
         item.setStorage(storage);
         item.setProduct(product);
-        item.setExpiresAt(LocalDateTime.now());
+        item.setExpiresAt(LocalDate.now());
 
         storage.getItems().add(item);
         storageRepository.save(storage);

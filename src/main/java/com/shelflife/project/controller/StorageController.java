@@ -3,8 +3,8 @@ package com.shelflife.project.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.shelflife.project.dto.ChangeStorageNameRequest;
-import com.shelflife.project.dto.CreateStorageRequest;
+import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
+import com.shelflife.project.dto.storage.CreateStorageRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.service.StorageService;

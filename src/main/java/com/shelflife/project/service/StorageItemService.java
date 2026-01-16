@@ -115,13 +115,12 @@ public class StorageItemService {
     @Transactional
     public StorageItem editItem(final long storageItemId, EditItemRequest request, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException, IllegalArgumentException {
-        User current = userService.getUserByAuth(auth);
         Optional<StorageItem> item = storageItemRepository.findById(storageItemId);
 
         if (!item.isPresent())
             throw new ItemNotFoundException("id", "Storage item with this id was not found");
 
-        if (!storageMemberService.canAccessStorage(item.get().getStorage().getId(), current.getId()))
+        if (!storageMemberService.canAccessStorage(item.get().getStorage().getId(), auth))
             throw new AccessDeniedException(null);
 
         if (request.getExpiresAt().isBefore(LocalDate.now()))

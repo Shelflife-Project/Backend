@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.dto.storage.AddItemRequest;
+import com.shelflife.project.dto.storage.EditItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.Storage;
@@ -109,6 +110,25 @@ public class StorageItemService {
         item.setExpiresAt(request.getExpiresAt());
 
         return storageItemRepository.save(item);
+    }
+
+    @Transactional
+    public StorageItem editItem(final long storageItemId, EditItemRequest request, Authentication auth)
+            throws AccessDeniedException, ItemNotFoundException, IllegalArgumentException {
+        User current = userService.getUserByAuth(auth);
+        Optional<StorageItem> item = storageItemRepository.findById(storageItemId);
+
+        if (!item.isPresent())
+            throw new ItemNotFoundException("id", "Storage item with this id was not found");
+
+        if (!storageMemberService.canAccessStorage(item.get().getStorage().getId(), current.getId()))
+            throw new AccessDeniedException(null);
+
+        if (request.getExpiresAt().isBefore(LocalDate.now()))
+            throw new IllegalArgumentException("expiresAt");
+
+        item.get().setExpiresAt(request.getExpiresAt());
+        return storageItemRepository.save(item.get());
     }
 
     @Transactional

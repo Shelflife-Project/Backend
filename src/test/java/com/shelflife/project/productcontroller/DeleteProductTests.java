@@ -100,6 +100,7 @@ public class DeleteProductTests {
         Product p = new Product();
         p.setOwner(testAdmin);
         p.setName("test");
+        p.setCategory("testCategory");
         productRepository.save(p);
 
         mockMvc.perform(delete("/api/products/" + p.getId())

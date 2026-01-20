@@ -127,6 +127,7 @@ public class UpdateProductTests {
         Product p = new Product();
         p.setOwner(testAdmin);
         p.setName("test");
+        p.setCategory("testCategory");
         productRepository.save(p);
 
         mockMvc.perform(patch("/api/products/" + p.getId())

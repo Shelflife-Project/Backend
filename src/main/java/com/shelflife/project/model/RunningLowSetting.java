@@ -8,13 +8,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "running_low_settings")
+@Table(
+    name = "running_low_settings",
+    uniqueConstraints = @UniqueConstraint(columnNames = { "storage_id", "product_id" })
+)
 public class RunningLowSetting {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

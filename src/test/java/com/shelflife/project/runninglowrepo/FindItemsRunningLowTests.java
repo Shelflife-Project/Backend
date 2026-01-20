@@ -1,0 +1,153 @@
+package com.shelflife.project.runninglowrepo;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import com.shelflife.project.model.Product;
+import com.shelflife.project.model.RunningLowSetting;
+import com.shelflife.project.model.Storage;
+import com.shelflife.project.model.StorageItem;
+import com.shelflife.project.model.User;
+import com.shelflife.project.repository.ProductRepository;
+import com.shelflife.project.repository.RunningLowRepository;
+import com.shelflife.project.repository.StorageItemRepository;
+import com.shelflife.project.repository.StorageRepository;
+import com.shelflife.project.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
+
+@SpringBootTest
+@ActiveProfiles("test")
+@Transactional
+public class FindItemsRunningLowTests {
+    @Autowired
+    private RunningLowRepository rlRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private StorageRepository storageRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private StorageItemRepository siRepository;
+
+    User user;
+    Product product;
+    Storage storage;
+    StorageItem item;
+    RunningLowSetting setting;
+
+    @BeforeEach
+    void setup() {
+        user = new User();
+        user.setEmail("test@test.test");
+        user.setUsername("test");
+        user.setAdmin(false);
+        user.setPassword("12345");
+        userRepository.save(user);
+
+        product = new Product();
+        product.setName("test");
+        product.setCategory("test");
+        product.setOwner(user);
+        product.setExpirationDaysDelta(100);
+        productRepository.save(product);
+
+        storage = new Storage();
+        storage.setName("test");
+        storage.setOwner(user);
+        storageRepository.save(storage);
+
+        item = new StorageItem();
+        item.setExpiresAt(LocalDate.now().plusDays(100));
+        item.setProduct(product);
+        item.setStorage(storage);
+        siRepository.save(item);
+
+        setting = new RunningLowSetting();
+        setting.setProduct(product);
+        setting.setStorage(storage);
+        setting.setRunningLow(1);
+        rlRepository.save(setting);
+    }
+
+    @Test
+    void returnsProductForRunningLow() {
+        List<Product> products = rlRepository.findItemsRunningLow(storage.getId());
+
+        assertEquals(1, products.size());
+        assertEquals(products.get(0).getId(), product.getId());
+    }
+
+    @Test
+    void returnsNothingForRunningLow() {
+        StorageItem extraItem = new StorageItem();
+        extraItem.setExpiresAt(LocalDate.now().plusDays(100));
+        extraItem.setProduct(product);
+        extraItem.setStorage(storage);
+        siRepository.save(extraItem);
+
+        List<Product> products = rlRepository.findItemsRunningLow(storage.getId());
+
+        assertEquals(0, products.size());
+    }
+
+    @Test
+    void returnsMultipleProductsForRunningLow() {
+        Product extraProduct = new Product();
+        extraProduct.setName("other");
+        extraProduct.setCategory("other");
+        extraProduct.setOwner(user);
+        productRepository.save(extraProduct);
+
+        RunningLowSetting extraSetting = new RunningLowSetting();
+        extraSetting.setProduct(extraProduct);
+        extraSetting.setStorage(storage);
+        extraSetting.setRunningLow(1);
+        rlRepository.save(extraSetting);
+
+        StorageItem extraItem = new StorageItem();
+        extraItem.setExpiresAt(LocalDate.now().plusDays(100));
+        extraItem.setProduct(extraProduct);
+        extraItem.setStorage(storage);
+        siRepository.save(extraItem);
+
+        List<Product> products = rlRepository.findItemsRunningLow(storage.getId());
+
+        assertEquals(2, products.size());
+        assertEquals(products.get(0).getId(), product.getId());
+        assertEquals(products.get(1).getId(), extraProduct.getId());
+    }
+
+    @Test
+    void returnsOneProduct_ForRunningLow_WithoutOtherSetting() {
+        Product extraProduct = new Product();
+        extraProduct.setName("other");
+        extraProduct.setCategory("other");
+        extraProduct.setOwner(user);
+        productRepository.save(extraProduct);
+
+        StorageItem extraItem = new StorageItem();
+        extraItem.setExpiresAt(LocalDate.now().plusDays(100));
+        extraItem.setProduct(extraProduct);
+        extraItem.setStorage(storage);
+        siRepository.save(extraItem);
+
+        List<Product> products = rlRepository.findItemsRunningLow(storage.getId());
+
+        assertEquals(1, products.size());
+        assertEquals(products.get(0).getId(), product.getId());
+    }
+}

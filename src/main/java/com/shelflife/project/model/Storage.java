@@ -10,6 +10,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -24,7 +25,7 @@ import lombok.Setter;
 @Table(name = "storages")
 public class Storage {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @ManyToOne(optional = false)
@@ -41,4 +42,8 @@ public class Storage {
     @JsonIgnore
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "storage", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StorageMember> members = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "storage", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RunningLowSetting> runningLowSettings = new ArrayList<>();
 }

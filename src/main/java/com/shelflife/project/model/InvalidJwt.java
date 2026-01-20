@@ -19,7 +19,7 @@ import lombok.Setter;
 public class InvalidJwt {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     private String token;

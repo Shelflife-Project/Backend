@@ -62,7 +62,6 @@ public class DeleteProductTests {
         testProduct = new Product();
         testProduct.setName("Chips");
         testProduct.setOwner(testUser);
-        testProduct.setRunningLow(2);
         testProduct.setExpirationDaysDelta(200);
         testProduct.setCategory("Snack");
         testProduct.setBarcode("12345");

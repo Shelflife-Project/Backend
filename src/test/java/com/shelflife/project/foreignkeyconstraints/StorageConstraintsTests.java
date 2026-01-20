@@ -70,7 +70,6 @@ public class StorageConstraintsTests {
         product.setBarcode("12345");
         product.setCategory("test");
         product.setName("test");
-        product.setRunningLow(1);
         product.setExpirationDaysDelta(1);
 
         storageItem = new StorageItem();

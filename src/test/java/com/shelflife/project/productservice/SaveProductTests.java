@@ -131,34 +131,6 @@ public class SaveProductTests {
     }
 
     @Test
-    void throwsIllegalArgumentForZeroRunningLow() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
-
-        CreateProductRequest request = validRequest();
-        request.setRunningLow(0);
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            productService.saveProduct(request, auth);
-        });
-
-        verify(repo, never()).save(any());
-    }
-
-    @Test
-    void throwsIllegalArgumentForNegativeRunningLow() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
-
-        CreateProductRequest request = validRequest();
-        request.setRunningLow(-5);
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            productService.saveProduct(request, auth);
-        });
-
-        verify(repo, never()).save(any());
-    }
-
-    @Test
     void throwsIllegalArgumentForZeroExpiration() {
         when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
 
@@ -189,7 +161,6 @@ public class SaveProductTests {
     private CreateProductRequest validRequest() {
         CreateProductRequest req = new CreateProductRequest();
         req.setName("ProductName");
-        req.setRunningLow(5);
         req.setExpirationDaysDelta(365);
         req.setCategory("Canned soup");
         req.setBarcode("12346");

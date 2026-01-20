@@ -36,9 +36,6 @@ public class Product {
     @Column(nullable = false)
     private int expirationDaysDelta;
 
-    @Column(nullable = false)
-    private int runningLow;
-
     @Column(unique = true, nullable = true)
     private String barcode;
 

@@ -16,7 +16,7 @@ public interface RunningLowRepository extends JpaRepository<RunningLowSetting, L
 
     List<RunningLowSetting> findByProductId(long productId);
 
-    Optional<RunningLowSetting> findbyProductIdAndStorageId(long productId, long storageId);
+    Optional<RunningLowSetting> findByProductIdAndStorageId(long productId, long storageId);
 
     boolean existsByProductIdAndStorageId(long productId, long storageId);
 

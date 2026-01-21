@@ -75,6 +75,7 @@ public class CreateSettingTests {
         CreateSettingRequest request = new CreateSettingRequest(1, 10);
 
         doThrow(ItemNotFoundException.class).when(storageService).getStorage(1);
+        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
         assertThrows(ItemNotFoundException.class, () -> service.createSetting(1, request, auth));
     }
 
@@ -84,6 +85,7 @@ public class CreateSettingTests {
         Storage storage = new Storage();
 
         doReturn(storage).when(storageService).getStorage(1);
+        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
         doThrow(ItemNotFoundException.class).when(productService).getProductByID(1);
 
         assertThrows(ItemNotFoundException.class, () -> service.createSetting(1, request, auth));

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.shelflife.project.dto.runninglow.CreateSettingRequest;
 import com.shelflife.project.dto.runninglow.EditSettingRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.exception.RunningLowExistsException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.model.Storage;
@@ -27,9 +28,12 @@ public class RunningLowService {
     private StorageMemberService storageMemberService;
 
     @Autowired
+    private StorageService storageService;
+
+    @Autowired
     private ProductService productService;
 
-    RunningLowSetting getSetting(final long settingId) throws ItemNotFoundException {
+    public RunningLowSetting getSetting(final long settingId) throws ItemNotFoundException {
         Optional<RunningLowSetting> setting = repository.findById(settingId);
 
         if (!setting.isPresent())
@@ -38,7 +42,7 @@ public class RunningLowService {
         return setting.get();
     }
 
-    List<RunningLowSetting> getSettingsForStorage(final long storageId, Authentication auth)
+    public List<RunningLowSetting> getSettingsForStorage(final long storageId, Authentication auth)
             throws AccessDeniedException {
         if (!storageMemberService.canAccessStorage(storageId, auth))
             throw new AccessDeniedException("You can't access this storage");
@@ -46,7 +50,7 @@ public class RunningLowService {
         return repository.findByStorageId(storageId);
     }
 
-    List<Product> getRunningLowInStorage(final long storageId, Authentication auth)
+    public List<Product> getRunningLowInStorage(final long storageId, Authentication auth)
             throws AccessDeniedException {
         if (!storageMemberService.canAccessStorage(storageId, auth))
             throw new AccessDeniedException("You can't access this storage");
@@ -55,23 +59,30 @@ public class RunningLowService {
     }
 
     @Transactional
-    RunningLowSetting createSetting(final long storageId, CreateSettingRequest request, Authentication auth)
-            throws AccessDeniedException, ItemNotFoundException {
-        Storage storage = storageMemberService.getStorage(storageId);
-        Product product = productService.getProductByID(request.getProductId());
-
+    public RunningLowSetting createSetting(final long storageId, CreateSettingRequest request, Authentication auth)
+            throws AccessDeniedException, ItemNotFoundException, RunningLowExistsException {
         if (!storageMemberService.canAccessStorage(storageId, auth))
             throw new AccessDeniedException("You can't access this storage");
+
+        Storage storage = storageService.getStorage(storageId);
+        Product product = productService.getProductByID(request.getProductId());
+
+        if (repository.existsByProductIdAndStorageId(product.getId(), storage.getId()))
+            throw new RunningLowExistsException("A setting with this product already exists");
+
+        if (request.getRunningLow() < 0)
+            throw new IllegalArgumentException("runningLow");
 
         RunningLowSetting setting = new RunningLowSetting();
         setting.setStorage(storage);
         setting.setProduct(product);
+        setting.setRunningLow(request.getRunningLow());
 
         return repository.save(setting);
     }
 
     @Transactional
-    RunningLowSetting editSetting(final long settingId, EditSettingRequest request, Authentication auth)
+    public RunningLowSetting editSetting(final long settingId, EditSettingRequest request, Authentication auth)
             throws AccessDeniedException, IllegalArgumentException {
         RunningLowSetting setting = getSetting(settingId);
 
@@ -86,7 +97,7 @@ public class RunningLowService {
     }
 
     @Transactional
-    void deleteSetting(final long settingId, Authentication auth)
+    public void deleteSetting(final long settingId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
         RunningLowSetting setting = getSetting(settingId);
 

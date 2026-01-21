@@ -8,12 +8,17 @@ import com.shelflife.project.model.Product;
 import com.shelflife.project.model.RunningLowSetting;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RunningLowRepository extends JpaRepository<RunningLowSetting, Long> {
     List<RunningLowSetting> findByStorageId(long storageId);
 
     List<RunningLowSetting> findByProductId(long productId);
+
+    Optional<RunningLowSetting> findbyProductIdAndStorageId(long productId, long storageId);
+
+    boolean existsByProductIdAndStorageId(long productId, long storageId);
 
     @Query(value = """
             SELECT p FROM StorageItem si

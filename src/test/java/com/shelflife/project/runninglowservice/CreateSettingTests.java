@@ -48,7 +48,7 @@ public class CreateSettingTests {
     private Authentication auth;
 
     @Test
-    void successfulCreate() {
+    void successfulCreate_withTen() {
         CreateSettingRequest request = new CreateSettingRequest(1, 10);
         Product product = new Product();
         product.setId(1);
@@ -68,6 +68,29 @@ public class CreateSettingTests {
         assertEquals(1, setting.getStorage().getId());
         assertEquals(1, setting.getProduct().getId());
         assertEquals(10, setting.getRunningLow());
+    }
+
+    @Test
+    void successfulCreate_withZero() {
+        CreateSettingRequest request = new CreateSettingRequest(1, 0);
+        Product product = new Product();
+        product.setId(1);
+
+        Storage storage = new Storage();
+        storage.setId(1);
+
+        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(product).when(productService).getProductByID(1);
+        doReturn(false).when(repository).existsByProductIdAndStorageId(1, 1);
+        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        when(repository.save(any(RunningLowSetting.class))).thenAnswer(answer -> answer.getArgument(0));
+
+        RunningLowSetting setting = service.createSetting(1, request, auth);
+
+        assertNotNull(setting);
+        assertEquals(1, setting.getStorage().getId());
+        assertEquals(1, setting.getProduct().getId());
+        assertEquals(0, setting.getRunningLow());
     }
 
     @Test

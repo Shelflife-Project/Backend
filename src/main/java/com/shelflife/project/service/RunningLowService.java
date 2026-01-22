@@ -83,7 +83,7 @@ public class RunningLowService {
 
     @Transactional
     public RunningLowSetting editSetting(final long settingId, EditSettingRequest request, Authentication auth)
-            throws AccessDeniedException, IllegalArgumentException {
+            throws AccessDeniedException, IllegalArgumentException, ItemNotFoundException {
         RunningLowSetting setting = getSetting(settingId);
 
         if (!storageMemberService.canAccessStorage(setting.getStorage().getId(), auth))

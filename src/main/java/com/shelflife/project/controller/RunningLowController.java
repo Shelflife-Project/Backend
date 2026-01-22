@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
-@RequestMapping("/api/storages/{storageId}/runningLowSettings")
+@RequestMapping("/api/storages/{storageId}/runninglowsettings")
 public class RunningLowController {
     @Autowired
     private RunningLowService runningLowService;

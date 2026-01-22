@@ -125,7 +125,7 @@ public class ProductService {
 
     @Transactional
     public Product updateProduct(long productId, UpdateProductRequest request, Authentication auth)
-            throws BarcodeExistsException, AccessDeniedException, IllegalArgumentException {
+            throws BarcodeExistsException, AccessDeniedException, IllegalArgumentException, ItemNotFoundException {
         if (!canEditProduct(productId, auth))
             throw new AccessDeniedException(null);
 

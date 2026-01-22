@@ -68,7 +68,7 @@ public class RunningLowService {
         Product product = productService.getProductByID(request.getProductId());
 
         if (repository.existsByProductIdAndStorageId(product.getId(), storage.getId()))
-            throw new RunningLowExistsException("A setting with this product already exists");
+            throw new RunningLowExistsException();
 
         if (request.getRunningLow() < 0)
             throw new IllegalArgumentException("runningLow");

@@ -138,6 +138,8 @@ public class ProductController {
             return ResponseEntity.badRequest().body(Map.of("barcode", "This barcode already exists"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(e.getMessage(), "Invalid value"));
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getMessage(), "Invalid value"));
         }
     }
 }

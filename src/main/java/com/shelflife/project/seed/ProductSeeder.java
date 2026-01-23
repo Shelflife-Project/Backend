@@ -21,7 +21,6 @@ public class ProductSeeder implements Seeder {
         userProduct.setCategory("Baked good");
         userProduct.setBarcode("1234");
         userProduct.setExpirationDaysDelta(5);
-        userProduct.setRunningLow(1);
         userProduct.setOwner(userRepository.findByEmail("test@test.test").get());
 
         repository.save(userProduct);
@@ -31,7 +30,6 @@ public class ProductSeeder implements Seeder {
         adminProduct.setCategory("Dairy");
         adminProduct.setBarcode("4567");
         adminProduct.setExpirationDaysDelta(90);
-        adminProduct.setRunningLow(2);
         adminProduct.setOwner(userRepository.findByEmail("admin@test.test").get());
 
         repository.save(adminProduct);

@@ -22,6 +22,9 @@ public class SeedRunner implements ApplicationRunner {
     @Autowired
     private StorageItemSeeder storageItemSeeder;
 
+    @Autowired
+    private RunningLowSeeder runningLowSeeder;
+
     private static final Logger log = LoggerFactory.getLogger(SeedRunner.class);
 
     @Override
@@ -40,5 +43,8 @@ public class SeedRunner implements ApplicationRunner {
 
         storageItemSeeder.seed();
         log.info("Storage items successfully seeded");
+
+        runningLowSeeder.seed();
+        log.info("Running low successfully seeded");
     }
 }

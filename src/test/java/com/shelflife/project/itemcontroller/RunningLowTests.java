@@ -136,7 +136,7 @@ public class RunningLowTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testItem.getId()));
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
     }
 
     @Test
@@ -148,7 +148,7 @@ public class RunningLowTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testItem.getId()));
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
     }
 
     @Test
@@ -160,7 +160,7 @@ public class RunningLowTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testItem.getId()));
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
     }
 
     @Test

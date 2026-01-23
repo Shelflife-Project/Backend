@@ -49,3 +49,6 @@ Functionality:
         - StorageID – linked to Storages
         - ProductID – linked to products
         - CreatedAt – Date
+
+To run the seeders, run this command:
+`mvn clean spring-boot:run -D spring-boot.run.arguments=--seed`

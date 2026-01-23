@@ -118,10 +118,6 @@ public class ProductService {
         if (request.getExpirationDaysDelta() < 1)
             throw new IllegalArgumentException("expirationDaysDelta");
 
-        if (request.getRunningLow() < 1)
-            throw new IllegalArgumentException("runningLow");
-
-        product.setRunningLow(request.getRunningLow());
         product.setExpirationDaysDelta(request.getExpirationDaysDelta());
 
         return productRepository.save(product);
@@ -129,7 +125,7 @@ public class ProductService {
 
     @Transactional
     public Product updateProduct(long productId, UpdateProductRequest request, Authentication auth)
-            throws BarcodeExistsException, AccessDeniedException, IllegalArgumentException {
+            throws BarcodeExistsException, AccessDeniedException, IllegalArgumentException, ItemNotFoundException {
         if (!canEditProduct(productId, auth))
             throw new AccessDeniedException(null);
 
@@ -163,13 +159,6 @@ public class ProductService {
                 throw new IllegalArgumentException("expirationDaysDelta");
 
             productDB.setExpirationDaysDelta(request.getExpirationDaysDelta());
-        }
-
-        if (request.getRunningLow() != null) {
-            if (request.getRunningLow() < 1)
-                throw new IllegalArgumentException("runningLow");
-
-            productDB.setRunningLow(request.getRunningLow());
         }
 
         return productRepository.save(productDB);

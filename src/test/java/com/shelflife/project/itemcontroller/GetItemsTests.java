@@ -111,7 +111,6 @@ public class GetItemsTests {
         testProduct.setName("test");
         testProduct.setOwner(testAdmin);
         testProduct.setCategory("cat");
-        testProduct.setRunningLow(2);
         testProduct.setExpirationDaysDelta(2);
         testProduct = productRepository.save(testProduct);
 

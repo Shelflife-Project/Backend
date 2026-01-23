@@ -1,4 +1,4 @@
-package com.shelflife.project.itemcontroller;
+package com.shelflife.project.runninglowcontroller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,12 +10,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.shelflife.project.model.Product;
+import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.model.Storage;
-import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.StorageMember;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ProductRepository;
-import com.shelflife.project.repository.StorageItemRepository;
+import com.shelflife.project.repository.RunningLowRepository;
 import com.shelflife.project.repository.StorageMemberRepository;
 import com.shelflife.project.repository.StorageRepository;
 import com.shelflife.project.repository.UserRepository;
@@ -27,13 +27,11 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.time.LocalDate;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class EditItemTests {
+public class EditSettingsTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -50,7 +48,7 @@ public class EditItemTests {
     private StorageMemberRepository storageMemberRepository;
 
     @Autowired
-    private StorageItemRepository storageItemRepository;
+    private RunningLowRepository runningLowRepository;
 
     @Autowired
     private ProductRepository productRepository;
@@ -60,12 +58,11 @@ public class EditItemTests {
     private User testMember;
 
     private Storage testUserStorage;
-    private Storage testAdminStorage;
 
     private StorageMember testMemberObj;
 
     private Product testProduct;
-    private StorageItem testItem;
+    private RunningLowSetting testSetting;
 
     @BeforeEach
     void setup() {
@@ -101,11 +98,6 @@ public class EditItemTests {
         testMemberObj.setAccepted(true);
         testMemberObj = storageMemberRepository.save(testMemberObj);
 
-        testAdminStorage = new Storage();
-        testAdminStorage.setOwner(testAdmin);
-        testAdminStorage.setName("adminTest");
-        testAdminStorage = storageRepository.save(testAdminStorage);
-
         testProduct = new Product();
         testProduct.setName("test");
         testProduct.setOwner(testAdmin);
@@ -113,11 +105,11 @@ public class EditItemTests {
         testProduct.setExpirationDaysDelta(2);
         testProduct = productRepository.save(testProduct);
 
-        testItem = new StorageItem();
-        testItem.setProduct(testProduct);
-        testItem.setStorage(testUserStorage);
-        testItem.setExpiresAt(LocalDate.now().plusDays(2));
-        testItem = storageItemRepository.save(testItem);
+        testSetting = new RunningLowSetting();
+        testSetting.setProduct(testProduct);
+        testSetting.setRunningLow(10);
+        testSetting.setStorage(testUserStorage);
+        testSetting = runningLowRepository.save(testSetting);
     }
 
     @Test
@@ -125,11 +117,13 @@ public class EditItemTests {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+        mockMvc.perform(put("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId())
+                .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now()))
-                .cookie(jwtCookie))
-                .andExpect(status().isOk());
+                .content(validJson(5)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(testSetting.getId()))
+                .andExpect(jsonPath("$.runningLow").value(5));
     }
 
     @Test
@@ -137,11 +131,13 @@ public class EditItemTests {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+        mockMvc.perform(put("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId())
+                .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now()))
-                .cookie(jwtCookie))
-                .andExpect(status().isOk());
+                .content(validJson(5)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(testSetting.getId()))
+                .andExpect(jsonPath("$.runningLow").value(5));
     }
 
     @Test
@@ -149,45 +145,47 @@ public class EditItemTests {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+        mockMvc.perform(put("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId())
+                .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now()))
-                .cookie(jwtCookie))
-                .andExpect(status().isOk());
+                .content(validJson(5)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(testSetting.getId()))
+                .andExpect(jsonPath("$.runningLow").value(5));
     }
 
     @Test
-    void illegalArgumentForDate() throws Exception {
+    void invalidRunningLow() throws Exception {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+        mockMvc.perform(put("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId())
+                .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now().minusDays(1)))
-                .cookie(jwtCookie))
+                .content(validJson(-5)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.expiresAt").exists());
+                .andExpect(jsonPath("$.runningLow").exists());
     }
 
     @Test
-    void itemNotFound() throws Exception {
+    void doesntExists() throws Exception {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId() + 10)
+        mockMvc.perform(put("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId() + 10)
+                .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now()))
-                .cookie(jwtCookie))
+                .content(validJson(5)))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId()))
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglowsettings"))
                 .andExpect(status().isForbidden());
     }
 
-    private String validJson(final long productId, LocalDate date) {
-        return "{\"expiresAt\":\"" + date + "\"}";
+    private String validJson(final long runningLow) {
+        return "{\"runningLow\":" + runningLow + "}";
     }
 }

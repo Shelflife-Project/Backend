@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class AddItemRequest {
-    @Min(value = 0, message = "Product ID must be larger than 0")
+    @Min(value = 1, message = "Product ID must be larger than 0")
     private long productId;
 
     @NotNull

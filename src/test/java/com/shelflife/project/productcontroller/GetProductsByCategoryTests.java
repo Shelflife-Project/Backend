@@ -55,7 +55,6 @@ public class GetProductsByCategoryTests {
         testProduct = new Product();
         testProduct.setName("Chips");
         testProduct.setOwner(testUser);
-        testProduct.setRunningLow(2);
         testProduct.setExpirationDaysDelta(200);
         testProduct.setCategory("Extra");
         testProduct.setBarcode("12345");
@@ -64,7 +63,6 @@ public class GetProductsByCategoryTests {
         otherTestProduct = new Product();
         otherTestProduct.setName("Milk");
         otherTestProduct.setOwner(testUser);
-        otherTestProduct.setRunningLow(2);
         otherTestProduct.setExpirationDaysDelta(20);
         otherTestProduct.setCategory("Dairy");
         otherTestProduct.setBarcode("6789");

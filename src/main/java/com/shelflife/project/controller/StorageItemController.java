@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.dto.storage.EditItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.service.RunningLowService;
 import com.shelflife.project.service.StorageItemService;
 
 import jakarta.validation.Valid;
@@ -28,6 +29,9 @@ import jakarta.validation.Valid;
 public class StorageItemController {
     @Autowired
     private StorageItemService storageItemService;
+
+    @Autowired
+    private RunningLowService runningLowService;
 
     @GetMapping("/items")
     public ResponseEntity<?> getStorageItems(@PathVariable long storageId, Authentication auth) {
@@ -86,6 +90,15 @@ public class StorageItemController {
             return ResponseEntity.ok(storageItemService.getItemsAboutToExpire(storageId, auth));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/runninglow")
+    public ResponseEntity<?> getRunningLow(@PathVariable long storageId, Authentication auth) {
+        try {
+            return ResponseEntity.ok(runningLowService.getRunningLowInStorage(storageId, auth));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

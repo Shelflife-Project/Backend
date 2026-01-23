@@ -63,7 +63,6 @@ public class GetProductsByBarcodeTests {
         testProduct = new Product();
         testProduct.setName("Chips");
         testProduct.setOwner(testUser);
-        testProduct.setRunningLow(2);
         testProduct.setExpirationDaysDelta(200);
         testProduct.setCategory("Snack");
         testProduct.setBarcode("12345");
@@ -72,7 +71,6 @@ public class GetProductsByBarcodeTests {
         otherTestProduct = new Product();
         otherTestProduct.setName("Milk");
         otherTestProduct.setOwner(testUser);
-        otherTestProduct.setRunningLow(2);
         otherTestProduct.setExpirationDaysDelta(20);
         otherTestProduct.setCategory("Dairy");
         otherTestProduct.setBarcode("6789");
@@ -93,7 +91,6 @@ public class GetProductsByBarcodeTests {
                 .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
                 .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
                 .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$[0].runningLow").value(testProduct.getRunningLow()))
                 .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 
@@ -111,7 +108,6 @@ public class GetProductsByBarcodeTests {
                 .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
                 .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
                 .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$[0].runningLow").value(testProduct.getRunningLow()))
                 .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 

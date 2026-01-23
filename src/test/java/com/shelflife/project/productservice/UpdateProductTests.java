@@ -93,26 +93,11 @@ public class UpdateProductTests {
     }
 
     @Test
-    void throwsIllegalArgumentForInvalidRunningLow() {
-        User current = testUser(1L, false);
-        Product p = testProduct(1L, current);
-        UpdateProductRequest req = new UpdateProductRequest();
-        req.setRunningLow(0);
-
-        when(userService.getUserByAuth(auth)).thenReturn(current);
-        when(repo.findById(1L)).thenReturn(Optional.of(p));
-
-        assertThrows(IllegalArgumentException.class, () -> productService.updateProduct(1L, req, auth));
-        verify(repo, never()).save(any());
-    }
-
-    @Test
     void adminCanUpdateAny() {
         User current = testUser(1L, true);
         User owner = testUser(2L, true);
         Product p = testProduct(1L, owner);
         UpdateProductRequest req = new UpdateProductRequest();
-        req.setRunningLow(21);
 
         when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
@@ -143,7 +128,6 @@ public class UpdateProductTests {
         req.setName("testName");
         req.setCategory("newCat");
         req.setExpirationDaysDelta(21);
-        req.setRunningLow(10);
         req.setBarcode("6789");
 
         when(userService.getUserByAuth(auth)).thenReturn(current);
@@ -155,7 +139,6 @@ public class UpdateProductTests {
         assertEquals("testName", newP.getName());
         assertEquals("newCat", newP.getCategory());
         assertEquals("6789", newP.getBarcode());
-        assertEquals(10, newP.getRunningLow());
         assertEquals(21, newP.getExpirationDaysDelta());
         assertEquals(1, newP.getId());
         assertEquals(1, newP.getOwnerId());
@@ -178,7 +161,6 @@ public class UpdateProductTests {
         p.setCategory("cat");
         p.setBarcode("12345");
         p.setExpirationDaysDelta(2);
-        p.setRunningLow(2);
 
         return p;
     }

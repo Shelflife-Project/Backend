@@ -66,7 +66,6 @@ public class CreateProductTests {
         p.setCategory("Snack");
         p.setBarcode("12345");
         p.setOwner(testUser);
-        p.setRunningLow(2);
         p.setExpirationDaysDelta(200);
         testProduct = productRepository.save(p);
     }
@@ -86,15 +85,14 @@ public class CreateProductTests {
         mockMvc.perform(post("/api/products")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson("Test", "test", "6789", 1, 1)))
+                .content(getJson("Test", "test", "6789", 1)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("id").value(testProduct.getId() + 1))
                 .andExpect(jsonPath("ownerId").value(testUser.getId()))
                 .andExpect(jsonPath("name").value("Test"))
                 .andExpect(jsonPath("category").value("test"))
                 .andExpect(jsonPath("barcode").value("6789"))
-                .andExpect(jsonPath("expirationDaysDelta").value(1))
-                .andExpect(jsonPath("runningLow").value(1));
+                .andExpect(jsonPath("expirationDaysDelta").value(1));
 
         assertTrue(productRepository.existsById(testProduct.getId() + 1));
     }
@@ -107,15 +105,14 @@ public class CreateProductTests {
         mockMvc.perform(post("/api/products")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson("Test", "test", "6789", 1, 1)))
+                .content(getJson("Test", "test", "6789", 1)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("id").value(testProduct.getId() + 1))
                 .andExpect(jsonPath("ownerId").value(testAdmin.getId()))
                 .andExpect(jsonPath("name").value("Test"))
                 .andExpect(jsonPath("category").value("test"))
                 .andExpect(jsonPath("barcode").value("6789"))
-                .andExpect(jsonPath("expirationDaysDelta").value(1))
-                .andExpect(jsonPath("runningLow").value(1));
+                .andExpect(jsonPath("expirationDaysDelta").value(1));
 
         assertTrue(productRepository.existsById(testProduct.getId() + 1));
     }
@@ -128,15 +125,14 @@ public class CreateProductTests {
         mockMvc.perform(post("/api/products")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson("Test", "test", "", 1, 1)))
+                .content(getJson("Test", "test", "", 1)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("id").value(testProduct.getId() + 1))
                 .andExpect(jsonPath("ownerId").value(testAdmin.getId()))
                 .andExpect(jsonPath("name").value("Test"))
                 .andExpect(jsonPath("category").value("test"))
                 .andExpect(jsonPath("barcode").isEmpty())
-                .andExpect(jsonPath("expirationDaysDelta").value(1))
-                .andExpect(jsonPath("runningLow").value(1));
+                .andExpect(jsonPath("expirationDaysDelta").value(1));
 
         assertTrue(productRepository.existsById(testProduct.getId() + 1));
     }
@@ -149,7 +145,7 @@ public class CreateProductTests {
         mockMvc.perform(post("/api/products")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson("", "test", "6789", 1, 1)))
+                .content(getJson("", "test", "6789", 1)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("name").exists());
 
@@ -164,7 +160,7 @@ public class CreateProductTests {
         mockMvc.perform(post("/api/products")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson("Test", "", "6789", 1, 1)))
+                .content(getJson("Test", "", "6789", 1)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("category").exists());
 
@@ -179,7 +175,7 @@ public class CreateProductTests {
         mockMvc.perform(post("/api/products")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson("Test", "test", "12345", 1, 1)))
+                .content(getJson("Test", "test", "12345", 1)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("barcode").exists());
 
@@ -194,30 +190,15 @@ public class CreateProductTests {
         mockMvc.perform(post("/api/products")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson("Test", "test", "6789", 0, 1)))
+                .content(getJson("Test", "test", "6789", 0)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("expirationDaysDelta").exists());
 
         assertFalse(productRepository.existsById(testProduct.getId() + 1));
     }
 
-    @Test
-    void ivalidRunningLow() throws Exception {
-        String jwt = jwtService.generateToken(testAdmin.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(post("/api/products")
-                .cookie(jwtCookie)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson("Test", "test", "6789", 1, 0)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("runningLow").exists());
-
-        assertFalse(productRepository.existsById(testProduct.getId() + 1));
-    }
-
-    private String getJson(String name, String category, String barcode, long expirationDaysDelta, long runningLow) {
+    private String getJson(String name, String category, String barcode, long expirationDaysDelta) {
         return "{\"name\":\"" + name + "\", \"category\":\"" + category + "\", \"barcode\":\"" + barcode
-                + "\", \"expirationDaysDelta\":" + expirationDaysDelta + ", \"runningLow\":" + runningLow + "}";
+                + "\", \"expirationDaysDelta\":" + expirationDaysDelta + "}";
     }
 }

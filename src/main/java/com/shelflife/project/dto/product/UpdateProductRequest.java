@@ -19,7 +19,4 @@ public class UpdateProductRequest {
 
     @Min(value = 1, message = "Expiration delta must be larger than 0")
     private Integer expirationDaysDelta;
-
-    @Min(value = 1, message = "Running low must be larger than 0")
-    private Integer runningLow;
 }

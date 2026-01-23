@@ -114,7 +114,6 @@ public class RemoveProductTests {
         p.setCategory("cat");
         p.setBarcode("12345");
         p.setExpirationDaysDelta(2);
-        p.setRunningLow(2);
 
         return p;
     }

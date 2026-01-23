@@ -1,0 +1,109 @@
+package com.shelflife.project.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+
+import com.shelflife.project.dto.runninglow.CreateSettingRequest;
+import com.shelflife.project.dto.runninglow.EditSettingRequest;
+import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.exception.RunningLowExistsException;
+import com.shelflife.project.model.Product;
+import com.shelflife.project.model.RunningLowSetting;
+import com.shelflife.project.model.Storage;
+import com.shelflife.project.repository.RunningLowRepository;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class RunningLowService {
+    @Autowired
+    private RunningLowRepository repository;
+
+    @Autowired
+    private StorageMemberService storageMemberService;
+
+    @Autowired
+    private StorageService storageService;
+
+    @Autowired
+    private ProductService productService;
+
+    public RunningLowSetting getSetting(final long settingId) throws ItemNotFoundException {
+        Optional<RunningLowSetting> setting = repository.findById(settingId);
+
+        if (!setting.isPresent())
+            throw new ItemNotFoundException("settingId", "Setting with this id was not found");
+
+        return setting.get();
+    }
+
+    public List<RunningLowSetting> getSettingsForStorage(final long storageId, Authentication auth)
+            throws AccessDeniedException {
+        if (!storageMemberService.canAccessStorage(storageId, auth))
+            throw new AccessDeniedException("You can't access this storage");
+
+        return repository.findByStorageId(storageId);
+    }
+
+    public List<Product> getRunningLowInStorage(final long storageId, Authentication auth)
+            throws AccessDeniedException {
+        if (!storageMemberService.canAccessStorage(storageId, auth))
+            throw new AccessDeniedException("You can't access this storage");
+
+        return repository.findItemsRunningLow(storageId);
+    }
+
+    @Transactional
+    public RunningLowSetting createSetting(final long storageId, CreateSettingRequest request, Authentication auth)
+            throws AccessDeniedException, ItemNotFoundException, RunningLowExistsException {
+        if (!storageMemberService.canAccessStorage(storageId, auth))
+            throw new AccessDeniedException("You can't access this storage");
+
+        Storage storage = storageService.getStorage(storageId);
+        Product product = productService.getProductByID(request.getProductId());
+
+        if (repository.existsByProductIdAndStorageId(product.getId(), storage.getId()))
+            throw new RunningLowExistsException();
+
+        if (request.getRunningLow() < 0)
+            throw new IllegalArgumentException("runningLow");
+
+        RunningLowSetting setting = new RunningLowSetting();
+        setting.setStorage(storage);
+        setting.setProduct(product);
+        setting.setRunningLow(request.getRunningLow());
+
+        return repository.save(setting);
+    }
+
+    @Transactional
+    public RunningLowSetting editSetting(final long settingId, EditSettingRequest request, Authentication auth)
+            throws AccessDeniedException, IllegalArgumentException, ItemNotFoundException {
+        RunningLowSetting setting = getSetting(settingId);
+
+        if (!storageMemberService.canAccessStorage(setting.getStorage().getId(), auth))
+            throw new AccessDeniedException("You can't access this storage");
+
+        if (request.getRunningLow() < 0)
+            throw new IllegalArgumentException("runningLow");
+
+        setting.setRunningLow(request.getRunningLow());
+        return repository.save(setting);
+    }
+
+    @Transactional
+    public void deleteSetting(final long settingId, Authentication auth)
+            throws ItemNotFoundException, AccessDeniedException {
+        RunningLowSetting setting = getSetting(settingId);
+
+        if (!storageMemberService.canAccessStorage(setting.getStorage().getId(), auth))
+            throw new AccessDeniedException("You can't access this storage");
+
+        repository.delete(setting);
+    }
+}

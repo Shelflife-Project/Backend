@@ -65,7 +65,6 @@ public class UpdateProductTests {
         p.setCategory("Snack");
         p.setBarcode("12345");
         p.setOwner(testUser);
-        p.setRunningLow(2);
         p.setExpirationDaysDelta(200);
         testProduct = productRepository.save(p);
     }
@@ -95,8 +94,7 @@ public class UpdateProductTests {
                 .andExpect(jsonPath("name").value("newName"))
                 .andExpect(jsonPath("category").value(testProduct.getCategory()))
                 .andExpect(jsonPath("barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("expirationDaysDelta").value(testProduct.getExpirationDaysDelta()))
-                .andExpect(jsonPath("runningLow").value(testProduct.getRunningLow()));
+                .andExpect(jsonPath("expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
 
         assertEquals("newName", productRepository.findById(testProduct.getId()).get().getName());
     }
@@ -116,8 +114,7 @@ public class UpdateProductTests {
                 .andExpect(jsonPath("name").value("newName"))
                 .andExpect(jsonPath("category").value(testProduct.getCategory()))
                 .andExpect(jsonPath("barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("expirationDaysDelta").value(testProduct.getExpirationDaysDelta()))
-                .andExpect(jsonPath("runningLow").value(testProduct.getRunningLow()));
+                .andExpect(jsonPath("expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
 
         assertEquals("newName", productRepository.findById(testProduct.getId()).get().getName());
     }
@@ -130,6 +127,7 @@ public class UpdateProductTests {
         Product p = new Product();
         p.setOwner(testAdmin);
         p.setName("test");
+        p.setCategory("testCategory");
         productRepository.save(p);
 
         mockMvc.perform(patch("/api/products/" + p.getId())
@@ -199,20 +197,5 @@ public class UpdateProductTests {
                 .andExpect(jsonPath("expirationDaysDelta").exists());
 
         assertEquals(testProduct.getExpirationDaysDelta(), productRepository.findById(testProduct.getId()).get().getExpirationDaysDelta());
-    }
-
-    @Test
-    void doesntSaveInvalidRunningLow() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(patch("/api/products/" + testProduct.getId())
-                .cookie(jwtCookie)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"runningLow\":0}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("runningLow").exists());
-
-        assertEquals(testProduct.getRunningLow(), productRepository.findById(testProduct.getId()).get().getRunningLow());
     }
 }

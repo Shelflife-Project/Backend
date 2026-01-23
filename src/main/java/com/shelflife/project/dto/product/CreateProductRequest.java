@@ -26,7 +26,4 @@ public class CreateProductRequest {
 
     @Min(value = 1, message = "Expiration delta must be larger than 0")
     private int expirationDaysDelta;
-
-    @Min(value = 1, message = "Running low must be larger than 0")
-    private int runningLow;
 }

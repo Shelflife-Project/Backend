@@ -1,21 +1,20 @@
-package com.shelflife.project.itemcontroller;
+package com.shelflife.project.runninglowcontroller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.shelflife.project.model.Product;
+import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.model.Storage;
-import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.StorageMember;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ProductRepository;
-import com.shelflife.project.repository.StorageItemRepository;
+import com.shelflife.project.repository.RunningLowRepository;
 import com.shelflife.project.repository.StorageMemberRepository;
 import com.shelflife.project.repository.StorageRepository;
 import com.shelflife.project.repository.UserRepository;
@@ -27,13 +26,11 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import java.time.LocalDate;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class EditItemTests {
+public class DeleteSettingTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -50,22 +47,21 @@ public class EditItemTests {
     private StorageMemberRepository storageMemberRepository;
 
     @Autowired
-    private StorageItemRepository storageItemRepository;
+    private ProductRepository productRepository;
 
     @Autowired
-    private ProductRepository productRepository;
+    private RunningLowRepository runningLowRepository;
 
     private User testAdmin;
     private User testUser;
     private User testMember;
 
     private Storage testUserStorage;
-    private Storage testAdminStorage;
 
     private StorageMember testMemberObj;
 
     private Product testProduct;
-    private StorageItem testItem;
+    private RunningLowSetting testSetting;
 
     @BeforeEach
     void setup() {
@@ -101,11 +97,6 @@ public class EditItemTests {
         testMemberObj.setAccepted(true);
         testMemberObj = storageMemberRepository.save(testMemberObj);
 
-        testAdminStorage = new Storage();
-        testAdminStorage.setOwner(testAdmin);
-        testAdminStorage.setName("adminTest");
-        testAdminStorage = storageRepository.save(testAdminStorage);
-
         testProduct = new Product();
         testProduct.setName("test");
         testProduct.setOwner(testAdmin);
@@ -113,81 +104,50 @@ public class EditItemTests {
         testProduct.setExpirationDaysDelta(2);
         testProduct = productRepository.save(testProduct);
 
-        testItem = new StorageItem();
-        testItem.setProduct(testProduct);
-        testItem.setStorage(testUserStorage);
-        testItem.setExpiresAt(LocalDate.now().plusDays(2));
-        testItem = storageItemRepository.save(testItem);
+        testSetting = new RunningLowSetting();
+        testSetting.setProduct(testProduct);
+        testSetting.setStorage(testUserStorage);
+        testSetting.setRunningLow(10);
+        testSetting = runningLowRepository.save(testSetting);
     }
 
     @Test
-    void successfulEditAsOwner() throws Exception {
+    void successfulDeleteAsOwner() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now()))
-                .cookie(jwtCookie))
+        mockMvc.perform(
+                delete("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId())
+                        .cookie(jwtCookie))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void successfulEditAsAdmin() throws Exception {
+    void successfulDeleteAsAdmin() throws Exception {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now()))
-                .cookie(jwtCookie))
+        mockMvc.perform(
+                delete("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId())
+                        .cookie(jwtCookie))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void successfulEditAsMember() throws Exception {
+    void successfulDeleteAsMember() throws Exception {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now()))
-                .cookie(jwtCookie))
+        mockMvc.perform(
+                delete("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId())
+                        .cookie(jwtCookie))
                 .andExpect(status().isOk());
-    }
-
-    @Test
-    void illegalArgumentForDate() throws Exception {
-        String jwt = jwtService.generateToken(testMember.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now().minusDays(1)))
-                .cookie(jwtCookie))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.expiresAt").exists());
-    }
-
-    @Test
-    void itemNotFound() throws Exception {
-        String jwt = jwtService.generateToken(testMember.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId() + 10)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(validJson(testItem.getId(), LocalDate.now()))
-                .cookie(jwtCookie))
-                .andExpect(status().isNotFound());
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId()))
+        mockMvc.perform(
+                delete("/api/storages/" + testUserStorage.getId() + "/runninglowsettings/" + testSetting.getId()))
                 .andExpect(status().isForbidden());
-    }
-
-    private String validJson(final long productId, LocalDate date) {
-        return "{\"expiresAt\":\"" + date + "\"}";
     }
 }

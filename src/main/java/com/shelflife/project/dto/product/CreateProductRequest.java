@@ -15,10 +15,12 @@ import lombok.Setter;
 public class CreateProductRequest {
     @NotBlank(message = "Name cannot be empty")
     @NotNull(message = "Name cannot be empty")
+    @Length(max = 40, message = "The name can only be 40 characters long")
     private String name;
 
     @NotBlank(message = "Category cannot be empty")
     @NotNull(message = "Category cannot be empty")
+    @Length(max = 40, message = "The category can only be 40 characters long")
     private String category;
 
     @Length(max = 40, message = "The barcode can only be 40 characters long")

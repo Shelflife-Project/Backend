@@ -11,7 +11,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UpdateProductRequest {
+    @Length(max = 40, message = "The name can only be 40 characters long")
     private String name;
+    
+    @Length(max = 40, message = "The category can only be 40 characters long")
     private String category;
 
     @Length(max = 40, message = "The barcode can only be 40 characters long")

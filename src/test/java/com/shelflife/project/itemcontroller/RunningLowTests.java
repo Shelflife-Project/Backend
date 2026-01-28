@@ -137,6 +137,7 @@ public class RunningLowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(1))
                 .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
@@ -150,6 +151,7 @@ public class RunningLowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(1))
                 .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
@@ -163,6 +165,8 @@ public class RunningLowTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(testSetting.getRunningLow()))
+                .andExpect(jsonPath("$[0].amount").value(1))
                 .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 

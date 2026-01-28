@@ -138,6 +138,7 @@ public class RunningLowTests {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
                 .andExpect(jsonPath("$[0].runningLowAt").value(1))
+                .andExpect(jsonPath("$[0].amount").value(1))
                 .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
@@ -152,6 +153,7 @@ public class RunningLowTests {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
                 .andExpect(jsonPath("$[0].runningLowAt").value(1))
+                .andExpect(jsonPath("$[0].amount").value(1))
                 .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
@@ -167,6 +169,30 @@ public class RunningLowTests {
                 .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
                 .andExpect(jsonPath("$[0].runningLowAt").value(testSetting.getRunningLow()))
                 .andExpect(jsonPath("$[0].amount").value(1))
+                .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
+    }
+
+    @Test
+    void getsOneWithAmountTwo() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        StorageItem item = new StorageItem();
+        item.setProduct(testProduct);
+        item.setStorage(testUserStorage);
+        item.setExpiresAt(LocalDate.now().plusDays(2));
+        item = storageItemRepository.save(item);
+
+        testSetting.setRunningLow(2);
+        runningLowRepository.save(testSetting);
+
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglow")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(testSetting.getRunningLow()))
+                .andExpect(jsonPath("$[0].amount").value(2))
                 .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 

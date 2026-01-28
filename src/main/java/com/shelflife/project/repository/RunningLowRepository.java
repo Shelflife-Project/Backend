@@ -21,11 +21,11 @@ public interface RunningLowRepository extends JpaRepository<RunningLowSetting, L
     boolean existsByProductIdAndStorageId(long productId, long storageId);
 
     @Query(value = """
-            SELECT new com.shelflife.project.dto.runninglow.RunningLowNotification(si.storage, si.product, rl.runningLow, COUNT(si))
-            FROM StorageItem si
-            JOIN RunningLowSetting rl ON si.storage = rl.storage AND si.product = rl.product
-            WHERE si.storage.id = :storageId
-            GROUP BY si.storage, si.product
-            HAVING COUNT(si) <= rl.runningLow""")
+            SELECT new com.shelflife.project.dto.runninglow.RunningLowNotification(rl.storage, rl.product, rl.runningLow, COUNT(si.product.id))
+            FROM RunningLowSetting rl
+            LEFT JOIN StorageItem si ON si.storage = rl.storage AND si.product = rl.product
+            WHERE rl.storage.id = :storageId
+            GROUP BY rl.product.id, rl.storage.id
+            HAVING COUNT(si.product.id) <= rl.runningLow""")
     List<RunningLowNotification> findItemsRunningLow(long storageId);
 }

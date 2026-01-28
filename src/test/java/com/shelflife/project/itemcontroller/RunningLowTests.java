@@ -136,7 +136,9 @@ public class RunningLowTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(1))
+                .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
     @Test
@@ -148,7 +150,9 @@ public class RunningLowTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(1))
+                .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
     @Test
@@ -160,7 +164,10 @@ public class RunningLowTests {
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(testSetting.getRunningLow()))
+                .andExpect(jsonPath("$[0].amount").value(1))
+                .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
     @Test
@@ -183,6 +190,21 @@ public class RunningLowTests {
     @Test
     void accessDeniedAsAnonymous() throws Exception {
         mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglow"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void accessDeniedAsNonMember() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        Storage adminStorage = new Storage();
+        adminStorage.setOwner(testAdmin);
+        adminStorage.setName("adminStorage");
+        storageRepository.save(adminStorage);
+
+        mockMvc.perform(get("/api/storages/" + adminStorage.getId() + "/runninglow")
+                .cookie(jwtCookie))
                 .andExpect(status().isForbidden());
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.shelflife.project.dto.runninglow.RunningLowNotification;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.model.Storage;
@@ -85,10 +86,10 @@ public class FindItemsRunningLowTests {
 
     @Test
     void returnsProductForRunningLow() {
-        List<Product> products = rlRepository.findItemsRunningLow(storage.getId());
+        List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(storage.getId());
 
-        assertEquals(1, products.size());
-        assertEquals(products.get(0).getId(), product.getId());
+        assertEquals(1, notifications.size());
+        assertEquals(notifications.get(0).getProduct().getId(), product.getId());
     }
 
     @Test
@@ -99,9 +100,9 @@ public class FindItemsRunningLowTests {
         extraItem.setStorage(storage);
         siRepository.save(extraItem);
 
-        List<Product> products = rlRepository.findItemsRunningLow(storage.getId());
+        List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(storage.getId());
 
-        assertEquals(0, products.size());
+        assertEquals(0, notifications.size());
     }
 
     @Test
@@ -124,11 +125,11 @@ public class FindItemsRunningLowTests {
         extraItem.setStorage(storage);
         siRepository.save(extraItem);
 
-        List<Product> products = rlRepository.findItemsRunningLow(storage.getId());
+        List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(storage.getId());
 
-        assertEquals(2, products.size());
-        assertEquals(products.get(0).getId(), product.getId());
-        assertEquals(products.get(1).getId(), extraProduct.getId());
+        assertEquals(2, notifications.size());
+        assertEquals(notifications.get(0).getProduct().getId(), product.getId());
+        assertEquals(notifications.get(1).getProduct().getId(), extraProduct.getId());
     }
 
     @Test
@@ -145,9 +146,33 @@ public class FindItemsRunningLowTests {
         extraItem.setStorage(storage);
         siRepository.save(extraItem);
 
-        List<Product> products = rlRepository.findItemsRunningLow(storage.getId());
+        List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(storage.getId());
 
-        assertEquals(1, products.size());
-        assertEquals(products.get(0).getId(), product.getId());
+        assertEquals(1, notifications.size());
+        assertEquals(notifications.get(0).getProduct().getId(), product.getId());
+    }
+
+    @Test
+    void returnsOnlyFromStorage() {
+        Storage otherStorage = new Storage();
+        otherStorage.setName("Other");
+        otherStorage.setOwner(user);
+        otherStorage = storageRepository.save(otherStorage);
+
+        Product extraProduct = new Product();
+        extraProduct.setName("other");
+        extraProduct.setCategory("other");
+        extraProduct.setOwner(user);
+        productRepository.save(extraProduct);
+
+        StorageItem extraItem = new StorageItem();
+        extraItem.setExpiresAt(LocalDate.now().plusDays(100));
+        extraItem.setProduct(extraProduct);
+        extraItem.setStorage(storage);
+        siRepository.save(extraItem);
+
+        List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(otherStorage.getId());
+
+        assertEquals(0, notifications.size());
     }
 }

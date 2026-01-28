@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.shelflife.project.dto.runninglow.CreateSettingRequest;
 import com.shelflife.project.dto.runninglow.EditSettingRequest;
+import com.shelflife.project.dto.runninglow.RunningLowNotification;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.RunningLowExistsException;
 import com.shelflife.project.model.Product;
@@ -50,7 +51,7 @@ public class RunningLowService {
         return repository.findByStorageId(storageId);
     }
 
-    public List<Product> getRunningLowInStorage(final long storageId, Authentication auth)
+    public List<RunningLowNotification> getRunningLowInStorage(final long storageId, Authentication auth)
             throws AccessDeniedException {
         if (!storageMemberService.canAccessStorage(storageId, auth))
             throw new AccessDeniedException("You can't access this storage");

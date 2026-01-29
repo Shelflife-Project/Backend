@@ -85,11 +85,28 @@ public class FindItemsRunningLowTests {
     }
 
     @Test
-    void returnsProductForRunningLow() {
+    void returnsNotificationForRunningLow() {
         List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(storage.getId());
 
         assertEquals(1, notifications.size());
         assertEquals(notifications.get(0).getProduct().getId(), product.getId());
+    }
+
+    @Test
+    void returnsOneNotificationForRunningLowWithTwoItems() {
+        StorageItem other = new StorageItem();
+        other.setExpiresAt(LocalDate.now().plusDays(100));
+        other.setProduct(product);
+        other.setStorage(storage);
+        siRepository.save(other);
+
+        setting.setRunningLow(2);
+        rlRepository.save(setting);
+
+        List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(storage.getId());
+
+        assertEquals(1, notifications.size());
+        assertEquals(notifications.get(0).getAmount(), 2);
     }
 
     @Test
@@ -106,7 +123,7 @@ public class FindItemsRunningLowTests {
     }
 
     @Test
-    void returnsMultipleProductsForRunningLow() {
+    void returnsMultipleNotificationsForRunningLow() {
         Product extraProduct = new Product();
         extraProduct.setName("other");
         extraProduct.setCategory("other");
@@ -129,11 +146,23 @@ public class FindItemsRunningLowTests {
 
         assertEquals(2, notifications.size());
         assertEquals(notifications.get(0).getProduct().getId(), product.getId());
-        assertEquals(notifications.get(1).getProduct().getId(), extraProduct.getId());
+        assertEquals(notifications.get(0).getAmount(), 1);
+        assertEquals(notifications.get(1).getAmount(), 1);
     }
 
     @Test
-    void returnsOneProduct_ForRunningLow_WithoutOtherSetting() {
+    void returnsNotificationWhileNoItemsInStorage() {
+        siRepository.delete(item);
+
+        List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(storage.getId());
+
+        assertEquals(1, notifications.size());
+        assertEquals(notifications.get(0).getProduct().getId(), product.getId());
+        assertEquals(notifications.get(0).getAmount(), 0);
+    }
+
+    @Test
+    void returnsOneNotification_ForRunningLow_WithoutOtherSetting() {
         Product extraProduct = new Product();
         extraProduct.setName("other");
         extraProduct.setCategory("other");
@@ -158,18 +187,6 @@ public class FindItemsRunningLowTests {
         otherStorage.setName("Other");
         otherStorage.setOwner(user);
         otherStorage = storageRepository.save(otherStorage);
-
-        Product extraProduct = new Product();
-        extraProduct.setName("other");
-        extraProduct.setCategory("other");
-        extraProduct.setOwner(user);
-        productRepository.save(extraProduct);
-
-        StorageItem extraItem = new StorageItem();
-        extraItem.setExpiresAt(LocalDate.now().plusDays(100));
-        extraItem.setProduct(extraProduct);
-        extraItem.setStorage(storage);
-        siRepository.save(extraItem);
 
         List<RunningLowNotification> notifications = rlRepository.findItemsRunningLow(otherStorage.getId());
 

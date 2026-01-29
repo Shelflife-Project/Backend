@@ -7,6 +7,12 @@ import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageMember;
 import com.shelflife.project.service.StorageMemberService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +32,11 @@ public class InviteController {
     private StorageMemberService service;
 
     @GetMapping
+    @Operation(summary = "Get invites that were not accepted yet")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Returns your invites"),
+            @ApiResponse(responseCode = "403", description = "You are not logged in", content = @Content(schema = @Schema(implementation = Void.class)))
+    })
     public ResponseEntity<List<StorageMember>> getInvites(Authentication auth) {
         try {
             return ResponseEntity.ok(service.getInvites(auth));
@@ -35,6 +46,12 @@ public class InviteController {
     }
 
     @PostMapping("/{id}")
+    @Operation(summary = "Accept an invite")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful accept"),
+            @ApiResponse(responseCode = "403", description = "You can't modify this invite", content = @Content(schema = @Schema(implementation = Void.class))),
+            @ApiResponse(responseCode = "404", description = "Invite with id was not found", content = @Content(schema = @Schema(implementation = Void.class)))
+    })
     public ResponseEntity<?> acceptInvite(@PathVariable long id, Authentication auth) {
         try {
             service.acceptInvite(id, auth);
@@ -47,6 +64,12 @@ public class InviteController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Decline an invite")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful decline"),
+            @ApiResponse(responseCode = "403", description = "You can't modify this invite", content = @Content(schema = @Schema(implementation = Void.class))),
+            @ApiResponse(responseCode = "404", description = "Invite with id was not found", content = @Content(schema = @Schema(implementation = Void.class)))
+    })
     public ResponseEntity<?> declineInvite(@PathVariable long id, Authentication auth) {
         try {
             service.declineInvite(id, auth);

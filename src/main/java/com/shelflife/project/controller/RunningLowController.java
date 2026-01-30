@@ -42,7 +42,7 @@ public class RunningLowController {
     @Operation(summary = "Get running low settings")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved settings"),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
@@ -63,7 +63,7 @@ public class RunningLowController {
             @ApiResponse(responseCode = "400", description = "Invalid input or setting already exists", content = {
                     @Content(schema = @Schema(example = "{ \"productId\": \"A setting for this product already exists in this storage\" }"))
             }),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             }),
             @ApiResponse(responseCode = "404", description = "Storage or product not found", content = {
@@ -94,7 +94,7 @@ public class RunningLowController {
             @ApiResponse(responseCode = "400", description = "Invalid input", content = {
                     @Content(schema = @Schema(type = "application/json", example = "{ \"runningLow\":\"Running low should be a positive number\" }"))
             }),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             }),
             @ApiResponse(responseCode = "404", description = "Setting with this ID was not found", content = {
@@ -119,7 +119,7 @@ public class RunningLowController {
     @Operation(summary = "Delete a running low setting")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Setting deleted successfully"),
-            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "403", description = "You can't access this storage"),
             @ApiResponse(responseCode = "404", description = "Setting with this ID was not found")
     })
     @DeleteMapping("/{id}")

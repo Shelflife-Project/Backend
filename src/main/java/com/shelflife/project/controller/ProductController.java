@@ -52,7 +52,7 @@ public class ProductController {
 
     @Operation(summary = "Get all products", description = "Retrieve a list of all products based on optional filters.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of products")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved products")
     })
     @GetMapping()
     public List<Product> getProducts(

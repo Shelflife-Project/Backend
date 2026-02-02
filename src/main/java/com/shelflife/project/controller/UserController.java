@@ -14,6 +14,11 @@ import com.shelflife.project.service.ImageService;
 import com.shelflife.project.service.JwtService;
 import com.shelflife.project.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -51,6 +56,13 @@ public class UserController {
     private ImageService imageService;
 
     @GetMapping()
+    @Operation(summary = "Get all users", description = "Only for admins")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved users"),
+            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+                    @Content(schema = @Schema(implementation = Void.class))
+            })
+    })
     public ResponseEntity<List<User>> getUsers(Authentication auth) {
         try {
             List<User> users = service.getUsers(auth);
@@ -61,10 +73,16 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@PathVariable long id, Authentication auth) {
+    @Operation(summary = "Get user by ID", description = "Retrieve a user by its ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved user"),
+            @ApiResponse(responseCode = "404", description = "User not found", content = {
+                    @Content(schema = @Schema(implementation = Void.class))
+            })
+    })
+    public ResponseEntity<User> getUser(@PathVariable long id, Authentication auth) {
         try {
-            User user = service.getUserById(id, auth);
-            return ResponseEntity.ok(user);
+            return ResponseEntity.ok(service.getUserById(id, auth));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ItemNotFoundException e) {
@@ -73,6 +91,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}/pfp")
+    @Operation(summary = "Get the icon of a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(mediaType = "image/*")
+            }, description = "Returns an image with it's own mime type header. If there is no uploaded image, a placeholder svg will be returned"),
+    })
     public ResponseEntity<Resource> getPfp(@PathVariable long id) {
         String filename = id + "_user";
         Resource resource = imageService.loadImage(filename, "classpath:avatar-default.svg");
@@ -91,6 +115,18 @@ public class UserController {
     }
 
     @PostMapping("/{id}/pfp")
+    @Operation(summary = "Upload an icon for a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(schema = @Schema(implementation = Void.class))
+            }),
+            @ApiResponse(responseCode = "500", description = "An IO Exception occured", content = {
+                    @Content(schema = @Schema(example = "{ \"error\": \"Couldn't upload image\" }"))
+            }),
+            @ApiResponse(responseCode = "400", description = "Invalid mime type", content = {
+                    @Content(schema = @Schema(example = "{ \"pfp\": \"Invalid mime type\" }"))
+            }),
+    })
     public ResponseEntity<?> uploadPfp(@PathVariable long id, @RequestParam("pfp") MultipartFile file,
             Authentication auth) {
         try {
@@ -108,7 +144,13 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable long id, Authentication auth) {
+    @Operation(summary = "Delete a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful removal"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<Void> deleteUser(@PathVariable long id, Authentication auth) {
         try {
             service.removeUser(id, auth);
             return ResponseEntity.ok().build();
@@ -120,6 +162,21 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
+    @Operation(summary = "Update user data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful update", content = {
+                    @Content(schema = @Schema(implementation = User.class))
+            }),
+            @ApiResponse(responseCode = "400", description = "Invalid argument", content = {
+                    @Content(schema = @Schema(example = "{ \"email\": \"Email already exists\" }"))
+            }),
+            @ApiResponse(responseCode = "403", description = "You can't edit this user", content = {
+                    @Content(schema = @Schema(implementation = Void.class))
+            }),
+            @ApiResponse(responseCode = "404", description = "User not found", content = {
+                    @Content(schema = @Schema(implementation = Void.class))
+            })
+    })
     public ResponseEntity<?> updateUserData(@PathVariable long id, Authentication auth,
             @Valid @RequestBody ChangeUserDataRequest request, HttpServletRequest httpRequest,
             HttpServletResponse response) {
@@ -146,7 +203,7 @@ public class UserController {
         } catch (EmailExistsException e) {
             return ResponseEntity.badRequest().body(Map.of("email", "This email is already used"));
         } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.notFound().build();
         }

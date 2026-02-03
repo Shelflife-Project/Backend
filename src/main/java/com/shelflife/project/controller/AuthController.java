@@ -22,6 +22,10 @@ import com.shelflife.project.exception.PasswordsDontMatchException;
 import com.shelflife.project.model.User;
 import com.shelflife.project.service.UserService;
 
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -35,6 +39,10 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/login")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful login"),
+            @ApiResponse(responseCode = "400", description = "Couldn't log in")
+    })
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletResponse response,
             Authentication auth) {
         try {
@@ -54,6 +62,14 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful signup", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
+            @ApiResponse(responseCode = "403", description = "Won't sign up, already logged in"),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = {
+                    @Content(mediaType = "application/json")
+            })
+    })
     public ResponseEntity<?> signup(@Valid @RequestBody SignUpRequest request, HttpServletResponse response,
             Authentication auth) {
         try {
@@ -68,6 +84,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful logout"),
+            @ApiResponse(responseCode = "400", description = "You are not logged in")
+    })
     public ResponseEntity<?> logout(Authentication auth) {
         try {
             userService.logout(auth);
@@ -78,6 +98,11 @@ public class AuthController {
     }
 
     @PostMapping("/password/change")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful password change"),
+            @ApiResponse(responseCode = "403", description = "You are not logged in"),
+            @ApiResponse(responseCode = "400", description = "Invalid old password, or new passwords not matching")
+    })
     public ResponseEntity<?> changePassword(Authentication auth, @Valid @RequestBody ChangePasswordRequest request) {
         try {
             userService.changePassword(request, auth);
@@ -92,6 +117,11 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "You are logged in", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
+            @ApiResponse(responseCode = "403", description = "You are not logged in", content = @Content())
+    })
     public ResponseEntity<User> getMe(HttpServletResponse response, Authentication auth) {
         Optional<User> self = userService.getOptionalUserByAuth(auth);
 

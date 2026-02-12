@@ -63,6 +63,8 @@ public class AuthController {
             response.addCookie(cookie);
 
             return ResponseEntity.ok().build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "You are already logged in"));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
         }
@@ -70,7 +72,7 @@ public class AuthController {
 
     @Operation(summary = "Sign up with email and password")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful signup", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
+            @ApiResponse(responseCode = "201", description = "Successful signup", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
             @ApiResponse(responseCode = "403", description = "Won't sign up, already logged in", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class))),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content(mediaType = "application/json")})
     })
@@ -91,7 +93,7 @@ public class AuthController {
     @Operation(summary = "Log out of the current session")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful logout"),
-            @ApiResponse(responseCode = "403", description = "You are not logged out"),  
+            @ApiResponse(responseCode = "403", description = "You are not logged in"),  
     })
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@Parameter(description = "Authentication information of the user") Authentication auth, HttpServletResponse response) {
@@ -106,7 +108,7 @@ public class AuthController {
             userService.logout(auth);
             return ResponseEntity.ok().build();
         } catch (AccessDeniedException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "You are not logged in"));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "You are not logged in"));
         }
     }
  

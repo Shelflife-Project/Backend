@@ -129,7 +129,7 @@ public class LoginTests {
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getLoginJson("test@test.test", "test123")))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     String getLoginJson(String email, String password) {

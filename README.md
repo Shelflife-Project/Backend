@@ -54,4 +54,4 @@ To run the seeders, run this command:
 `mvn clean spring-boot:run -D spring-boot.run.arguments=--seed`
 
 API Swagger:
-`localhost:8080/swagger-ui/index.html`
+`http://localhost:8080/swagger-ui/index.html#/`

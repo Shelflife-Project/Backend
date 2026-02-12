@@ -88,7 +88,14 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Successful logout"),
             @ApiResponse(responseCode = "400", description = "You are not logged in")
     })
-    public ResponseEntity<?> logout(Authentication auth) {
+    public ResponseEntity<?> logout(Authentication auth, HttpServletResponse response) {
+        final Cookie cookie = new Cookie("jwt", null);
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+
         try {
             userService.logout(auth);
             return ResponseEntity.ok().build();

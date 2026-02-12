@@ -139,14 +139,14 @@ public class UserService {
 
     @Transactional
     public String login(@Valid LoginRequest request, Authentication auth)
-            throws AccessDeniedException, ItemNotFoundException {
+            throws AccessDeniedException, InvalidPasswordException, ItemNotFoundException {
 
         if (isAuthenticated(auth))
             throw new AccessDeniedException(null);
 
         User dbUser = getUserByEmail(request.getEmail().toLowerCase());
         if (!encoder.matches(request.getPassword(), dbUser.getPassword()))
-            throw new AccessDeniedException(null);
+            throw new InvalidPasswordException();
 
         return jwtService.generateToken(request.getEmail());
     }

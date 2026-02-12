@@ -101,7 +101,7 @@ public class LogoutTests {
 
 		mockMvc.perform(post("/api/auth/logout")
 				.header("Authorization", "Bearer " + token))
-				.andExpect(status().isBadRequest())
+				.andExpect(status().isForbidden())
 				.andExpect(jsonPath("error").exists());
 	}
 }

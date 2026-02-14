@@ -20,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageRepository;
+import com.shelflife.project.service.StorageGetterService;
 import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.StorageService;
 import com.shelflife.project.service.UserService;
@@ -31,6 +32,9 @@ public class DeleteStorageRequestTests {
 
     @Mock
     private StorageRepository storageRepository;
+
+    @Mock
+    private StorageGetterService storageGetterService;
 
     @Mock
     private StorageMemberService storageMemberService;
@@ -50,7 +54,7 @@ public class DeleteStorageRequestTests {
         Storage storage = new Storage();
 
         doReturn(admin).when(userService).getUserByAuth(auth);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(storageGetterService).getStorage(1);
 
         assertDoesNotThrow(() -> storageService.deleteStorageRequest(1, auth));
         verify(storageRepository).deleteById(1L);
@@ -66,7 +70,7 @@ public class DeleteStorageRequestTests {
         storage.setOwner(owner);
 
         doReturn(owner).when(userService).getUserByAuth(auth);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(storageGetterService).getStorage(1);
 
         assertDoesNotThrow(() -> storageService.deleteStorageRequest(1, auth));
         verify(storageRepository).deleteById(1L);
@@ -86,7 +90,7 @@ public class DeleteStorageRequestTests {
         storage.setOwner(owner);
 
         doReturn(member).when(userService).getUserByAuth(auth);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(storageGetterService).getStorage(1);
         doReturn(true).when(storageMemberService).isMemberOfStorage(1, 2);
 
         assertDoesNotThrow(() -> storageService.deleteStorageRequest(1, auth));
@@ -107,7 +111,7 @@ public class DeleteStorageRequestTests {
         storage.setOwner(owner);
 
         doReturn(user).when(userService).getUserByAuth(auth);
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(storageGetterService).getStorage(1);
 
         assertThrows(AccessDeniedException.class, () -> storageService.deleteStorageRequest(1, auth));
         verify(storageMemberService, only()).isMemberOfStorage(1, 2);

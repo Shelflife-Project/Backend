@@ -13,7 +13,6 @@ import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageRepository;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 
 @Service
 public class StorageService {
@@ -31,8 +30,11 @@ public class StorageService {
     private UserService userService;
 
     @Transactional
-    public Storage createStorage(@Valid CreateStorageRequest request, Authentication auth)
+    public Storage createStorage(CreateStorageRequest request, Authentication auth)
             throws AccessDeniedException, IllegalArgumentException {
+
+        if (request.getName() == null || request.getName().isBlank())
+            throw new IllegalArgumentException("name");
 
         User current = userService.getUserByAuth(auth);
         Storage storage = new Storage();
@@ -43,13 +45,16 @@ public class StorageService {
     }
 
     @Transactional
-    public Storage changeName(final long id, @Valid ChangeStorageNameRequest request, Authentication auth)
+    public Storage changeName(final long id, ChangeStorageNameRequest request, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException {
+
+        if (request.getName() == null || request.getName().isBlank())
+            throw new IllegalArgumentException("name");
 
         User current = userService.getUserByAuth(auth);
         Storage storage = storageGetterService.getStorage(id);
 
-        if (!current.isAdmin() || storage.getOwner().getId() == current.getId())
+        if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
             throw new AccessDeniedException("You can't rename this storage");
 
         storage.setName(request.getName());

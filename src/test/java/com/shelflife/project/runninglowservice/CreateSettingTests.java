@@ -25,7 +25,8 @@ import com.shelflife.project.model.Storage;
 import com.shelflife.project.repository.RunningLowRepository;
 import com.shelflife.project.service.ProductService;
 import com.shelflife.project.service.RunningLowService;
-import com.shelflife.project.service.StorageMemberService;
+import com.shelflife.project.service.StorageAccessService;
+import com.shelflife.project.service.StorageGetterService;
 import com.shelflife.project.service.StorageService;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +38,10 @@ public class CreateSettingTests {
     private StorageService storageService;
 
     @Mock
-    private StorageMemberService storageMemberService;
+    private StorageGetterService storageGetterService;
+
+    @Mock
+    private StorageAccessService storageAccessService;
 
     @Mock
     private ProductService productService;
@@ -56,10 +60,10 @@ public class CreateSettingTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(storageGetterService).getStorage(1);
         doReturn(product).when(productService).getProductByID(1);
         doReturn(false).when(repository).existsByProductIdAndStorageId(1, 1);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
         when(repository.save(any(RunningLowSetting.class))).thenAnswer(answer -> answer.getArgument(0));
 
         RunningLowSetting setting = service.createSetting(1, request, auth);
@@ -79,10 +83,10 @@ public class CreateSettingTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(storageGetterService).getStorage(1);
         doReturn(product).when(productService).getProductByID(1);
         doReturn(false).when(repository).existsByProductIdAndStorageId(1, 1);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
         when(repository.save(any(RunningLowSetting.class))).thenAnswer(answer -> answer.getArgument(0));
 
         RunningLowSetting setting = service.createSetting(1, request, auth);
@@ -97,8 +101,8 @@ public class CreateSettingTests {
     void throwsNotFoundForStorage() {
         CreateSettingRequest request = new CreateSettingRequest(1, 10);
 
-        doThrow(ItemNotFoundException.class).when(storageService).getStorage(1);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doThrow(ItemNotFoundException.class).when(storageGetterService).getStorage(1);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
         assertThrows(ItemNotFoundException.class, () -> service.createSetting(1, request, auth));
     }
 
@@ -107,8 +111,8 @@ public class CreateSettingTests {
         CreateSettingRequest request = new CreateSettingRequest(1, 10);
         Storage storage = new Storage();
 
-        doReturn(storage).when(storageService).getStorage(1);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(storage).when(storageGetterService).getStorage(1);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
         doThrow(ItemNotFoundException.class).when(productService).getProductByID(1);
 
         assertThrows(ItemNotFoundException.class, () -> service.createSetting(1, request, auth));
@@ -123,10 +127,10 @@ public class CreateSettingTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(storageGetterService).getStorage(1);
         doReturn(product).when(productService).getProductByID(1);
         doReturn(false).when(repository).existsByProductIdAndStorageId(1, 1);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
 
         assertThrows(IllegalArgumentException.class, () -> service.createSetting(1, request, auth));
     }
@@ -140,10 +144,10 @@ public class CreateSettingTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        doReturn(storage).when(storageService).getStorage(1);
+        doReturn(storage).when(storageGetterService).getStorage(1);
         doReturn(product).when(productService).getProductByID(1);
         doReturn(true).when(repository).existsByProductIdAndStorageId(1, 1);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
 
         assertThrows(RunningLowExistsException.class, () -> service.createSetting(1, request, auth));
     }
@@ -152,7 +156,7 @@ public class CreateSettingTests {
     void throwsAccessDenied() {
         CreateSettingRequest request = new CreateSettingRequest(1, -1);
 
-        doReturn(false).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
 
         assertThrows(AccessDeniedException.class, () -> service.createSetting(1, request, auth));
     }

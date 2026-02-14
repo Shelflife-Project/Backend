@@ -7,6 +7,7 @@ import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
 import com.shelflife.project.dto.storage.CreateStorageRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
+import com.shelflife.project.service.StorageGetterService;
 import com.shelflife.project.service.StorageService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +38,9 @@ public class StorageController {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    private StorageGetterService storageGetterService;
+
     @GetMapping()
     @Operation(summary = "Get owned and member storages")
     @ApiResponses(value = {
@@ -47,7 +51,7 @@ public class StorageController {
     })
     public ResponseEntity<List<Storage>> getStorages(Authentication auth) {
         try {
-            return ResponseEntity.ok(storageService.getStorages(auth));
+            return ResponseEntity.ok(storageGetterService.getStorages(auth));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -68,9 +72,9 @@ public class StorageController {
     })
     public ResponseEntity<?> getStorage(@PathVariable long id, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageService.getStorage(auth, id));
+            return ResponseEntity.ok(storageGetterService.getStorage(auth, id));
         } catch (ItemNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

@@ -32,7 +32,7 @@ public interface StorageRepository extends JpaRepository<Storage, Long> {
 			SELECT distinct s
 			FROM Storage s
 			LEFT JOIN s.members sm
-			WHERE s.owner.id = :userId OR (sm.user.id = :userId AND sm.user.isAccepted)
+			WHERE s.owner.id = :userId OR (sm.user.id = :userId AND sm.isAccepted)
 			""")
 	List<Storage> findAccessibleStorages(long userId);
 }

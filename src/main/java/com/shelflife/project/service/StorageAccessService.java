@@ -16,6 +16,9 @@ public class StorageAccessService {
     @Autowired
     private UserService userService;
 
+    /**
+     * @return True if you are an ADMIN, or an OWNER, or an accepted MEMBER
+     */
     public boolean canAccessStorage(long storageId, long userId) {
         if (userService.isAdmin(userId))
             return true;
@@ -26,6 +29,9 @@ public class StorageAccessService {
         return false;
     }
 
+    /**
+     * @return True if you are an ADMIN, or an OWNER, or an accepted MEMBER
+     */
     public boolean canAccessStorage(long storageId, Authentication auth) {
 
         try {

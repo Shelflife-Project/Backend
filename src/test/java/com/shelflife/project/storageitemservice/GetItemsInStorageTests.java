@@ -21,8 +21,8 @@ import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageRepository;
+import com.shelflife.project.service.StorageAccessService;
 import com.shelflife.project.service.StorageItemService;
-import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +37,7 @@ public class GetItemsInStorageTests {
     private StorageRepository storageRepository;
 
     @Mock
-    private StorageMemberService storageMemberService;
+    private StorageAccessService storageAccessService;
 
     @InjectMocks
     private StorageItemService service;
@@ -66,7 +66,7 @@ public class GetItemsInStorageTests {
 
     @Test
     void auth_throwsAccessDenied() {
-        doReturn(false).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
 
         assertThrows(AccessDeniedException.class, () -> service.getItemsInStorage(1, auth));
     }

@@ -28,6 +28,9 @@ public class StorageMemberService {
     private StorageMemberRepository storageMemberRepository;
 
     @Autowired
+    StorageAccessService storageAccessService;
+
+    @Autowired
     private StorageRepository storageRepository;
 
     public Storage getStorage(final long id) throws ItemNotFoundException {
@@ -54,8 +57,8 @@ public class StorageMemberService {
         if (!storageRepository.existsById(storageId))
             throw new ItemNotFoundException("id", "Storage with this id was not found");
 
-        if (!canAccessStorage(storageId, auth))
-            throw new AccessDeniedException(null);
+        if (!storageAccessService.canAccessStorage(storageId, auth))
+            throw new AccessDeniedException("You can't access this storage");
 
         return storageMemberRepository.findByStorageId(storageId);
     }
@@ -135,42 +138,6 @@ public class StorageMemberService {
             throw new AccessDeniedException(null);
 
         removeMemberFromStorage(storageId, userId);
-    }
-
-    public boolean canAccessStorage(final long storageId, final long userId) {
-        try {
-            User user = userService.getUserById(userId);
-            Storage storage = getStorage(storageId);
-
-            if (user.isAdmin())
-                return true;
-
-            if (storage.getOwner().getId() == userId)
-                return true;
-
-            return storageMemberRepository.isMember(storageId, userId);
-        } catch (ItemNotFoundException e) {
-            return false;
-        }
-    }
-
-    public boolean canAccessStorage(final long storageId, Authentication auth) {
-        try {
-            User user = userService.getUserByAuth(auth);
-            Storage storage = getStorage(storageId);
-
-            if (user.isAdmin())
-                return true;
-
-            if (storage.getOwner().getId() == user.getId())
-                return true;
-
-            return storageMemberRepository.isMember(storageId, user.getId());
-        } catch (ItemNotFoundException e) {
-            return false;
-        } catch (AccessDeniedException e) {
-            return false;
-        }
     }
 
     public boolean isMemberOfStorage(final long storageId, final long userId) {

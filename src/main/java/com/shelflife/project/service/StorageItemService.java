@@ -27,7 +27,7 @@ public class StorageItemService {
     private StorageItemRepository storageItemRepository;
 
     @Autowired
-    private StorageMemberService storageMemberService;
+    private StorageAccessService storageAccessService;
 
     @Autowired
     private ProductService productService;
@@ -56,8 +56,8 @@ public class StorageItemService {
 
     public List<StorageItem> getItemsInStorage(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
-        if (!storageMemberService.canAccessStorage(storageId, auth))
-            throw new AccessDeniedException(null);
+        if (!storageAccessService.canAccessStorage(storageId, auth))
+            throw new AccessDeniedException("You can't access this storage");
 
         return getItemsInStorage(storageId);
     }
@@ -71,8 +71,8 @@ public class StorageItemService {
 
     public List<StorageItem> getExpiredItemsInStorage(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
-        if (!storageMemberService.canAccessStorage(storageId, auth))
-            throw new AccessDeniedException(null);
+        if (!storageAccessService.canAccessStorage(storageId, auth))
+            throw new AccessDeniedException("You can't access this storage");
 
         return getExpiredItemsInStorage(storageId);
     }
@@ -85,8 +85,8 @@ public class StorageItemService {
     public List<StorageItem> getItemsAboutToExpire(final long storageId, Authentication auth)
             throws ItemNotFoundException, AccessDeniedException {
 
-        if (!storageMemberService.canAccessStorage(storageId, auth))
-            throw new AccessDeniedException(null);
+        if (!storageAccessService.canAccessStorage(storageId, auth))
+            throw new AccessDeniedException("You can't access this storage");
 
         return getItemsAboutToExpire(storageId);
     }
@@ -95,8 +95,8 @@ public class StorageItemService {
     public StorageItem addItemToStorage(final long storageId, AddItemRequest request, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException, IllegalArgumentException {
 
-        if (!storageMemberService.canAccessStorage(storageId, auth))
-            throw new AccessDeniedException(null);
+        if (!storageAccessService.canAccessStorage(storageId, auth))
+            throw new AccessDeniedException("You can't access this storage");
 
         if (request.getExpiresAt().isBefore(LocalDate.now()))
             throw new IllegalArgumentException("expiresAt");
@@ -120,8 +120,8 @@ public class StorageItemService {
         if (!item.isPresent())
             throw new ItemNotFoundException("id", "Storage item with this id was not found");
 
-        if (!storageMemberService.canAccessStorage(item.get().getStorage().getId(), auth))
-            throw new AccessDeniedException(null);
+        if (!storageAccessService.canAccessStorage(item.get().getStorage().getId(), auth))
+            throw new AccessDeniedException("You can't access this storage");
 
         if (request.getExpiresAt().isBefore(LocalDate.now()))
             throw new IllegalArgumentException("expiresAt");
@@ -140,8 +140,8 @@ public class StorageItemService {
         if (!item.isPresent())
             throw new ItemNotFoundException("id", "Storage item with this id was not found");
 
-        if (!storageMemberService.canAccessStorage(item.get().getStorage().getId(), current.getId()))
-            throw new AccessDeniedException(null);
+        if (!storageAccessService.canAccessStorage(item.get().getStorage().getId(), current.getId()))
+            throw new AccessDeniedException("You can't access this storage");
 
         storageItemRepository.deleteById(storageItemId);
     }

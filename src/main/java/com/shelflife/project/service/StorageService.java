@@ -1,8 +1,5 @@
 package com.shelflife.project.service;
 
-import java.util.List;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -16,6 +13,7 @@ import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageRepository;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 @Service
 public class StorageService {
@@ -24,17 +22,17 @@ public class StorageService {
     private StorageRepository storageRepository;
 
     @Autowired
+    private StorageGetterService storageGetterService;
+
+    @Autowired
     private StorageMemberService storageMemberService;
 
     @Autowired
     private UserService userService;
 
     @Transactional
-    public Storage createStorage(CreateStorageRequest request, Authentication auth)
+    public Storage createStorage(@Valid CreateStorageRequest request, Authentication auth)
             throws AccessDeniedException, IllegalArgumentException {
-
-        if (request.getName() == null || request.getName().isBlank())
-            throw new IllegalArgumentException("name");
 
         User current = userService.getUserByAuth(auth);
         Storage storage = new Storage();
@@ -45,16 +43,14 @@ public class StorageService {
     }
 
     @Transactional
-    public Storage changeName(final long id, ChangeStorageNameRequest request, Authentication auth)
-            throws AccessDeniedException, IllegalArgumentException, ItemNotFoundException {
-        if (request.getName() == null || request.getName().isBlank())
-            throw new IllegalArgumentException("name");
+    public Storage changeName(final long id, @Valid ChangeStorageNameRequest request, Authentication auth)
+            throws AccessDeniedException, ItemNotFoundException {
 
         User current = userService.getUserByAuth(auth);
-        Storage storage = getStorage(id);
+        Storage storage = storageGetterService.getStorage(id);
 
-        if (storage.getOwner().getId() != current.getId() && !current.isAdmin())
-            throw new AccessDeniedException(null);
+        if (!current.isAdmin() || storage.getOwner().getId() == current.getId())
+            throw new AccessDeniedException("You can't rename this storage");
 
         storage.setName(request.getName());
         return storageRepository.save(storage);
@@ -64,49 +60,14 @@ public class StorageService {
     public void deleteStorageRequest(final long id, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException {
         User current = userService.getUserByAuth(auth);
-        Storage storage = getStorage(id);
+        Storage storage = storageGetterService.getStorage(id);
 
         if (current.isAdmin() || storage.getOwner().getId() == current.getId()) { // Delete storage
             storageRepository.deleteById(id);
         } else if (storageMemberService.isMemberOfStorage(id, current.getId())) { // Leave storage
             storageMemberService.removeMemberFromStorage(id, current.getId());
         } else {
-            throw new AccessDeniedException(null);
+            throw new AccessDeniedException("You can't delete this storage");
         }
-    }
-
-    public List<Storage> getStorages() {
-        return storageRepository.findAll();
-    }
-
-    public List<Storage> getStorages(Authentication auth) throws AccessDeniedException {
-        User user = userService.getUserByAuth(auth);
-
-        if (user.isAdmin())
-            return getStorages();
-
-        return storageRepository.findAccessibleStorages(user.getId());
-    }
-
-    public Storage getStorage(final long id) throws ItemNotFoundException {
-        Optional<Storage> storage = storageRepository.findById(id);
-
-        if (!storage.isPresent())
-            throw new ItemNotFoundException("id", "Storage with this id was not found");
-
-        return storage.get();
-    }
-
-    public Storage getStorage(Authentication auth, final long storageId)
-            throws AccessDeniedException, ItemNotFoundException {
-
-        if (!storageMemberService.canAccessStorage(storageId, auth)) {
-            if (!storageRepository.existsById(storageId))
-                throw new ItemNotFoundException("id", "Storage with this id was not found");
-
-            throw new AccessDeniedException(null);
-        }
-
-        return getStorage(storageId);
     }
 }

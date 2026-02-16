@@ -37,4 +37,9 @@ public class RunningLowSeeder implements Seeder {
 
         runningLowRepository.save(setting);
     }
+
+    @Override
+    public boolean shouldSeed() {
+        return runningLowRepository.count() == 0;
+    }
 }

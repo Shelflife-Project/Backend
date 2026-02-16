@@ -7,7 +7,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
 
-import com.shelflife.project.repository.UserRepository;
+
 
 @Configuration
 public class SeedRunner implements ApplicationRunner {
@@ -27,8 +27,7 @@ public class SeedRunner implements ApplicationRunner {
     @Autowired
     private RunningLowSeeder runningLowSeeder;
 
-    @Autowired
-    private UserRepository userRepository;
+    
 
     private static final Logger log = LoggerFactory.getLogger(SeedRunner.class);
 
@@ -37,29 +36,43 @@ public class SeedRunner implements ApplicationRunner {
         if (args.getOptionValues("seed") == null)
             return;
 
-        // Check if data already exists
-        if (userRepository.count() > 0) {
-            log.info("Database already contains data. Skipping seeding.");
-            return;
-        }
-
         log.info("Starting database seeding...");
 
-        userSeeder.seed();
-        log.info("Users successfully seeded");
+        if (userSeeder.shouldSeed()) {
+            userSeeder.seed();
+            log.info("Users successfully seeded");
+        } else {
+            log.info("Users already exist; skipping user seeder.");
+        }
 
-        productSeeder.seed();
-        log.info("Products successfully seeded");
+        if (productSeeder.shouldSeed()) {
+            productSeeder.seed();
+            log.info("Products successfully seeded");
+        } else {
+            log.info("Products already exist; skipping product seeder.");
+        }
 
-        storageSeeder.seed();
-        log.info("Storages successfully seeded");
+        if (storageSeeder.shouldSeed()) {
+            storageSeeder.seed();
+            log.info("Storages successfully seeded");
+        } else {
+            log.info("Storages already exist; skipping storage seeder.");
+        }
 
-        storageItemSeeder.seed();
-        log.info("Storage items successfully seeded");
+        if (storageItemSeeder.shouldSeed()) {
+            storageItemSeeder.seed();
+            log.info("Storage items successfully seeded");
+        } else {
+            log.info("Storage items already exist; skipping storage item seeder.");
+        }
 
-        runningLowSeeder.seed();
-        log.info("Running low successfully seeded");
+        if (runningLowSeeder.shouldSeed()) {
+            runningLowSeeder.seed();
+            log.info("Running low successfully seeded");
+        } else {
+            log.info("Running low settings already exist; skipping running low seeder.");
+        }
 
-        log.info("Database seeding completed successfully");
+        log.info("Database seeding process finished");
     }
 }

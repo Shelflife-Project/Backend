@@ -18,7 +18,7 @@ import org.springframework.security.core.Authentication;
 import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.repository.RunningLowRepository;
 import com.shelflife.project.service.RunningLowService;
-import com.shelflife.project.service.StorageMemberService;
+import com.shelflife.project.service.StorageAccessService;
 
 @ExtendWith(MockitoExtension.class)
 public class GetSettingsForStorageTests {
@@ -26,7 +26,7 @@ public class GetSettingsForStorageTests {
     private RunningLowRepository repository;
 
     @Mock
-    private StorageMemberService storageMemberService;
+    private StorageAccessService storageAccessService;
 
     @InjectMocks
     private RunningLowService service;
@@ -36,7 +36,7 @@ public class GetSettingsForStorageTests {
     @Test
     void successfulGet() {
         RunningLowSetting setting = new RunningLowSetting();
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
         doReturn(List.of(setting)).when(repository).findByStorageId(1);
 
         assertDoesNotThrow(() -> service.getSettingsForStorage(1, auth));
@@ -45,7 +45,7 @@ public class GetSettingsForStorageTests {
 
     @Test
     void throwsAccessDenied() {
-        doReturn(false).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
 
         assertThrows(AccessDeniedException.class, () -> service.getSettingsForStorage(1, auth));
     }

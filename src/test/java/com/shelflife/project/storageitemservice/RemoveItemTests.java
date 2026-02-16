@@ -23,8 +23,8 @@ import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageItemRepository;
+import com.shelflife.project.service.StorageAccessService;
 import com.shelflife.project.service.StorageItemService;
-import com.shelflife.project.service.StorageMemberService;
 import com.shelflife.project.service.UserService;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,7 +36,7 @@ public class RemoveItemTests {
     private UserService userService;
 
     @Mock
-    private StorageMemberService storageMemberService;
+    private StorageAccessService storageAccessService;
 
     @Spy
     @InjectMocks
@@ -59,7 +59,7 @@ public class RemoveItemTests {
         when(userService.getUserByAuth(auth)).thenReturn(user);
         when(storageItemRepository.findById(3L)).thenReturn(Optional.of(item));
 
-        doReturn(true).when(storageMemberService).canAccessStorage(2, user.getId());
+        doReturn(true).when(storageAccessService).canAccessStorage(2, user.getId());
 
         storageItemService.removeItemFromStorage(3, auth);
 
@@ -90,7 +90,7 @@ public class RemoveItemTests {
 
         when(userService.getUserByAuth(auth)).thenReturn(user);
         when(storageItemRepository.findById(3L)).thenReturn(Optional.of(item));
-        doReturn(false).when(storageMemberService).canAccessStorage(2, user.getId());
+        doReturn(false).when(storageAccessService).canAccessStorage(2, user.getId());
 
         assertThrows(AccessDeniedException.class, () -> storageItemService.removeItemFromStorage(3, auth));
         verify(storageItemRepository, never()).deleteById(anyLong());

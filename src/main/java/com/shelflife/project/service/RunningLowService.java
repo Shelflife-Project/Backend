@@ -26,10 +26,10 @@ public class RunningLowService {
     private RunningLowRepository repository;
 
     @Autowired
-    private StorageMemberService storageMemberService;
+    private StorageAccessService storageAccessService;
 
     @Autowired
-    private StorageService storageService;
+    private StorageGetterService storageGetterService;
 
     @Autowired
     private ProductService productService;
@@ -45,7 +45,7 @@ public class RunningLowService {
 
     public List<RunningLowSetting> getSettingsForStorage(final long storageId, Authentication auth)
             throws AccessDeniedException {
-        if (!storageMemberService.canAccessStorage(storageId, auth))
+        if (!storageAccessService.canAccessStorage(storageId, auth))
             throw new AccessDeniedException("You can't access this storage");
 
         return repository.findByStorageId(storageId);
@@ -53,7 +53,7 @@ public class RunningLowService {
 
     public List<RunningLowNotification> getRunningLowInStorage(final long storageId, Authentication auth)
             throws AccessDeniedException {
-        if (!storageMemberService.canAccessStorage(storageId, auth))
+        if (!storageAccessService.canAccessStorage(storageId, auth))
             throw new AccessDeniedException("You can't access this storage");
 
         return repository.findItemsRunningLow(storageId);
@@ -62,10 +62,10 @@ public class RunningLowService {
     @Transactional
     public RunningLowSetting createSetting(final long storageId, CreateSettingRequest request, Authentication auth)
             throws AccessDeniedException, ItemNotFoundException, RunningLowExistsException {
-        if (!storageMemberService.canAccessStorage(storageId, auth))
+        if (!storageAccessService.canAccessStorage(storageId, auth))
             throw new AccessDeniedException("You can't access this storage");
 
-        Storage storage = storageService.getStorage(storageId);
+        Storage storage = storageGetterService.getStorage(storageId);
         Product product = productService.getProductByID(request.getProductId());
 
         if (repository.existsByProductIdAndStorageId(product.getId(), storage.getId()))
@@ -87,7 +87,7 @@ public class RunningLowService {
             throws AccessDeniedException, IllegalArgumentException, ItemNotFoundException {
         RunningLowSetting setting = getSetting(settingId);
 
-        if (!storageMemberService.canAccessStorage(setting.getStorage().getId(), auth))
+        if (!storageAccessService.canAccessStorage(setting.getStorage().getId(), auth))
             throw new AccessDeniedException("You can't access this storage");
 
         if (request.getRunningLow() < 0)
@@ -102,7 +102,7 @@ public class RunningLowService {
             throws ItemNotFoundException, AccessDeniedException {
         RunningLowSetting setting = getSetting(settingId);
 
-        if (!storageMemberService.canAccessStorage(setting.getStorage().getId(), auth))
+        if (!storageAccessService.canAccessStorage(setting.getStorage().getId(), auth))
             throw new AccessDeniedException("You can't access this storage");
 
         repository.delete(setting);

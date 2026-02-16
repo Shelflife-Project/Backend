@@ -25,8 +25,8 @@ import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.repository.StorageItemRepository;
+import com.shelflife.project.service.StorageAccessService;
 import com.shelflife.project.service.StorageItemService;
-import com.shelflife.project.service.StorageMemberService;
 
 @ExtendWith(MockitoExtension.class)
 public class EditItemTests {
@@ -35,7 +35,7 @@ public class EditItemTests {
     private StorageItemRepository storageItemRepository;
 
     @Mock
-    private StorageMemberService storageMemberService;
+    private StorageAccessService storageAccessService;
 
     @Spy
     @InjectMocks
@@ -54,7 +54,7 @@ public class EditItemTests {
         item.setExpiresAt(LocalDate.now());
 
         doReturn(Optional.of(item)).when(storageItemRepository).findById(1L);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
         when(storageItemRepository.save(any(StorageItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         StorageItem result = storageItemService.editItem(1, validRequest(LocalDate.now().plusDays(1)), auth);
@@ -77,7 +77,7 @@ public class EditItemTests {
         EditItemRequest request = validRequest(LocalDate.now().minusDays(1));
 
         doReturn(Optional.of(item)).when(storageItemRepository).findById(1L);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
 
         assertThrows(IllegalArgumentException.class, () -> storageItemService.editItem(1, request, auth));
 
@@ -95,7 +95,7 @@ public class EditItemTests {
         item.setExpiresAt(LocalDate.now());
 
         doReturn(Optional.of(item)).when(storageItemRepository).findById(1L);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
         when(storageItemRepository.save(any(StorageItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         EditItemRequest request = validRequest(LocalDate.now());
@@ -116,7 +116,7 @@ public class EditItemTests {
         item.setExpiresAt(LocalDate.now());
 
         doReturn(Optional.of(item)).when(storageItemRepository).findById(1L);
-        doReturn(false).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
 
         assertThrows(AccessDeniedException.class,
                 () -> storageItemService.editItem(1, validRequest(LocalDate.now()), auth));

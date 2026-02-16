@@ -23,7 +23,7 @@ import com.shelflife.project.model.Storage;
 import com.shelflife.project.repository.RunningLowRepository;
 import com.shelflife.project.service.ProductService;
 import com.shelflife.project.service.RunningLowService;
-import com.shelflife.project.service.StorageMemberService;
+import com.shelflife.project.service.StorageAccessService;
 import com.shelflife.project.service.StorageService;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,7 +35,7 @@ public class DeleteSettingTests {
     private StorageService storageService;
 
     @Mock
-    private StorageMemberService storageMemberService;
+    private StorageAccessService storageAccessService;
 
     @Mock
     private ProductService productService;
@@ -61,7 +61,7 @@ public class DeleteSettingTests {
         setting.setRunningLow(4);
 
         doReturn(setting).when(service).getSetting(1);
-        doReturn(true).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
 
         assertDoesNotThrow(() -> service.deleteSetting(1, auth));
         verify(repository).delete(setting);
@@ -88,7 +88,7 @@ public class DeleteSettingTests {
         setting.setRunningLow(4);
 
         doReturn(setting).when(service).getSetting(1);
-        doReturn(false).when(storageMemberService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
 
         assertThrows(AccessDeniedException.class, () -> service.deleteSetting(1, auth));
         verify(repository, never()).delete(setting);

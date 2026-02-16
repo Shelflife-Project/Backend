@@ -63,6 +63,15 @@ public class UserService {
         }
     }
 
+    public boolean isAdmin(long userId) {
+        try {
+            User user = getUserById(userId);
+            return user.isAdmin();
+        } catch (ItemNotFoundException e) {
+            return false;
+        }
+    }
+
     public boolean isAdmin(Authentication auth) {
         try {
             User user = getUserByAuth(auth);

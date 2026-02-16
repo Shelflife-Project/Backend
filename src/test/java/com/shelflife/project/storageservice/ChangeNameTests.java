@@ -23,6 +23,7 @@ import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageRepository;
+import com.shelflife.project.service.StorageGetterService;
 import com.shelflife.project.service.StorageService;
 import com.shelflife.project.service.UserService;
 
@@ -33,6 +34,9 @@ public class ChangeNameTests {
 
     @Mock
     private StorageRepository storageRepository;
+
+    @Mock
+    private StorageGetterService storageGetterService;
 
     @Spy
     @InjectMocks
@@ -53,7 +57,7 @@ public class ChangeNameTests {
         request.setName("new");
 
         doReturn(owner).when(userService).getUserByAuth(auth);
-        doReturn(testStorage).when(storageService).getStorage(1);
+        doReturn(testStorage).when(storageGetterService).getStorage(1);
         when(storageRepository.save(any(Storage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Storage storage = storageService.changeName(1, request, auth);
@@ -80,7 +84,7 @@ public class ChangeNameTests {
         request.setName("new");
 
         doReturn(admin).when(userService).getUserByAuth(auth);
-        doReturn(testStorage).when(storageService).getStorage(1);
+        doReturn(testStorage).when(storageGetterService).getStorage(1);
         when(storageRepository.save(any(Storage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Storage storage = storageService.changeName(1, request, auth);
@@ -136,7 +140,7 @@ public class ChangeNameTests {
         request.setName("new");
 
         doReturn(user).when(userService).getUserByAuth(auth);
-        doReturn(testStorage).when(storageService).getStorage(1);
+        doReturn(testStorage).when(storageGetterService).getStorage(1);
 
         assertThrows(AccessDeniedException.class, () -> storageService.changeName(1, request, auth));
         verifyNoInteractions(storageRepository);

@@ -34,4 +34,9 @@ public class ProductSeeder implements Seeder {
 
         repository.save(adminProduct);
     }
+
+    @Override
+    public boolean shouldSeed() {
+        return repository.count() == 0;
+    }
 }

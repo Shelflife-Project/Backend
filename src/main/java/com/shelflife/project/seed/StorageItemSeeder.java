@@ -48,4 +48,9 @@ public class StorageItemSeeder implements Seeder {
 
         storageItemRepository.save(adminItem);
     }
+
+    @Override
+    public boolean shouldSeed() {
+        return storageItemRepository.count() == 0;
+    }
 }

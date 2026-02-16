@@ -32,4 +32,9 @@ public class UserSeeder implements Seeder {
 
         repository.save(admin);
     }
+
+    @Override
+    public boolean shouldSeed() {
+        return repository.count() == 0;
+    }
 }

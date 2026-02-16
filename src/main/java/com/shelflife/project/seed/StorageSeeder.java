@@ -28,4 +28,9 @@ public class StorageSeeder implements Seeder {
 
         repository.save(adminStorage);
     }
+
+    @Override
+    public boolean shouldSeed() {
+        return repository.count() == 0;
+    }
 }

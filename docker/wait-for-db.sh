@@ -20,4 +20,4 @@ while true; do
   sleep 1
 done
 
-exec java -jar /app/app.jar
+exec java -jar /app/app.jar --seed

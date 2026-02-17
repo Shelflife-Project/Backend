@@ -11,10 +11,13 @@ import com.shelflife.project.service.StorageGetterService;
 import com.shelflife.project.service.StorageService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -34,6 +37,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/storages")
+@Tag(name = "Storage Management", description = "APIs for managing storage resources. All endpoints require authentication.")
+@SecurityRequirement(name = "bearerAuth")
 public class StorageController {
     @Autowired
     private StorageService storageService;
@@ -42,10 +47,12 @@ public class StorageController {
     private StorageGetterService storageGetterService;
 
     @GetMapping()
-    @Operation(summary = "Get owned and member storages")
+    @Operation(summary = "Get owned and member storages", description = "Retrieves all storages owned by the authenticated user and storages where the user is a member.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved storages"),
-            @ApiResponse(responseCode = "403", content = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved storages", content = {
+                    @Content(schema = @Schema(implementation = java.util.List.class, example = "[{\"id\": 1, \"name\": \"Kitchen\", \"owner\": {...}}]"))
+            }),
+            @ApiResponse(responseCode = "403", description = "Access denied - User must be authenticated", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
@@ -58,19 +65,21 @@ public class StorageController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get a storage by ID")
+    @Operation(summary = "Get a storage by ID", description = "Retrieves detailed information about a specific storage. User must be the owner or a member of the storage.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Succssfully retrieved storage", content = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved storage", content = {
                     @Content(schema = @Schema(implementation = Storage.class))
             }),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+            @ApiResponse(responseCode = "403", description = "Access denied - User is not the owner or member", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             }),
             @ApiResponse(responseCode = "404", description = "Storage with this ID was not found", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
-    public ResponseEntity<?> getStorage(@PathVariable long id, Authentication auth) {
+    public ResponseEntity<?> getStorage(
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id, 
+            Authentication auth) {
         try {
             return ResponseEntity.ok(storageGetterService.getStorage(auth, id));
         } catch (ItemNotFoundException e) {
@@ -81,19 +90,20 @@ public class StorageController {
     }
 
     @PostMapping()
-    @Operation(summary = "Create a storage")
+    @Operation(summary = "Create a storage", description = "Creates a new storage with the given name. The authenticated user becomes the owner of the storage.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully created storage", content = {
                     @Content(schema = @Schema(implementation = Storage.class))
             }),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+            @ApiResponse(responseCode = "403", description = "Access denied - User must be authenticated", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             }),
-            @ApiResponse(responseCode = "400", description = "Invalid name", content = {
+            @ApiResponse(responseCode = "400", description = "Invalid name - Name cannot be empty or exceed 40 characters", content = {
                     @Content(schema = @Schema(example = "{ \"name\": \"Name cannot be empty\" }"))
             })
     })
-    public ResponseEntity<?> createStorage(@Valid @RequestBody CreateStorageRequest request,
+    public ResponseEntity<?> createStorage(
+            @Valid @RequestBody CreateStorageRequest request,
             Authentication auth) {
         try {
             return ResponseEntity.ok(storageService.createStorage(request, auth));
@@ -105,22 +115,24 @@ public class StorageController {
     }
 
     @PatchMapping("/{id}")
-    @Operation(summary = "Edit a storages name")
+    @Operation(summary = "Edit a storage's name", description = "Updates the name of an existing storage. Only the storage owner can perform this operation.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Storage updated successfully", content = {
                     @Content(schema = @Schema(implementation = Storage.class))
             }),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+            @ApiResponse(responseCode = "403", description = "Access denied - Only owner can edit storage name", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             }),
-            @ApiResponse(responseCode = "400", description = "Invalid name", content = {
+            @ApiResponse(responseCode = "400", description = "Invalid name - Name cannot be empty or exceed 40 characters", content = {
                     @Content(schema = @Schema(example = "{ \"name\": \"Name cannot be empty\" }"))
             }),
             @ApiResponse(responseCode = "404", description = "Storage with this ID was not found", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
-    public ResponseEntity<?> changeName(@PathVariable long id, @Valid @RequestBody ChangeStorageNameRequest request,
+    public ResponseEntity<?> changeName(
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id, 
+            @Valid @RequestBody ChangeStorageNameRequest request,
             Authentication auth) {
         try {
             return ResponseEntity.ok(storageService.changeName(id, request, auth));
@@ -134,13 +146,15 @@ public class StorageController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a storage")
+    @Operation(summary = "Delete a storage", description = "Deletes a storage and all its associated items and members. Only the storage owner can perform this operation.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Storage deleted successfully"),
-            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "403", description = "Access denied - Only owner can delete storage"),
             @ApiResponse(responseCode = "404", description = "Storage with this ID was not found")
     })
-    public ResponseEntity<Void> deleteStorage(@PathVariable long id, Authentication auth) {
+    public ResponseEntity<Void> deleteStorage(
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id, 
+            Authentication auth) {
         try {
             storageService.deleteStorageRequest(id, auth);
             return ResponseEntity.ok().build();

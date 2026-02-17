@@ -37,8 +37,7 @@ public class LoginTests {
     @Autowired
     private PasswordEncoder encoder;
 
-        @Autowired
-        private ObjectMapper objectMapper;
+    
 
     private User testUser;
 
@@ -136,7 +135,7 @@ public class LoginTests {
                                 .andExpect(jsonPath("$.token").exists())
                                 .andReturn();
 
-                Map<String, String> response = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+                Map<String, String> response = new ObjectMapper().readValue(result.getResponse().getContentAsString(), Map.class);
                 return response.get("token");
         }
 

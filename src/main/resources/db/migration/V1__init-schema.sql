@@ -1,4 +1,4 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL UNIQUE,
     is_admin BIT(1) NOT NULL,
@@ -6,13 +6,13 @@ CREATE TABLE users (
     username VARCHAR(255) NOT NULL
 );
 
-CREATE TABLE images (
+CREATE TABLE IF NOT EXISTS images (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     filename VARCHAR(255),
     mimetype VARCHAR(255)
 );
 
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     barcode VARCHAR(255) UNIQUE,
     category VARCHAR(255) NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE products (
         FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 
-CREATE TABLE storages (
+CREATE TABLE IF NOT EXISTS storages (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     owner_id BIGINT NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE storages (
         FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 
-CREATE TABLE storage_members (
+CREATE TABLE IF NOT EXISTS storage_members (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     is_accepted BIT(1) NOT NULL,
     storage_id BIGINT,
@@ -42,7 +42,7 @@ CREATE TABLE storage_members (
         FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE storage_items (
+CREATE TABLE IF NOT EXISTS storage_items (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     created_at DATETIME(6) NOT NULL,
     expires_at DATE NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE storage_items (
         FOREIGN KEY (storage_id) REFERENCES storages(id)
 );
 
-CREATE TABLE running_low_settings (
+CREATE TABLE IF NOT EXISTS running_low_settings (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     running_low INT NOT NULL,
     product_id BIGINT,
@@ -66,7 +66,7 @@ CREATE TABLE running_low_settings (
         FOREIGN KEY (storage_id) REFERENCES storages(id)
 );
 
-CREATE TABLE invalidjwts (
+CREATE TABLE IF NOT EXISTS invalidjwts (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     created_at DATETIME(6) NOT NULL,
     token VARCHAR(255)

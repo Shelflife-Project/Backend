@@ -11,6 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.UserRepository;
 
@@ -19,6 +20,8 @@ import jakarta.transaction.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.Map;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,6 +37,8 @@ public class LoginTests {
     @Autowired
     private PasswordEncoder encoder;
 
+    
+
     private User testUser;
 
     @BeforeEach
@@ -47,15 +52,8 @@ public class LoginTests {
 
     @Test
     void loginSuccessful() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getLoginJson(testUser.getEmail(), "test123")))
-                .andExpect(status().isOk())
-                .andExpect(cookie().exists("jwt"))
-                .andReturn();
-
-        String jwt = result.getResponse().getCookie("jwt").getValue();
-        Cookie jwtCookie = new Cookie("jwt", jwt);
+        String token = loginAndGetToken(testUser.getEmail(), "test123");
+        Cookie jwtCookie = new Cookie("jwt", token);
 
         mockMvc.perform(get("/api/auth/me")
                 .cookie(jwtCookie))
@@ -73,6 +71,7 @@ public class LoginTests {
                 .content(getLoginJson("test1@est.test", "test123")))
                 .andExpect(status().isBadRequest())
                 .andExpect(cookie().doesNotExist("jwt"))
+                                .andExpect(jsonPath("$.token").doesNotExist())
                 .andReturn();
 
         mockMvc.perform(get("/api/auth/me"))
@@ -86,6 +85,7 @@ public class LoginTests {
                 .content(getLoginJson("test@test.test", "test1234")))
                 .andExpect(status().isBadRequest())
                 .andExpect(cookie().doesNotExist("jwt"))
+                                .andExpect(jsonPath("$.token").doesNotExist())
                 .andReturn();
 
         mockMvc.perform(get("/api/auth/me"))
@@ -99,6 +99,7 @@ public class LoginTests {
                 .content("{}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(cookie().doesNotExist("jwt"))
+                                .andExpect(jsonPath("$.token").doesNotExist())
                 .andReturn();
 
         mockMvc.perform(get("/api/auth/me"))
@@ -107,15 +108,8 @@ public class LoginTests {
 
     @Test
     void cantLoginMultipleTimes() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getLoginJson("test@test.test", "test123")))
-                .andExpect(status().isOk())
-                .andExpect(cookie().exists("jwt"))
-                .andReturn();
-
-        String jwt = result.getResponse().getCookie("jwt").getValue();
-        Cookie jwtCookie = new Cookie("jwt", jwt);
+        String token = loginAndGetToken("test@test.test", "test123");
+        Cookie jwtCookie = new Cookie("jwt", token);
 
         mockMvc.perform(get("/api/auth/me")
                 .cookie(jwtCookie))
@@ -132,7 +126,20 @@ public class LoginTests {
                 .andExpect(status().isForbidden());
     }
 
+        private String loginAndGetToken(String email, String password) throws Exception {
+                MvcResult result = mockMvc.perform(post("/api/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(getLoginJson(email, password)))
+                                .andExpect(status().isOk())
+                                .andExpect(cookie().exists("jwt"))
+                                .andExpect(jsonPath("$.token").exists())
+                                .andReturn();
+
+                Map<String, String> response = new ObjectMapper().readValue(result.getResponse().getContentAsString(), Map.class);
+                return response.get("token");
+        }
+
     String getLoginJson(String email, String password) {
-        return "{\"email\":\"" + email + "\", \"password\":\"" + password + "\"}";
+                return "{\"email\":\"" + email + "\", \"password\":\"" + password + "\"}";
     }
 }

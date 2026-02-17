@@ -44,8 +44,8 @@ public class AuthController {
     private UserService userService;
 
     @Operation(summary = "Log in with email and password")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful login", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class))),
+        @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful login", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
             @ApiResponse(responseCode = "403", description = "You are already logged in", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class))),
             @ApiResponse(responseCode = "400", description = "Couldn't log in", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
     })
@@ -62,7 +62,7 @@ public class AuthController {
             cookie.setPath("/");
             response.addCookie(cookie);
 
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(Map.of("token", token));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "You are already logged in"));
         } catch (RuntimeException e) {

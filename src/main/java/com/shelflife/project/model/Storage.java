@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -23,16 +24,20 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "storages")
+@Schema(description = "Storage resource representing a container for items and members")
 public class Storage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Unique identifier of the storage", example = "1")
     private long id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "owner_id")
+    @Schema(description = "The user who owns this storage")
     private User owner;
 
     @Column(nullable = false)
+    @Schema(description = "The name of the storage", example = "Kitchen Pantry", maxLength = 40)
     private String name;
 
     @JsonIgnore

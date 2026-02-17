@@ -28,26 +28,35 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @RestController
 @RequestMapping("/api/storages/{storageId}/runninglowsettings")
+@Tag(name = "Running Low Settings", description = "APIs for managing running low thresholds for products in storages. All endpoints require authentication and storage access.")
+@SecurityRequirement(name = "bearerAuth")
 public class RunningLowController {
     @Autowired
     private RunningLowService runningLowService;
 
-    @Operation(summary = "Get running low settings")
+    @Operation(summary = "Get running low settings", description = "Retrieves all running low settings for a specific storage. User must have access to the storage.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved settings"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved settings", content = {
+                    @Content(schema = @Schema(example = "[{\"id\": 1, \"storage\": {\"id\": 1, \"name\": \"Kitchen\"}, \"product\": {\"id\": 5, \"name\": \"Milk\"}, \"runningLow\": 2}, {\"id\": 2, \"storage\": {\"id\": 1, \"name\": \"Kitchen\"}, \"product\": {\"id\": 7, \"name\": \"Eggs\"}, \"runningLow\": 6}]"))
+            }),
+            @ApiResponse(responseCode = "403", description = "Access denied - User must be storage owner or member", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
     @GetMapping
-    public ResponseEntity<List<RunningLowSetting>> getSettings(@PathVariable long storageId, Authentication auth) {
+    public ResponseEntity<List<RunningLowSetting>> getSettings(
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long storageId, 
+            Authentication auth) {
         try {
             return ResponseEntity.ok(runningLowService.getSettingsForStorage(storageId, auth));
         } catch (AccessDeniedException e) {
@@ -55,15 +64,15 @@ public class RunningLowController {
         }
     }
 
-    @Operation(summary = "Create a running low setting")
+    @Operation(summary = "Create a running low setting", description = "Creates a new running low alert threshold for a product in the specified storage. One running low setting per product per storage is allowed.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Setting created successfully", content = {
                     @Content(schema = @Schema(implementation = RunningLowSetting.class))
             }),
-            @ApiResponse(responseCode = "400", description = "Invalid input or setting already exists", content = {
+            @ApiResponse(responseCode = "400", description = "Invalid input or setting already exists for this product", content = {
                     @Content(schema = @Schema(example = "{ \"productId\": \"A setting for this product already exists in this storage\" }"))
             }),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
+            @ApiResponse(responseCode = "403", description = "Access denied - User must be storage owner or member", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             }),
             @ApiResponse(responseCode = "404", description = "Storage or product not found", content = {
@@ -71,7 +80,8 @@ public class RunningLowController {
             })
     })
     @PostMapping
-    public ResponseEntity<?> createSetting(@PathVariable long storageId,
+    public ResponseEntity<?> createSetting(
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long storageId,
             @Valid @RequestBody CreateSettingRequest request,
             Authentication auth) {
         try {
@@ -86,15 +96,15 @@ public class RunningLowController {
         }
     }
 
-    @Operation(summary = "Edit a running low setting")
+    @Operation(summary = "Edit a running low setting", description = "Updates the running low threshold value for an existing setting. User must have access to the storage.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Setting updated successfully", content = {
                     @Content(schema = @Schema(implementation = RunningLowSetting.class))
             }),
-            @ApiResponse(responseCode = "400", description = "Invalid input", content = {
-                    @Content(schema = @Schema(type = "application/json", example = "{ \"runningLow\":\"Running low should be a positive number\" }"))
+            @ApiResponse(responseCode = "400", description = "Invalid input - Running low value must be positive", content = {
+                    @Content(schema = @Schema(example = "{ \"runningLow\": \"Running low should be a positive number\" }"))
             }),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
+            @ApiResponse(responseCode = "403", description = "Access denied - User must be storage owner or member", content = {
                     @Content(schema = @Schema(implementation = Void.class))
             }),
             @ApiResponse(responseCode = "404", description = "Setting with this ID was not found", content = {
@@ -102,7 +112,9 @@ public class RunningLowController {
             })
     })
     @PutMapping("/{id}")
-    public ResponseEntity<?> editSetting(@PathVariable long id, @Valid @RequestBody EditSettingRequest request,
+    public ResponseEntity<?> editSetting(
+            @Parameter(description = "The unique identifier of the running low setting", example = "1") @PathVariable long id, 
+            @Valid @RequestBody EditSettingRequest request,
             Authentication auth) {
         try {
             return ResponseEntity.ok(runningLowService.editSetting(id, request, auth));
@@ -116,14 +128,16 @@ public class RunningLowController {
         }
     }
 
-    @Operation(summary = "Delete a running low setting")
+    @Operation(summary = "Delete a running low setting", description = "Deletes a running low setting. User must have access to the storage.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Setting deleted successfully"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage"),
+            @ApiResponse(responseCode = "403", description = "Access denied - User must be storage owner or member"),
             @ApiResponse(responseCode = "404", description = "Setting with this ID was not found")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSetting(@PathVariable long id, Authentication auth) {
+    public ResponseEntity<Void> deleteSetting(
+            @Parameter(description = "The unique identifier of the running low setting", example = "1") @PathVariable long id, 
+            Authentication auth) {
         try {
             runningLowService.deleteSetting(id, auth);
             return ResponseEntity.ok().build();

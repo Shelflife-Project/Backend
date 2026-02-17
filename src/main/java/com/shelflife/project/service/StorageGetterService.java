@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,10 @@ public class StorageGetterService {
         return storageRepository.findAll();
     }
 
+    public List<Storage> getStorages(Pageable pageable) {
+        return storageRepository.findAll(pageable).getContent();
+    }
+
     public List<Storage> getStorages(Authentication auth) throws AccessDeniedException {
         User user = userService.getUserByAuth(auth);
 
@@ -55,5 +60,13 @@ public class StorageGetterService {
             return getStorages();
 
         return storageRepository.findAccessibleStorages(user.getId());
+    }
+
+    public List<Storage> getStorages(Authentication auth, Pageable pageable) throws AccessDeniedException {
+        User user = userService.getUserByAuth(auth);
+
+        if (user.isAdmin())
+            return getStorages(pageable);
+        return storageRepository.findAccessibleStorages(user.getId(), pageable);
     }
 }

@@ -47,7 +47,7 @@ public class RunningLowController {
     @Operation(summary = "Get running low settings", description = "Retrieves all running low settings for a specific storage. User must have access to the storage.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved settings", content = {
-                    @Content(schema = @Schema(implementation = java.util.List.class))
+                    @Content(schema = @Schema(example = "[{\"id\": 1, \"storage\": {\"id\": 1, \"name\": \"Kitchen\"}, \"product\": {\"id\": 5, \"name\": \"Milk\"}, \"runningLow\": 2}, {\"id\": 2, \"storage\": {\"id\": 1, \"name\": \"Kitchen\"}, \"product\": {\"id\": 7, \"name\": \"Eggs\"}, \"runningLow\": 6}]"))
             }),
             @ApiResponse(responseCode = "403", description = "Access denied - User must be storage owner or member", content = {
                     @Content(schema = @Schema(implementation = Void.class))
@@ -67,7 +67,7 @@ public class RunningLowController {
     @Operation(summary = "Create a running low setting", description = "Creates a new running low alert threshold for a product in the specified storage. One running low setting per product per storage is allowed.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Setting created successfully", content = {
-                    @Content(schema = @Schema(implementation = RunningLowSetting.class))
+                    @Content(schema = @Schema(example = "{\"id\": 10, \"storage\": {\"id\": 1, \"name\": \"Kitchen\"}, \"product\": {\"id\": 5, \"name\": \"Milk\", \"barcode\": \"123456\"}, \"runningLow\": 2}"))
             }),
             @ApiResponse(responseCode = "400", description = "Invalid input or setting already exists for this product", content = {
                     @Content(schema = @Schema(example = "{ \"productId\": \"A setting for this product already exists in this storage\" }"))
@@ -99,7 +99,7 @@ public class RunningLowController {
     @Operation(summary = "Edit a running low setting", description = "Updates the running low threshold value for an existing setting. User must have access to the storage.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Setting updated successfully", content = {
-                    @Content(schema = @Schema(implementation = RunningLowSetting.class))
+                    @Content(schema = @Schema(example = "{\"id\": 10, \"storage\": {\"id\": 1, \"name\": \"Kitchen\"}, \"product\": {\"id\": 5, \"name\": \"Milk\"}, \"runningLow\": 5}"))
             }),
             @ApiResponse(responseCode = "400", description = "Invalid input - Running low value must be positive", content = {
                     @Content(schema = @Schema(example = "{ \"runningLow\": \"Running low should be a positive number\" }"))

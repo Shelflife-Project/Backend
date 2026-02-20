@@ -1,6 +1,7 @@
 package com.shelflife.project.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
@@ -24,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -56,9 +60,21 @@ public class StorageController {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
-    public ResponseEntity<List<Storage>> getStorages(Authentication auth) {
+    public ResponseEntity<List<Storage>> getStorages(Authentication auth, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "true") boolean ascending) {
         try {
-            return ResponseEntity.ok(storageGetterService.getStorages(auth));
+            Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+            Pageable pageable;
+
+            if (size == null) {
+                pageable = Pageable.unpaged();
+            } else {
+                pageable = PageRequest.of(page, size, sort);
+            }
+            return ResponseEntity.ok(storageGetterService.getStorages(auth, pageable));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

@@ -16,6 +16,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import com.shelflife.project.dto.purchase.ToPurchaseItem;
 import com.shelflife.project.dto.shopping.CreateShoppingItemRequest;
@@ -28,12 +33,18 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/storages/{storageId}/shoppinglist")
+@Tag(name = "Shopping List", description = "Manage shopping list items in a storage")
 public class ShoppingListController {
     @Autowired
     private ShoppingListService service;
 
-    @GetMapping
-    public ResponseEntity<List<ShoppingListItem>> getForStorage(@PathVariable long storageId, Authentication auth) {
+        @GetMapping
+        @Operation(summary = "Get shopping list items for a storage", description = "Returns shopping list items for the given storage if the user has access")
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+        })
+        public ResponseEntity<List<ShoppingListItem>> getForStorage(@Parameter(description = "Storage id") @PathVariable long storageId, Authentication auth) {
         try {
             return ResponseEntity.ok(service.getForStorage(storageId, auth));
         } catch (AccessDeniedException e) {
@@ -41,8 +52,15 @@ public class ShoppingListController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<?> create(@PathVariable long storageId, @Valid @RequestBody CreateShoppingItemRequest request,
+        @PostMapping
+        @Operation(summary = "Create a shopping list item", description = "Add a product to the shopping list for the specified storage")
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Created"),
+            @ApiResponse(responseCode = "400", description = "Bad Request"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Storage or product not found")
+        })
+        public ResponseEntity<?> create(@Parameter(description = "Storage id") @PathVariable long storageId, @Valid @RequestBody CreateShoppingItemRequest request,
             Authentication auth) {
         try {
             return ResponseEntity.ok(service.createItem(storageId, request, auth));
@@ -55,8 +73,15 @@ public class ShoppingListController {
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> edit(@PathVariable long id, @Valid @RequestBody EditShoppingItemRequest request,
+        @PutMapping("/{id}")
+        @Operation(summary = "Edit a shopping list item", description = "Update the amount to buy for an existing shopping list entry")
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "400", description = "Bad Request"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Item not found")
+        })
+        public ResponseEntity<?> edit(@Parameter(description = "Shopping list item id") @PathVariable long id, @Valid @RequestBody EditShoppingItemRequest request,
             Authentication auth) {
         try {
             return ResponseEntity.ok(service.editItem(id, request, auth));
@@ -69,8 +94,14 @@ public class ShoppingListController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable long id, Authentication auth) {
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Delete a shopping list item", description = "Remove an item from the shopping list")
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OK"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Item not found")
+        })
+        public ResponseEntity<Void> delete(@Parameter(description = "Shopping list item id") @PathVariable long id, Authentication auth) {
         try {
             service.deleteItem(id, auth);
             return ResponseEntity.ok().build();

@@ -15,6 +15,7 @@ import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.StorageItem;
+import com.shelflife.project.dto.purchase.ToPurchaseItem;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageRepository;
@@ -108,6 +109,7 @@ public class StorageItemService {
         item.setProduct(product);
         item.setStorage(storage);
         item.setExpiresAt(request.getExpiresAt());
+        item.setAmountToBuy(request.getAmountToBuy());
 
         return storageItemRepository.save(item);
     }
@@ -127,7 +129,42 @@ public class StorageItemService {
             throw new IllegalArgumentException("expiresAt");
 
         item.get().setExpiresAt(request.getExpiresAt());
+        if (request.getAmountToBuy() != null)
+            item.get().setAmountToBuy(request.getAmountToBuy());
         return storageItemRepository.save(item.get());
+    }
+
+    public java.util.List<ToPurchaseItem> getToPurchaseForUser(Authentication auth) {
+        User current = userService.getUserByAuth(auth);
+
+        java.util.List<Storage> storages = storageRepository.findAccessibleStorages(current.getId());
+
+        if (storages == null || storages.isEmpty())
+            return java.util.Collections.emptyList();
+
+        java.util.List<Long> storageIds = new java.util.ArrayList<>();
+        for (Storage s : storages)
+            storageIds.add(s.getId());
+
+        java.util.List<StorageItem> items = storageItemRepository.findByStorageIdIn(storageIds);
+
+        java.util.Map<Long, ToPurchaseItem> agg = new java.util.HashMap<>();
+
+        for (StorageItem si : items) {
+            long pid = si.getProduct().getId();
+            ToPurchaseItem t = agg.get(pid);
+            if (t == null) {
+                t = new ToPurchaseItem();
+                t.setProductId(pid);
+                t.setProductName(si.getProduct().getName());
+                t.setAmountToBuy(si.getAmountToBuy());
+                agg.put(pid, t);
+            } else {
+                t.setAmountToBuy(t.getAmountToBuy() + si.getAmountToBuy());
+            }
+        }
+
+        return new java.util.ArrayList<>(agg.values());
     }
 
     @Transactional

@@ -42,4 +42,7 @@ public class StorageItem {
     @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "amount_to_buy", nullable = false)
+    private int amountToBuy = 0;
 }

@@ -17,4 +17,7 @@ public class AddItemRequest {
 
     @NotNull
     private LocalDate expiresAt;
+
+    @Min(value = 0, message = "Amount to buy must be 0 or greater")
+    private int amountToBuy = 0;
 }

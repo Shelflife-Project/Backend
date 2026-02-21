@@ -11,4 +11,5 @@ import lombok.Setter;
 @Setter
 public class EditItemRequest {
     private LocalDate expiresAt;
+    private Integer amountToBuy;
 }

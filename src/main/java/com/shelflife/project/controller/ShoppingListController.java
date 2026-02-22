@@ -22,7 +22,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.Parameter;
 
-import com.shelflife.project.dto.purchase.ToPurchaseItem;
 import com.shelflife.project.dto.shopping.CreateShoppingItemRequest;
 import com.shelflife.project.dto.shopping.EditShoppingItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;

@@ -15,6 +15,7 @@ import com.shelflife.project.dto.purchase.ToPurchaseItem;
 import com.shelflife.project.dto.shopping.CreateShoppingItemRequest;
 import com.shelflife.project.dto.shopping.EditShoppingItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
+import com.shelflife.project.exception.ShoppingItemExistsException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.ShoppingListItem;
 import com.shelflife.project.model.Storage;
@@ -69,7 +70,7 @@ public class ShoppingListService {
         Product product = productService.getProductByID(request.getProductId());
 
         if (repository.existsByProductIdAndStorageId(product.getId(), storage.getId()))
-            throw new IllegalArgumentException("productId");
+            throw new ShoppingItemExistsException("productId");
 
         if (request.getAmountToBuy() < 0)
             throw new IllegalArgumentException("amountToBuy");

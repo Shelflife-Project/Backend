@@ -46,6 +46,7 @@ public class InviteMemberTests {
     private User testAdmin;
     private User testUser;
     private User testMember;
+    private User testInvitedUser;
 
     private Storage testUserStorage;
     private Storage testAdminStorage;
@@ -67,6 +68,13 @@ public class InviteMemberTests {
         testUser.setPassword("test123");
         testUser.setAdmin(false);
         testUser = userRepository.save(testUser);
+
+        testInvitedUser = new User();
+        testInvitedUser.setEmail("testinvite@test.test");
+        testInvitedUser.setUsername("testinvite");
+        testInvitedUser.setPassword("test123");
+        testInvitedUser.setAdmin(false);
+        testInvitedUser = userRepository.save(testInvitedUser);
 
         testMember = new User();
         testMember.setEmail("testmember@test.test");
@@ -99,11 +107,11 @@ public class InviteMemberTests {
         mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"test@test.test\"}"))
+                .content("{\"email\":\"" + testInvitedUser.getEmail() + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.storage.id").value(testUserStorage.getId()))
-                .andExpect(jsonPath("$.user.id").value(testAdmin.getId()));
+                .andExpect(jsonPath("$.user.id").value(testInvitedUser.getId()));
     }
 
     @Test
@@ -138,7 +146,19 @@ public class InviteMemberTests {
         mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"testmember@test.test\"}"))
+                .content("{\"email\":\"" + testMember.getEmail() + "\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void cantInviteAdmin() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + testAdmin.getEmail() + "\"}"))
                 .andExpect(status().isBadRequest());
     }
 

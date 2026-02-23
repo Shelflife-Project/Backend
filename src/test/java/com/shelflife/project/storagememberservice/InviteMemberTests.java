@@ -71,10 +71,7 @@ public class InviteMemberTests {
         User target = new User();
         target.setId(1);
 
-        doReturn(storage).when(service).getStorage(1L);
-        doReturn(target).when(userService).getUserByEmail("test");
         doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
-
         assertThrows(AccessDeniedException.class, () -> service.inviteMemberToStorage(1, "test", auth));
     }
 
@@ -102,16 +99,24 @@ public class InviteMemberTests {
 
     @Test
     void successfulAddAsAdmin() {
+        User owner = new User();
+        owner.setId(1);
+        owner.setAdmin(false);
+
         Storage storage = new Storage();
+        storage.setId(1);
+        storage.setOwner(owner);
+
         User target = new User();
+        target.setId(2);
 
-        User other = new User();
-        other.setId(2);
-        other.setAdmin(true);
+        User admin = new User();
+        admin.setId(3);
+        admin.setAdmin(true);
 
+        doReturn(admin).when(userService).getUserByAuth(auth);
         doReturn(storage).when(service).getStorage(1L);
         doReturn(target).when(userService).getUserByEmail("test");
-        doReturn(other).when(userService).getUserByAuth(auth);
 
         when(storageMemberRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -148,15 +153,58 @@ public class InviteMemberTests {
 
     @Test
     void throwsMemberExceptionForDuplicateAdd() {
+        User owner = new User();
+        owner.setId(1);
+
         Storage storage = new Storage();
         storage.setId(1);
+        storage.setOwner(owner);
+
+        User target = new User();
+        target.setId(2);
+
+        doReturn(owner).when(userService).getUserByAuth(auth);
+        doReturn(storage).when(service).getStorage(1L);
+        doReturn(target).when(userService).getUserByEmail("test");
+        when(storageMemberRepository.existsByStorageIdAndUserId(1, 2)).thenReturn(true);
+
+        assertThrows(MemberException.class, () -> service.inviteMemberToStorage(1, "test", auth));
+        verify(storageMemberRepository, never()).save(any(StorageMember.class));
+    }
+
+    @Test
+    void throwsMemberExceptionForSelfAddAsOwner() {
+        User owner = new User();
+        owner.setId(1);
+        owner.setAdmin(false);
+        
+        Storage storage = new Storage();
+        storage.setId(1);
+        storage.setOwner(owner);
 
         User target = new User();
         target.setId(1);
 
+        doReturn(owner).when(userService).getUserByAuth(auth);
         doReturn(storage).when(service).getStorage(1L);
         doReturn(target).when(userService).getUserByEmail("test");
-        when(storageMemberRepository.existsByStorageIdAndUserId(1, 1)).thenReturn(true);
+
+        assertThrows(MemberException.class, () -> service.inviteMemberToStorage(1, "test", auth));
+        verify(storageMemberRepository, never()).save(any(StorageMember.class));
+    }
+
+    @Test
+    void throwsMemberExceptionForAdmins() {
+        User user = new User();
+        user.setId(1);
+        user.setAdmin(true);
+        
+        Storage storage = new Storage();
+        storage.setId(1);
+
+        doReturn(user).when(userService).getUserByAuth(auth);
+        doReturn(storage).when(service).getStorage(1L);
+        doReturn(user).when(userService).getUserByEmail("test");
 
         assertThrows(MemberException.class, () -> service.inviteMemberToStorage(1, "test", auth));
         verify(storageMemberRepository, never()).save(any(StorageMember.class));

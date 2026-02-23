@@ -98,16 +98,19 @@ public class StorageMemberService {
     public StorageMember inviteMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
             throws ItemNotFoundException, MemberException, AccessDeniedException {
 
+        User current = userService.getUserByAuth(auth);
         Storage storage = getStorage(storageId);
         User target = userService.getUserByEmail(memberEmail);
 
-        if (storageMemberRepository.existsByStorageIdAndUserId(storageId, target.getId()))
-            throw new MemberException(true);
-
-        User current = userService.getUserByAuth(auth);
-
         if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
             throw new AccessDeniedException(null);
+
+        // You can't invite admins, or the owner
+        if (target.isAdmin() || target.getId() == storage.getOwner().getId())
+            throw new MemberException(true);
+
+        if (storageMemberRepository.existsByStorageIdAndUserId(storageId, target.getId()))
+            throw new MemberException(true);
 
         StorageMember member = new StorageMember();
         member.setUser(target);

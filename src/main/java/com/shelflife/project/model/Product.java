@@ -36,6 +36,9 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = true)
+    private String description;
+
     @Column(nullable = false)
     private String category;
 

@@ -1,4 +1,4 @@
-package com.shelflife.project.shoppingservice;
+package com.shelflife.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -20,8 +20,6 @@ import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ShoppingListItemRepository;
 import com.shelflife.project.repository.StorageRepository;
-import com.shelflife.project.service.ShoppingListService;
-import com.shelflife.project.service.UserService;
 
 public class ShoppingListServiceTests {
 

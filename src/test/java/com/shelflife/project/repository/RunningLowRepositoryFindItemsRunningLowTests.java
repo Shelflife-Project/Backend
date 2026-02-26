@@ -1,4 +1,4 @@
-package com.shelflife.project.runninglowrepo;
+package com.shelflife.project.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -17,11 +17,6 @@ import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.User;
-import com.shelflife.project.repository.ProductRepository;
-import com.shelflife.project.repository.RunningLowRepository;
-import com.shelflife.project.repository.StorageItemRepository;
-import com.shelflife.project.repository.StorageRepository;
-import com.shelflife.project.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 

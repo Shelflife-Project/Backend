@@ -19,14 +19,13 @@ import jakarta.transaction.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetProductsTests {
+public class ProductControllerGetProductsByCategoryTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -39,20 +38,13 @@ public class GetProductsTests {
     @Autowired
     private ProductRepository productRepository;
 
-    private User testAdmin;
     private User testUser;
 
     private Product testProduct;
+    private Product otherTestProduct;
 
     @BeforeEach
     void setup() {
-        testAdmin = new User();
-        testAdmin.setEmail("test@test.test");
-        testAdmin.setUsername("test");
-        testAdmin.setPassword("test123");
-        testAdmin.setAdmin(true);
-        testAdmin = userRepository.save(testAdmin);
-
         testUser = new User();
         testUser.setEmail("testuser@test.test");
         testUser.setUsername("testuser");
@@ -64,49 +56,58 @@ public class GetProductsTests {
         testProduct.setName("Chips");
         testProduct.setOwner(testUser);
         testProduct.setExpirationDaysDelta(200);
-        testProduct.setCategory("Snack");
+        testProduct.setCategory("Extra");
         testProduct.setBarcode("12345");
         testProduct = productRepository.save(testProduct);
+
+        otherTestProduct = new Product();
+        otherTestProduct.setName("Milk");
+        otherTestProduct.setOwner(testUser);
+        otherTestProduct.setExpirationDaysDelta(20);
+        otherTestProduct.setCategory("Dairy");
+        otherTestProduct.setBarcode("6789");
+        otherTestProduct = productRepository.save(otherTestProduct);
     }
 
     @Test
-    void getProductsAsUser() throws Exception {
+    void getProductsWithPartialCategory() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products")
+        mockMvc.perform(get("/api/products?category=a")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
-                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
-                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
-                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+                .andExpect(jsonPath("$[1].id").value(otherTestProduct.getId()));
     }
 
     @Test
-    void getProductsAsAdmin() throws Exception {
-        String jwt = jwtService.generateToken(testAdmin.getEmail());
+    void getProductsWithFullCategory() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products")
+        mockMvc.perform(get("/api/products?category=" + testProduct.getCategory())
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
-                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
-                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
-                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
+    }
+
+    @Test
+    void returnsZero() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(get("/api/products?category=notReal")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
     void cantGetProductsAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/products"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().string(""));
+        mockMvc.perform(get("/api/products?category=" + testProduct.getName()))
+                .andExpect(status().isForbidden());
     }
 }

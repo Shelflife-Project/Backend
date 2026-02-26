@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,13 +29,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 
-import static org.hamcrest.Matchers.*;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetAboutToExpireTests {
+public class ItemControllerEditItemTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -66,7 +65,6 @@ public class GetAboutToExpireTests {
     private StorageMember testMemberObj;
 
     private Product testProduct;
-    private StorageItem testExpiredItem;
     private StorageItem testItem;
 
     @BeforeEach
@@ -115,12 +113,6 @@ public class GetAboutToExpireTests {
         testProduct.setExpirationDaysDelta(2);
         testProduct = productRepository.save(testProduct);
 
-        testExpiredItem = new StorageItem();
-        testExpiredItem.setProduct(testProduct);
-        testExpiredItem.setStorage(testUserStorage);
-        testExpiredItem.setExpiresAt(LocalDate.now());
-        testExpiredItem = storageItemRepository.save(testExpiredItem);
-
         testItem = new StorageItem();
         testItem.setProduct(testProduct);
         testItem.setStorage(testUserStorage);
@@ -129,47 +121,73 @@ public class GetAboutToExpireTests {
     }
 
     @Test
-    void successfulGetItemsAsOwner() throws Exception {
+    void successfulEditAsOwner() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/abouttoexpire")
+        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validJson(testItem.getId(), LocalDate.now()))
                 .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
-                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
+                .andExpect(status().isOk());
     }
 
     @Test
-    void successfulGetItemsAsAdmin() throws Exception {
+    void successfulEditAsAdmin() throws Exception {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/abouttoexpire")
+        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validJson(testItem.getId(), LocalDate.now()))
                 .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
-                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
+                .andExpect(status().isOk());
     }
 
     @Test
-    void successfulGetItemsAsMember() throws Exception {
+    void successfulEditAsMember() throws Exception {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/abouttoexpire")
+        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validJson(testItem.getId(), LocalDate.now()))
                 .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
-                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void illegalArgumentForDate() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validJson(testItem.getId(), LocalDate.now().minusDays(1)))
+                .cookie(jwtCookie))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.expiresAt").exists());
+    }
+
+    @Test
+    void itemNotFound() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId() + 10)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validJson(testItem.getId(), LocalDate.now()))
+                .cookie(jwtCookie))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/abouttoexpire"))
+        mockMvc.perform(patch("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId()))
                 .andExpect(status().isForbidden());
+    }
+
+    private String validJson(final long productId, LocalDate date) {
+        return "{\"expiresAt\":\"" + date + "\"}";
     }
 }

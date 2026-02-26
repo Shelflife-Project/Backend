@@ -25,7 +25,7 @@ import static org.hamcrest.Matchers.*;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetProductsByNameTests {
+public class ProductControllerGetProductsByBarcodeTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -38,6 +38,7 @@ public class GetProductsByNameTests {
     @Autowired
     private ProductRepository productRepository;
 
+    private User testAdmin;
     private User testUser;
 
     private Product testProduct;
@@ -45,6 +46,13 @@ public class GetProductsByNameTests {
 
     @BeforeEach
     void setup() {
+        testAdmin = new User();
+        testAdmin.setEmail("test@test.test");
+        testAdmin.setUsername("test");
+        testAdmin.setPassword("test123");
+        testAdmin.setAdmin(true);
+        testAdmin = userRepository.save(testAdmin);
+
         testUser = new User();
         testUser.setEmail("testuser@test.test");
         testUser.setUsername("testuser");
@@ -70,28 +78,37 @@ public class GetProductsByNameTests {
     }
 
     @Test
-    void getProductsWithPartialName() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
+    void getProductsAsAdmin() throws Exception {
+        String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products?name=i")
-                .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
-                .andExpect(jsonPath("$[1].id").value(otherTestProduct.getId()));
-    }
-
-    @Test
-    void getProductsWithFullName() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(get("/api/products?name=" + testProduct.getName())
+        mockMvc.perform(get("/api/products?barcode=" + testProduct.getBarcode())
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
+                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
+                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
+                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
+                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+    }
+
+    @Test
+    void getProductsAsUser() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(get("/api/products?barcode=" + testProduct.getBarcode())
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
+                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
+                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
+                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
+                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 
     @Test
@@ -99,7 +116,7 @@ public class GetProductsByNameTests {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products?name=notReal")
+        mockMvc.perform(get("/api/products?barcode=notReal")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -107,7 +124,7 @@ public class GetProductsByNameTests {
 
     @Test
     void cantGetProductsAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/products?name=" + testProduct.getName()))
+        mockMvc.perform(get("/api/products?barcode=" + testProduct.getBarcode()))
                 .andExpect(status().isForbidden());
     }
 }

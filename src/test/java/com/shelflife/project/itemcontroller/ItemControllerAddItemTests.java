@@ -31,7 +31,7 @@ import java.time.LocalDate;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class AddItemTests {
+public class ItemControllerAddItemTests {
     @Autowired
     private MockMvc mockMvc;
 

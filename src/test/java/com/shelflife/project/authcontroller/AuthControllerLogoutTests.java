@@ -30,7 +30,7 @@ import java.util.Optional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class LogoutTests {
+public class AuthControllerLogoutTests {
 	@Autowired
 	private MockMvc mockMvc;
 

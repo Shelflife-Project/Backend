@@ -23,7 +23,7 @@ import com.shelflife.project.repository.ImageRepository;
 import com.shelflife.project.service.ImageService;
 
 @ExtendWith(MockitoExtension.class)
-public class DeleteImageTests {
+public class ImageServiceDeleteImageTests {
     @Spy
     @InjectMocks
     private ImageService imageService;

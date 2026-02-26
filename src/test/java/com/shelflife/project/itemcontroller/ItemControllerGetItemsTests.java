@@ -34,7 +34,7 @@ import static org.hamcrest.Matchers.*;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetItemsTests {
+public class ItemControllerGetItemsTests {
     @Autowired
     private MockMvc mockMvc;
 

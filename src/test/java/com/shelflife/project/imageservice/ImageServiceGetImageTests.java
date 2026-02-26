@@ -18,7 +18,7 @@ import com.shelflife.project.repository.ImageRepository;
 import com.shelflife.project.service.ImageService;
 
 @ExtendWith(MockitoExtension.class)
-public class GetImageTests {
+public class ImageServiceGetImageTests {
     @Mock
     private ImageRepository imageRepository;
 

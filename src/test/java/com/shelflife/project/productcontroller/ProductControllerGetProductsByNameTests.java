@@ -17,15 +17,15 @@ import com.shelflife.project.service.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class DeleteProductTests {
+public class ProductControllerGetProductsByNameTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -38,20 +38,13 @@ public class DeleteProductTests {
     @Autowired
     private ProductRepository productRepository;
 
-    private User testAdmin;
     private User testUser;
 
     private Product testProduct;
+    private Product otherTestProduct;
 
     @BeforeEach
     void setup() {
-        testAdmin = new User();
-        testAdmin.setEmail("test@test.test");
-        testAdmin.setUsername("test");
-        testAdmin.setPassword("test123");
-        testAdmin.setAdmin(true);
-        testAdmin = userRepository.save(testAdmin);
-
         testUser = new User();
         testUser.setEmail("testuser@test.test");
         testUser.setUsername("testuser");
@@ -66,65 +59,55 @@ public class DeleteProductTests {
         testProduct.setCategory("Snack");
         testProduct.setBarcode("12345");
         testProduct = productRepository.save(testProduct);
+
+        otherTestProduct = new Product();
+        otherTestProduct.setName("Milk");
+        otherTestProduct.setOwner(testUser);
+        otherTestProduct.setExpirationDaysDelta(20);
+        otherTestProduct.setCategory("Dairy");
+        otherTestProduct.setBarcode("6789");
+        otherTestProduct = productRepository.save(otherTestProduct);
     }
 
     @Test
-    void deleteProductAsAdmin() throws Exception {
-        String jwt = jwtService.generateToken(testAdmin.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(delete("/api/products/" + testProduct.getId())
-                .cookie(jwtCookie))
-                .andExpect(status().isOk());
-
-        assertTrue(productRepository.findById(testProduct.getId()).isEmpty());
-    }
-
-    @Test
-    void deleteOwnedAsUser() throws Exception {
+    void getProductsWithPartialName() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(delete("/api/products/" + testProduct.getId())
+        mockMvc.perform(get("/api/products?name=i")
                 .cookie(jwtCookie))
-                .andExpect(status().isOk());
-
-        assertTrue(productRepository.findById(testProduct.getId()).isEmpty());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[1].id").value(otherTestProduct.getId()));
     }
 
     @Test
-    void cantDeleteNonOwnedAsUser() throws Exception {
+    void getProductsWithFullName() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        Product p = new Product();
-        p.setOwner(testAdmin);
-        p.setName("test");
-        p.setCategory("testCategory");
-        productRepository.save(p);
-
-        mockMvc.perform(delete("/api/products/" + p.getId())
+        mockMvc.perform(get("/api/products?name=" + testProduct.getName())
                 .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()));
+    }
+
+    @Test
+    void returnsZero() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(get("/api/products?name=notReal")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    void cantGetProductsAsAnonymous() throws Exception {
+        mockMvc.perform(get("/api/products?name=" + testProduct.getName()))
                 .andExpect(status().isForbidden());
-
-        assertTrue(productRepository.findById(p.getId()).isPresent());
-    }
-
-    @Test
-    void returnsNotFound() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(delete("/api/products/" + testProduct.getId() + 1)
-                .cookie(jwtCookie))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void cantDeleteAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/products/" + testProduct.getId()))
-                .andExpect(status().isForbidden());
-
-        assertTrue(productRepository.findById(testProduct.getId()).isPresent());
     }
 }

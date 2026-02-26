@@ -1,17 +1,20 @@
-package com.shelflife.project.membercontroller;
+package com.shelflife.project.itemcontroller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.shelflife.project.model.Product;
 import com.shelflife.project.model.Storage;
+import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.StorageMember;
 import com.shelflife.project.model.User;
+import com.shelflife.project.repository.ProductRepository;
+import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageMemberRepository;
 import com.shelflife.project.repository.StorageRepository;
 import com.shelflife.project.repository.UserRepository;
@@ -23,11 +26,15 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDate;
+
+import static org.hamcrest.Matchers.*;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class InviteMemberTests {
+public class ItemControllerGetExpiredTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -43,15 +50,24 @@ public class InviteMemberTests {
     @Autowired
     private StorageMemberRepository storageMemberRepository;
 
+    @Autowired
+    private StorageItemRepository storageItemRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
     private User testAdmin;
     private User testUser;
     private User testMember;
-    private User testInvitedUser;
 
     private Storage testUserStorage;
     private Storage testAdminStorage;
 
     private StorageMember testMemberObj;
+
+    private Product testProduct;
+    private StorageItem testExpiredItem;
+    private StorageItem testItem;
 
     @BeforeEach
     void setup() {
@@ -69,13 +85,6 @@ public class InviteMemberTests {
         testUser.setAdmin(false);
         testUser = userRepository.save(testUser);
 
-        testInvitedUser = new User();
-        testInvitedUser.setEmail("testinvite@test.test");
-        testInvitedUser.setUsername("testinvite");
-        testInvitedUser.setPassword("test123");
-        testInvitedUser.setAdmin(false);
-        testInvitedUser = userRepository.save(testInvitedUser);
-
         testMember = new User();
         testMember.setEmail("testmember@test.test");
         testMember.setUsername("testmember");
@@ -91,92 +100,76 @@ public class InviteMemberTests {
         testMemberObj = new StorageMember();
         testMemberObj.setStorage(testUserStorage);
         testMemberObj.setUser(testMember);
+        testMemberObj.setAccepted(true);
         testMemberObj = storageMemberRepository.save(testMemberObj);
 
         testAdminStorage = new Storage();
         testAdminStorage.setOwner(testAdmin);
         testAdminStorage.setName("adminTest");
         testAdminStorage = storageRepository.save(testAdminStorage);
+
+        testProduct = new Product();
+        testProduct.setName("test");
+        testProduct.setOwner(testAdmin);
+        testProduct.setCategory("cat");
+        testProduct.setExpirationDaysDelta(2);
+        testProduct = productRepository.save(testProduct);
+
+        testExpiredItem = new StorageItem();
+        testExpiredItem.setProduct(testProduct);
+        testExpiredItem.setStorage(testUserStorage);
+        testExpiredItem.setExpiresAt(LocalDate.now().minusDays(2));
+        testExpiredItem = storageItemRepository.save(testExpiredItem);
+
+        testItem = new StorageItem();
+        testItem.setProduct(testProduct);
+        testItem.setStorage(testUserStorage);
+        testItem.setExpiresAt(LocalDate.now());
+        testItem = storageItemRepository.save(testItem);
     }
 
     @Test
-    void successfulInviteAsOwner() throws Exception {
+    void successfulGetItemsAsOwner() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"" + testInvitedUser.getEmail() + "\"}"))
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/expired")
+                .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.storage.id").value(testUserStorage.getId()))
-                .andExpect(jsonPath("$.user.id").value(testInvitedUser.getId()));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
     }
 
     @Test
-    void invalidEmail() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
+    void successfulGetItemsAsAdmin() throws Exception {
+        String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"test123@test.test\"}"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/expired")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
     }
 
     @Test
-    void invalidId() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(post("/api/storages/" + (testUserStorage.getId() + 10) + "/members")
-                .cookie(jwtCookie)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"test@test.test\"}"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void cantInviteMember() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"" + testMember.getEmail() + "\"}"))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void cantInviteAdmin() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"" + testAdmin.getEmail() + "\"}"))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void accessDeniedAsMember() throws Exception {
+    void successfulGetItemsAsMember() throws Exception {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"email\":\"test@test.test\"}"))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/expired")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members"))
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/expired"))
                 .andExpect(status().isForbidden());
     }
 }

@@ -9,11 +9,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.shelflife.project.model.Product;
+import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.StorageMember;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ProductRepository;
+import com.shelflife.project.repository.RunningLowRepository;
 import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageMemberRepository;
 import com.shelflife.project.repository.StorageRepository;
@@ -34,7 +36,7 @@ import static org.hamcrest.Matchers.*;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetExpiredTests {
+public class ItemControllerRunningLowTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -56,18 +58,20 @@ public class GetExpiredTests {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private RunningLowRepository runningLowRepository;
+
     private User testAdmin;
     private User testUser;
     private User testMember;
 
     private Storage testUserStorage;
-    private Storage testAdminStorage;
 
     private StorageMember testMemberObj;
 
     private Product testProduct;
-    private StorageItem testExpiredItem;
     private StorageItem testItem;
+    private RunningLowSetting testSetting;
 
     @BeforeEach
     void setup() {
@@ -103,11 +107,6 @@ public class GetExpiredTests {
         testMemberObj.setAccepted(true);
         testMemberObj = storageMemberRepository.save(testMemberObj);
 
-        testAdminStorage = new Storage();
-        testAdminStorage.setOwner(testAdmin);
-        testAdminStorage.setName("adminTest");
-        testAdminStorage = storageRepository.save(testAdminStorage);
-
         testProduct = new Product();
         testProduct.setName("test");
         testProduct.setOwner(testAdmin);
@@ -115,17 +114,17 @@ public class GetExpiredTests {
         testProduct.setExpirationDaysDelta(2);
         testProduct = productRepository.save(testProduct);
 
-        testExpiredItem = new StorageItem();
-        testExpiredItem.setProduct(testProduct);
-        testExpiredItem.setStorage(testUserStorage);
-        testExpiredItem.setExpiresAt(LocalDate.now().minusDays(2));
-        testExpiredItem = storageItemRepository.save(testExpiredItem);
-
         testItem = new StorageItem();
         testItem.setProduct(testProduct);
         testItem.setStorage(testUserStorage);
         testItem.setExpiresAt(LocalDate.now());
         testItem = storageItemRepository.save(testItem);
+
+        testSetting = new RunningLowSetting();
+        testSetting.setProduct(testProduct);
+        testSetting.setStorage(testUserStorage);
+        testSetting.setRunningLow(1);
+        testSetting = runningLowRepository.save(testSetting);
     }
 
     @Test
@@ -133,12 +132,14 @@ public class GetExpiredTests {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/expired")
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglow")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
-                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(1))
+                .andExpect(jsonPath("$[0].amount").value(1))
+                .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
     @Test
@@ -146,12 +147,14 @@ public class GetExpiredTests {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/expired")
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglow")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
-                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(1))
+                .andExpect(jsonPath("$[0].amount").value(1))
+                .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
     }
 
     @Test
@@ -159,17 +162,75 @@ public class GetExpiredTests {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/expired")
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglow")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
-                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(testSetting.getRunningLow()))
+                .andExpect(jsonPath("$[0].amount").value(1))
+                .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
+    }
+
+    @Test
+    void getsOneWithAmountTwo() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        StorageItem item = new StorageItem();
+        item.setProduct(testProduct);
+        item.setStorage(testUserStorage);
+        item.setExpiresAt(LocalDate.now().plusDays(2));
+        item = storageItemRepository.save(item);
+
+        testSetting.setRunningLow(2);
+        runningLowRepository.save(testSetting);
+
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglow")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].runningLowAt").value(testSetting.getRunningLow()))
+                .andExpect(jsonPath("$[0].amount").value(2))
+                .andExpect(jsonPath("$[0].storage.id").value(testUserStorage.getId()));
+    }
+
+    @Test
+    void getsZero() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        StorageItem item = new StorageItem();
+        item.setProduct(testProduct);
+        item.setStorage(testUserStorage);
+        item.setExpiresAt(LocalDate.now().plusDays(2));
+        item = storageItemRepository.save(item);
+
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglow")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/expired"))
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/runninglow"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void accessDeniedAsNonMember() throws Exception {
+        String jwt = jwtService.generateToken(testMember.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        Storage adminStorage = new Storage();
+        adminStorage.setOwner(testAdmin);
+        adminStorage.setName("adminStorage");
+        storageRepository.save(adminStorage);
+
+        mockMvc.perform(get("/api/storages/" + adminStorage.getId() + "/runninglow")
+                .cookie(jwtCookie))
                 .andExpect(status().isForbidden());
     }
 }

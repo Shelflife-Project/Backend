@@ -19,13 +19,14 @@ import jakarta.transaction.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetProductsByBarcodeTests {
+public class ProductControllerGetProductsTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -42,7 +43,6 @@ public class GetProductsByBarcodeTests {
     private User testUser;
 
     private Product testProduct;
-    private Product otherTestProduct;
 
     @BeforeEach
     void setup() {
@@ -67,31 +67,6 @@ public class GetProductsByBarcodeTests {
         testProduct.setCategory("Snack");
         testProduct.setBarcode("12345");
         testProduct = productRepository.save(testProduct);
-
-        otherTestProduct = new Product();
-        otherTestProduct.setName("Milk");
-        otherTestProduct.setOwner(testUser);
-        otherTestProduct.setExpirationDaysDelta(20);
-        otherTestProduct.setCategory("Dairy");
-        otherTestProduct.setBarcode("6789");
-        otherTestProduct = productRepository.save(otherTestProduct);
-    }
-
-    @Test
-    void getProductsAsAdmin() throws Exception {
-        String jwt = jwtService.generateToken(testAdmin.getEmail());
-        Cookie jwtCookie = new Cookie("jwt", jwt);
-
-        mockMvc.perform(get("/api/products?barcode=" + testProduct.getBarcode())
-                .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
-                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
-                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
-                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 
     @Test
@@ -99,7 +74,7 @@ public class GetProductsByBarcodeTests {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products?barcode=" + testProduct.getBarcode())
+        mockMvc.perform(get("/api/products")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
@@ -112,19 +87,26 @@ public class GetProductsByBarcodeTests {
     }
 
     @Test
-    void returnsZero() throws Exception {
-        String jwt = jwtService.generateToken(testUser.getEmail());
+    void getProductsAsAdmin() throws Exception {
+        String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/products?barcode=notReal")
+        mockMvc.perform(get("/api/products")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
+                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
+                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
+                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
+                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 
     @Test
     void cantGetProductsAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/products?barcode=" + testProduct.getBarcode()))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/products"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(""));
     }
 }

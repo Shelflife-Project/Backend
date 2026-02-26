@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -22,13 +23,11 @@ import jakarta.transaction.Transactional;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import static org.hamcrest.Matchers.*;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class GetMembersTests {
+public class MemberControllerInviteMemberTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -47,6 +46,7 @@ public class GetMembersTests {
     private User testAdmin;
     private User testUser;
     private User testMember;
+    private User testInvitedUser;
 
     private Storage testUserStorage;
     private Storage testAdminStorage;
@@ -69,6 +69,13 @@ public class GetMembersTests {
         testUser.setAdmin(false);
         testUser = userRepository.save(testUser);
 
+        testInvitedUser = new User();
+        testInvitedUser.setEmail("testinvite@test.test");
+        testInvitedUser.setUsername("testinvite");
+        testInvitedUser.setPassword("test123");
+        testInvitedUser.setAdmin(false);
+        testInvitedUser = userRepository.save(testInvitedUser);
+
         testMember = new User();
         testMember.setEmail("testmember@test.test");
         testMember.setUsername("testmember");
@@ -84,7 +91,6 @@ public class GetMembersTests {
         testMemberObj = new StorageMember();
         testMemberObj.setStorage(testUserStorage);
         testMemberObj.setUser(testMember);
-        testMemberObj.setAccepted(true);
         testMemberObj = storageMemberRepository.save(testMemberObj);
 
         testAdminStorage = new Storage();
@@ -94,50 +100,83 @@ public class GetMembersTests {
     }
 
     @Test
-    void successfulGetMembersAsOwner() throws Exception {
+    void successfulInviteAsOwner() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie))
+        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + testInvitedUser.getEmail() + "\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
-                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
-                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.storage.id").value(testUserStorage.getId()))
+                .andExpect(jsonPath("$.user.id").value(testInvitedUser.getId()));
     }
 
     @Test
-    void successfulGetMembersAsAdmin() throws Exception {
-        String jwt = jwtService.generateToken(testAdmin.getEmail());
+    void invalidEmail() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
-                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
-                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
+        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"test123@test.test\"}"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    void successfulGetMembersAsMember() throws Exception {
+    void invalidId() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(post("/api/storages/" + (testUserStorage.getId() + 10) + "/members")
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"test@test.test\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void cantInviteMember() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + testMember.getEmail() + "\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void cantInviteAdmin() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"" + testAdmin.getEmail() + "\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void accessDeniedAsMember() throws Exception {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members")
-                .cookie(jwtCookie))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testMemberObj.getId()))
-                .andExpect(jsonPath("$[0].storage.id").value(testMemberObj.getStorage().getId()))
-                .andExpect(jsonPath("$[0].user.id").value(testMemberObj.getUser().getId()));
+        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members")
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"test@test.test\"}"))
+                .andExpect(status().isForbidden());
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/members"))
+        mockMvc.perform(post("/api/storages/" + testUserStorage.getId() + "/members"))
                 .andExpect(status().isForbidden());
     }
 }

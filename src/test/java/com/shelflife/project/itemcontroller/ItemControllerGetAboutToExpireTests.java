@@ -28,11 +28,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 
+import static org.hamcrest.Matchers.*;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class DeleteItemTests {
+public class ItemControllerGetAboutToExpireTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -64,6 +66,7 @@ public class DeleteItemTests {
     private StorageMember testMemberObj;
 
     private Product testProduct;
+    private StorageItem testExpiredItem;
     private StorageItem testItem;
 
     @BeforeEach
@@ -112,6 +115,12 @@ public class DeleteItemTests {
         testProduct.setExpirationDaysDelta(2);
         testProduct = productRepository.save(testProduct);
 
+        testExpiredItem = new StorageItem();
+        testExpiredItem.setProduct(testProduct);
+        testExpiredItem.setStorage(testUserStorage);
+        testExpiredItem.setExpiresAt(LocalDate.now());
+        testExpiredItem = storageItemRepository.save(testExpiredItem);
+
         testItem = new StorageItem();
         testItem.setProduct(testProduct);
         testItem.setStorage(testUserStorage);
@@ -120,38 +129,47 @@ public class DeleteItemTests {
     }
 
     @Test
-    void successfulDeleteAsOwner() throws Exception {
+    void successfulGetItemsAsOwner() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(delete("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/abouttoexpire")
                 .cookie(jwtCookie))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
     }
 
     @Test
-    void successfulDeleteAsAdmin() throws Exception {
+    void successfulGetItemsAsAdmin() throws Exception {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(delete("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/abouttoexpire")
                 .cookie(jwtCookie))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
     }
 
     @Test
-    void successfulDeleteAsMember() throws Exception {
+    void successfulGetItemsAsMember() throws Exception {
         String jwt = jwtService.generateToken(testMember.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
-        mockMvc.perform(delete("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId())
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/abouttoexpire")
                 .cookie(jwtCookie))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testExpiredItem.getId()))
+                .andExpect(jsonPath("$[0].product.id").value(testProduct.getId()));
     }
 
     @Test
     void accessDeniedAsAnonymous() throws Exception {
-        mockMvc.perform(delete("/api/storages/" + testUserStorage.getId() + "/items/" + testItem.getId()))
+        mockMvc.perform(get("/api/storages/" + testUserStorage.getId() + "/abouttoexpire"))
                 .andExpect(status().isForbidden());
     }
 }

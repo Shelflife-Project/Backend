@@ -161,6 +161,7 @@ public class SaveProductTests {
     private CreateProductRequest validRequest() {
         CreateProductRequest req = new CreateProductRequest();
         req.setName("ProductName");
+        req.setDescription("Good product");
         req.setExpirationDaysDelta(365);
         req.setCategory("Canned soup");
         req.setBarcode("12346");

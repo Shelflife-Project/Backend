@@ -114,6 +114,7 @@ public class ProductService {
             throw new IllegalArgumentException("name");
 
         product.setName(request.getName());
+        product.setDescription(request.getDescription());
 
         if (request.getExpirationDaysDelta() < 1)
             throw new IllegalArgumentException("expirationDaysDelta");
@@ -135,6 +136,10 @@ public class ProductService {
                 throw new IllegalArgumentException("name");
 
             productDB.setName(request.getName());
+        }
+
+        if(request.getDescription() != null) {
+            productDB.setDescription(request.getDescription());
         }
 
         if (request.getCategory() != null) {

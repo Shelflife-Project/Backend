@@ -13,7 +13,10 @@ import lombok.Setter;
 public class UpdateProductRequest {
     @Length(max = 40, message = "The name can only be 40 characters long")
     private String name;
-    
+
+    @Length(max = 255, message = "The description can only be 255 characters long")
+    private String description;
+
     @Length(max = 40, message = "The category can only be 40 characters long")
     private String category;
 

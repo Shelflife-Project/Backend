@@ -18,6 +18,7 @@ public class ProductSeeder implements Seeder {
     public void seed() {
         Product userProduct = new Product();
         userProduct.setName("Bread");
+        userProduct.setDescription("A very nice and fresh loaf of bread.");
         userProduct.setCategory("Baked good");
         userProduct.setBarcode("1234");
         userProduct.setExpirationDaysDelta(5);

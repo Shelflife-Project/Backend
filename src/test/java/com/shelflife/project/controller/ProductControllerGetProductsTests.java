@@ -43,6 +43,7 @@ public class ProductControllerGetProductsTests {
     private User testUser;
 
     private Product testProduct;
+    private Product otherProduct;
 
     @BeforeEach
     void setup() {
@@ -67,6 +68,14 @@ public class ProductControllerGetProductsTests {
         testProduct.setCategory("Snack");
         testProduct.setBarcode("12345");
         testProduct = productRepository.save(testProduct);
+
+        otherProduct = new Product();
+        otherProduct.setName("Test");
+        otherProduct.setOwner(testUser);
+        otherProduct.setExpirationDaysDelta(100);
+        otherProduct.setCategory("Snack");
+        otherProduct.setBarcode("1234567");
+        otherProduct = productRepository.save(otherProduct);
     }
 
     @Test
@@ -77,7 +86,7 @@ public class ProductControllerGetProductsTests {
         mockMvc.perform(get("/api/products")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
                 .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
                 .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
@@ -94,7 +103,7 @@ public class ProductControllerGetProductsTests {
         mockMvc.perform(get("/api/products")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
                 .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
                 .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
@@ -108,5 +117,22 @@ public class ProductControllerGetProductsTests {
         mockMvc.perform(get("/api/products"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string(""));
+    }
+
+    @Test
+    void getProductsPaginated() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(get("/api/products?page=0&size=1")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
+                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
+                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
+                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
+                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
+                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 }

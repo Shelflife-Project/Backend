@@ -60,7 +60,8 @@ public class StorageController {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
-    public ResponseEntity<List<Storage>> getStorages(Authentication auth, @RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<List<Storage>> getStorages(Authentication auth,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "true") boolean ascending) {
@@ -94,7 +95,7 @@ public class StorageController {
             })
     })
     public ResponseEntity<?> getStorage(
-            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id, 
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id,
             Authentication auth) {
         try {
             return ResponseEntity.ok(storageGetterService.getStorage(auth, id));
@@ -147,7 +148,7 @@ public class StorageController {
             })
     })
     public ResponseEntity<?> changeName(
-            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id, 
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id,
             @Valid @RequestBody ChangeStorageNameRequest request,
             Authentication auth) {
         try {
@@ -169,7 +170,7 @@ public class StorageController {
             @ApiResponse(responseCode = "404", description = "Storage with this ID was not found")
     })
     public ResponseEntity<Void> deleteStorage(
-            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id, 
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id,
             Authentication auth) {
         try {
             storageService.deleteStorageRequest(id, auth);

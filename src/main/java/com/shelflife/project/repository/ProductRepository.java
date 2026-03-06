@@ -19,7 +19,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     List<Product> findByNameContainingIgnoreCaseAndCategoryContainingIgnoreCaseAndBarcodeContainingIgnoreCase(String name, String category, String barcode);
 
-
     boolean existsByBarcode(String barcode);
 
     @Query("select p.category from Product p")

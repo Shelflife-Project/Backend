@@ -9,7 +9,6 @@ import com.shelflife.project.dto.product.CreateProductRequest;
 import com.shelflife.project.dto.product.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
-import com.shelflife.project.filter.ProductFilter;
 import com.shelflife.project.model.Image;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.service.ImageService;
@@ -28,6 +27,9 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -56,16 +58,21 @@ public class ProductController {
     })
     @GetMapping()
     public List<Product> getProducts(
-            @RequestParam(required = false) String barcode,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String category) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "true") boolean ascending) {
 
-        ProductFilter filter = new ProductFilter();
-        filter.setName(name);
-        filter.setCategory(category);
-        filter.setBarcode(barcode);
+        Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable;
 
-        return productService.findProducts(filter);
+        if (size == null) {
+            pageable = Pageable.unpaged();
+        } else {
+            pageable = PageRequest.of(page, size, sort);
+        }
+
+        return productService.getProducts(pageable);
     }
 
     @Operation(summary = "Get product by ID", description = "Retrieve a product by its ID.")

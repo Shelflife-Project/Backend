@@ -21,6 +21,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     boolean existsByBarcode(String barcode);
 
-    @Query("select p.category from Product p")
+    @Query("select distinct p.category from Product p")
     List<String> getCategories();
 }

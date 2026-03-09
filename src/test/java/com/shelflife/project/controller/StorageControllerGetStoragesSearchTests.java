@@ -2,6 +2,7 @@ package com.shelflife.project.controller;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -105,8 +106,8 @@ public class StorageControllerGetStoragesSearchTests {
     @Test
     void searchStoragesAsAnonymous() throws Exception {
         mockMvc.perform(get("/api/storages?search=test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(""));
     }
 
     @Test

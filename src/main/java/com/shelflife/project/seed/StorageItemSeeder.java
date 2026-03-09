@@ -3,6 +3,7 @@ package com.shelflife.project.seed;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.shelflife.project.model.Product;
@@ -31,8 +32,8 @@ public class StorageItemSeeder implements Seeder {
         User user = userRepository.findByEmail("test@test.test").get();
         User admin = userRepository.findByEmail("admin@test.test").get();
 
-        Product bread = productRepository.findByNameContainingIgnoreCase("Bread").get(0);
-        Product milk = productRepository.findByNameContainingIgnoreCase("Milk").get(0);
+        Product bread = productRepository.searchProducts("Bread", Pageable.unpaged()).toList().get(0);
+        Product milk = productRepository.searchProducts("Milk", Pageable.unpaged()).toList().get(0);
 
         StorageItem userItem = new StorageItem();
         userItem.setProduct(bread);

@@ -78,7 +78,7 @@ public class StorageControllerGetStoragesSearchTests {
     }
 
     @Test
-    void searchStorages() throws Exception {
+    void searchStoragesAsAdmin() throws Exception {
         String jwt = jwtService.generateToken(testAdmin.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
@@ -88,6 +88,25 @@ public class StorageControllerGetStoragesSearchTests {
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").value(testUserStorage.getId()))
                 .andExpect(jsonPath("$[1].id").value(testAdminStorage.getId()));
+    }
+
+    @Test
+    void searchStoragesAsUser() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(get("/api/storages?search=test")
+                .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(testUserStorage.getId()));
+    }
+
+    @Test
+    void searchStoragesAsAnonymous() throws Exception {
+        mockMvc.perform(get("/api/storages?search=test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test

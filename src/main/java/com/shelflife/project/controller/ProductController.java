@@ -92,6 +92,12 @@ public class ProductController {
         }
     }
 
+    @Operation(summary = "Gets categories that are in the database")
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getCategories() {
+        return ResponseEntity.ok(productService.getCategories());
+    }
+
     @GetMapping("/{id}/icon")
     @Operation(summary = "Get the icon of a product")
     @ApiResponses(value = {

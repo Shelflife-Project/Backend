@@ -35,6 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/auth/logout").permitAll()
                         .requestMatchers("/swagger-ui", "/swagger-ui/*", "/v3/api-docs", "/v3/api-docs/*").permitAll()
                         .requestMatchers("/api/products/*/icon").permitAll()
+                        .requestMatchers("/api/users/*/pfp").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

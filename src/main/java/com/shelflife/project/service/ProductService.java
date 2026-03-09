@@ -13,7 +13,6 @@ import com.shelflife.project.dto.product.CreateProductRequest;
 import com.shelflife.project.dto.product.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
-import com.shelflife.project.filter.ProductFilter;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ProductRepository;
@@ -33,28 +32,11 @@ public class ProductService {
         return productRepository.findAll(pageable).toList();
     }
 
-    public List<Product> findProducts(ProductFilter filter) {
+    public List<Product> findProducts(String search, Pageable pageable) {
+        if(!search.isBlank())
+            return productRepository.searchProducts(search, pageable).toList();
 
-        if (filter.getName() != null && filter.getCategory() != null && filter.getBarcode() != null) {
-            return productRepository
-                    .findByNameContainingIgnoreCaseAndCategoryContainingIgnoreCaseAndBarcodeContainingIgnoreCase(
-                            filter.getName(), filter.getCategory(), filter.getBarcode());
-        }
-
-        if (filter.getName() != null && filter.getCategory() != null)
-            return productRepository.findByNameContainingIgnoreCaseAndCategoryContainingIgnoreCase(filter.getName(),
-                    filter.getCategory());
-
-        if (filter.getName() != null)
-            return productRepository.findByNameContainingIgnoreCase(filter.getName());
-
-        if (filter.getCategory() != null)
-            return productRepository.findByCategoryContainingIgnoreCase(filter.getCategory());
-
-        if (filter.getBarcode() != null)
-            return productRepository.findByBarcodeContainingIgnoreCase(filter.getBarcode());
-
-        return productRepository.findAll();
+        return productRepository.findAll(pageable).toList();
     }
 
     public List<String> getCategories() {

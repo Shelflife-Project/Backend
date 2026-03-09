@@ -1,6 +1,7 @@
 package com.shelflife.project.seed;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.shelflife.project.model.Product;
@@ -27,8 +28,7 @@ public class RunningLowSeeder implements Seeder {
 
     public void seed() {
         User user = userRepository.findByEmail("test@test.test").get();
-
-        Product bread = productRepository.findByNameContainingIgnoreCase("Bread").get(0);
+        Product bread = productRepository.searchProducts("Bread", Pageable.unpaged()).toList().get(0);
 
         RunningLowSetting setting = new RunningLowSetting();
         setting.setProduct(bread);

@@ -58,6 +58,7 @@ public class ProductController {
     })
     @GetMapping()
     public List<Product> getProducts(
+            @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -72,7 +73,7 @@ public class ProductController {
             pageable = PageRequest.of(page, size, sort);
         }
 
-        return productService.getProducts(pageable);
+        return productService.findProducts(search, pageable);
     }
 
     @Operation(summary = "Get product by ID", description = "Retrieve a product by its ID.")

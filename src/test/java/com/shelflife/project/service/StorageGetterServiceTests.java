@@ -2,10 +2,13 @@ package com.shelflife.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -14,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 
@@ -114,7 +118,7 @@ public class StorageGetterServiceTests {
         doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
 
         assertThrows(AccessDeniedException.class, () -> {
-            storageGetterService.getStorages(auth);
+            storageGetterService.getStorages(auth, "", Pageable.unpaged());
         });
     }
 
@@ -124,12 +128,13 @@ public class StorageGetterServiceTests {
         user.setAdmin(true);
 
         doReturn(user).when(userService).getUserByAuth(auth);
+        doReturn(List.of()).when(storageRepository).searchAll(anyString(), any(Pageable.class));
 
         assertDoesNotThrow(() -> {
-            storageGetterService.getStorages(auth);
+            storageGetterService.getStorages(auth, "", Pageable.unpaged());
         });
 
-        verify(storageGetterService).getStorages();
+        verify(storageRepository).searchAll(anyString(), any(Pageable.class));
     }
 
     @Test
@@ -141,9 +146,9 @@ public class StorageGetterServiceTests {
         doReturn(user).when(userService).getUserByAuth(auth);
 
         assertDoesNotThrow(() -> {
-            storageGetterService.getStorages(auth);
+            storageGetterService.getStorages(auth, "", Pageable.unpaged());
         });
 
-        verify(storageRepository).findAccessibleStorages(user.getId());
+        verify(storageRepository).findAccessibleStorages(user.getId(), "", Pageable.unpaged());
     }
 }

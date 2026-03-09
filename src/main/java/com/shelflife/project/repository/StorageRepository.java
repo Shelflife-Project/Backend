@@ -12,6 +12,13 @@ import java.util.List;
 public interface StorageRepository extends JpaRepository<Storage, Long> {
 	List<Storage> findByOwnerId(long ownerId);
 
+	@Query("""
+			SELECT distinct s
+			FROM Storage s
+			WHERE lower(s.name) LIKE lower(concat('%', :search, '%'))
+			""")
+	List<Storage> searchAll(String search, Pageable pageable);
+
 	/**
 	 * @param storageId
 	 * @param userId
@@ -38,7 +45,21 @@ public interface StorageRepository extends JpaRepository<Storage, Long> {
 	List<Storage> findAccessibleStorages(long userId);
 
 	/**
-	 * @param userId
+	 * @param userId The ID of the user that you need the accessible storages of
+	 * @param search A string for filtering the results by the storages name
+	 * @return A list of storages that you own or you are an accepted member of
+	 */
+	@Query("""
+			SELECT distinct s
+			FROM Storage s
+			LEFT JOIN s.members sm
+			WHERE (s.owner.id = :userId OR (sm.user.id = :userId AND sm.isAccepted)) AND
+			lower(s.name) LIKE lower(concat('%', :search, '%'))
+			""")
+	List<Storage> findAccessibleStorages(long userId, String search);
+
+	/**
+	 * @param userId The ID of the user that you need the accessible storages of
 	 * @return A list of storages that you own or you are an accepted member of
 	 */
 	@Query("""
@@ -48,4 +69,18 @@ public interface StorageRepository extends JpaRepository<Storage, Long> {
 			WHERE s.owner.id = :userId OR (sm.user.id = :userId AND sm.isAccepted)
 			""")
 	List<Storage> findAccessibleStorages(long userId, Pageable pageable);
+
+	/**
+	 * @param userId The ID of the user that you need the accessible storages of
+	 * @param search A string for filtering the results by the storages name
+	 * @return A list of storages that you own or you are an accepted member of
+	 */
+	@Query("""
+			SELECT distinct s
+			FROM Storage s
+			LEFT JOIN s.members sm
+			WHERE (s.owner.id = :userId OR (sm.user.id = :userId AND sm.isAccepted)) AND
+			lower(s.name) LIKE lower(concat('%', :search, '%'))
+			""")
+	List<Storage> findAccessibleStorages(long userId, String search, Pageable pageable);
 }

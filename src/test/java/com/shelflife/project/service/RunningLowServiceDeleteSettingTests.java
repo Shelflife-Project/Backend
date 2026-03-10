@@ -14,12 +14,12 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.model.Storage;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.RunningLowRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,7 +40,7 @@ public class RunningLowServiceDeleteSettingTests {
     @Spy
     private RunningLowService service;
 
-    private Authentication auth;
+    User user = new User();
 
     @Test
     void successfulDelete() {
@@ -57,16 +57,16 @@ public class RunningLowServiceDeleteSettingTests {
         setting.setRunningLow(4);
 
         doReturn(setting).when(service).getSetting(1);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
 
-        assertDoesNotThrow(() -> service.deleteSetting(1, auth));
+        assertDoesNotThrow(() -> service.deleteSetting(1, user));
         verify(repository).delete(setting);
     }
 
     @Test
     void throwsNotFound() {
         doThrow(ItemNotFoundException.class).when(service).getSetting(1);
-        assertThrows(ItemNotFoundException.class, () -> service.deleteSetting(1, auth));
+        assertThrows(ItemNotFoundException.class, () -> service.deleteSetting(1, user));
     }
 
     @Test
@@ -84,9 +84,9 @@ public class RunningLowServiceDeleteSettingTests {
         setting.setRunningLow(4);
 
         doReturn(setting).when(service).getSetting(1);
-        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, null);
 
-        assertThrows(AccessDeniedException.class, () -> service.deleteSetting(1, auth));
+        assertThrows(AccessDeniedException.class, () -> service.deleteSetting(1, null));
         verify(repository, never()).delete(setting);
     }
 }

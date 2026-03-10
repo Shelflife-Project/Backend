@@ -2,7 +2,6 @@ package com.shelflife.project.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
@@ -26,17 +25,16 @@ public class StorageService {
     @Autowired
     private StorageMemberService storageMemberService;
 
-    @Autowired
-    private UserService userService;
-
     @Transactional
-    public Storage createStorage(CreateStorageRequest request, Authentication auth)
+    public Storage createStorage(CreateStorageRequest request, User current)
             throws AccessDeniedException, IllegalArgumentException {
+
+        if (current == null)
+            throw new AccessDeniedException(null);
 
         if (request.getName() == null || request.getName().isBlank())
             throw new IllegalArgumentException("name");
 
-        User current = userService.getUserByAuth(auth);
         Storage storage = new Storage();
         storage.setOwner(current);
         storage.setName(request.getName());
@@ -45,13 +43,15 @@ public class StorageService {
     }
 
     @Transactional
-    public Storage changeName(final long id, ChangeStorageNameRequest request, Authentication auth)
+    public Storage changeName(final long id, ChangeStorageNameRequest request, User current)
             throws AccessDeniedException, ItemNotFoundException {
+
+        if (current == null)
+            throw new AccessDeniedException(null);
 
         if (request.getName() == null || request.getName().isBlank())
             throw new IllegalArgumentException("name");
 
-        User current = userService.getUserByAuth(auth);
         Storage storage = storageGetterService.getStorage(id);
 
         if (!current.isAdmin() && storage.getOwner().getId() != current.getId())
@@ -62,9 +62,11 @@ public class StorageService {
     }
 
     @Transactional
-    public void deleteStorageRequest(final long id, Authentication auth)
+    public void deleteStorageRequest(final long id, User current)
             throws AccessDeniedException, ItemNotFoundException {
-        User current = userService.getUserByAuth(auth);
+        if (current == null)
+            throw new AccessDeniedException(null);
+
         Storage storage = storageGetterService.getStorage(id);
 
         if (current.isAdmin() || storage.getOwner().getId() == current.getId()) { // Delete storage

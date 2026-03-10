@@ -13,9 +13,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.model.Product;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.RunningLowRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,22 +29,22 @@ public class RunningLowServiceGetRunningLowInStorageTests {
     @InjectMocks
     private RunningLowService service;
 
-    private Authentication auth;
+    private User user = new User();
 
     @Test
     void successfulGet() {
         Product product = new Product();
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         doReturn(List.of(product)).when(repository).findItemsRunningLow(1);
 
-        assertDoesNotThrow(() -> service.getRunningLowInStorage(1, auth));
-        assertEquals(product, service.getRunningLowInStorage(1, auth).get(0));
+        assertDoesNotThrow(() -> service.getRunningLowInStorage(1, user));
+        assertEquals(product, service.getRunningLowInStorage(1, user).get(0));
     }
 
     @Test
     void throwsAccessDenied() {
-        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, user);
 
-        assertThrows(AccessDeniedException.class, () -> service.getRunningLowInStorage(1, auth));
+        assertThrows(AccessDeniedException.class, () -> service.getRunningLowInStorage(1, user));
     }
 }

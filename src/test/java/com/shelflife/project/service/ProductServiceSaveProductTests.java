@@ -16,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.product.CreateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
@@ -29,23 +28,18 @@ public class ProductServiceSaveProductTests {
     @Mock
     private ProductRepository repo;
 
-    @Mock
-    private UserService userService;
-
-    @Mock
-    private Authentication auth;
-
     @Spy
     @InjectMocks
     private ProductService productService;
 
     @Test
     void successfulCreation() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
+        User user = testUser(1, false);
+
         when(repo.save(any(Product.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Product p = productService.saveProduct(validRequest(), auth);
+        Product p = productService.saveProduct(validRequest(), user);
         assertNotNull(p);
         assertEquals(1, p.getOwnerId());
 
@@ -53,20 +47,18 @@ public class ProductServiceSaveProductTests {
     }
 
     @Test
-    void throwsAccessDeniedAsAnonymous() {
-        when(userService.getUserByAuth(auth)).thenThrow(AccessDeniedException.class);
-
-        assertThrows(AccessDeniedException.class, () -> productService.saveProduct(validRequest(), auth));
+    void throwsAccessDeniedWithNull() {
+        assertThrows(AccessDeniedException.class, () -> productService.saveProduct(validRequest(), null));
         verifyNoInteractions(repo);
     }
 
     @Test
     void throwsBarcodeExists() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
+        User user = testUser(1, false);
         when(repo.existsByBarcode(validRequest().getBarcode())).thenReturn(true);
 
         assertThrows(BarcodeExistsException.class, () -> {
-            productService.saveProduct(validRequest(), auth);
+            productService.saveProduct(validRequest(), user);
         });
 
         verify(repo, never()).save(any());
@@ -74,13 +66,13 @@ public class ProductServiceSaveProductTests {
 
     @Test
     void throwsIllegalArgumentForNullCategory() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
+        User user = testUser(1, false);
 
         CreateProductRequest request = validRequest();
         request.setCategory(null);
 
         assertThrows(IllegalArgumentException.class, () -> {
-            productService.saveProduct(request, auth);
+            productService.saveProduct(request, user);
         });
 
         verify(repo, never()).save(any());
@@ -88,13 +80,13 @@ public class ProductServiceSaveProductTests {
 
     @Test
     void throwsIllegalArgumentForEmptyCategory() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
+        User user = testUser(1, false);
 
         CreateProductRequest request = validRequest();
         request.setCategory("");
 
         assertThrows(IllegalArgumentException.class, () -> {
-            productService.saveProduct(request, auth);
+            productService.saveProduct(request, user);
         });
 
         verify(repo, never()).save(any());
@@ -102,13 +94,13 @@ public class ProductServiceSaveProductTests {
 
     @Test
     void throwsIllegalArgumentForNullName() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
+        User user = testUser(1, false);
 
         CreateProductRequest request = validRequest();
         request.setName(null);
 
         assertThrows(IllegalArgumentException.class, () -> {
-            productService.saveProduct(request, auth);
+            productService.saveProduct(request, user);
         });
 
         verify(repo, never()).save(any());
@@ -116,13 +108,13 @@ public class ProductServiceSaveProductTests {
 
     @Test
     void throwsIllegalArgumentForEmptyName() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
+        User user = testUser(1, false);
 
         CreateProductRequest request = validRequest();
         request.setName("");
 
         assertThrows(IllegalArgumentException.class, () -> {
-            productService.saveProduct(request, auth);
+            productService.saveProduct(request, user);
         });
 
         verify(repo, never()).save(any());
@@ -130,13 +122,13 @@ public class ProductServiceSaveProductTests {
 
     @Test
     void throwsIllegalArgumentForZeroExpiration() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
+        User user = testUser(1, false);
 
         CreateProductRequest request = validRequest();
         request.setExpirationDaysDelta(0);
 
         assertThrows(IllegalArgumentException.class, () -> {
-            productService.saveProduct(request, auth);
+            productService.saveProduct(request, user);
         });
 
         verify(repo, never()).save(any());
@@ -144,13 +136,13 @@ public class ProductServiceSaveProductTests {
 
     @Test
     void throwsIllegalArgumentForNegativeExpiration() {
-        when(userService.getUserByAuth(auth)).thenReturn(testUser(1, false));
+        User user = testUser(1, false);
 
         CreateProductRequest request = validRequest();
         request.setExpirationDaysDelta(-5);
 
         assertThrows(IllegalArgumentException.class, () -> {
-            productService.saveProduct(request, auth);
+            productService.saveProduct(request, user);
         });
 
         verify(repo, never()).save(any());

@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.exception.ItemNotFoundException;
@@ -28,7 +27,7 @@ public class StorageMemberService {
     private StorageMemberRepository storageMemberRepository;
 
     @Autowired
-    StorageAccessService storageAccessService;
+    private StorageAccessService storageAccessService;
 
     @Autowired
     private StorageRepository storageRepository;
@@ -51,28 +50,31 @@ public class StorageMemberService {
         return member.get();
     }
 
-    public List<StorageMember> getStorageMembers(final long storageId, Authentication auth)
+    public List<StorageMember> getStorageMembers(final long storageId, User current)
             throws ItemNotFoundException, AccessDeniedException {
 
         if (!storageRepository.existsById(storageId))
             throw new ItemNotFoundException("id", "Storage with this id was not found");
 
-        if (!storageAccessService.canAccessStorage(storageId, auth))
+        if (!storageAccessService.canAccessStorage(storageId, current))
             throw new AccessDeniedException("You can't access this storage");
 
         return storageMemberRepository.findByStorageId(storageId);
     }
 
-    public List<StorageMember> getInvites(Authentication auth) throws AccessDeniedException {
-        User user = userService.getUserByAuth(auth);
+    public List<StorageMember> getInvites(User current) throws AccessDeniedException {
+        if (current == null)
+            throw new AccessDeniedException(null);
 
-        return storageMemberRepository.findInvitesByUserId(user.getId());
+        return storageMemberRepository.findInvitesByUserId(current.getId());
     }
 
     @Transactional
-    public void acceptInvite(final long memberId, Authentication auth)
+    public void acceptInvite(final long memberId, User current)
             throws ItemNotFoundException, AccessDeniedException {
-        User current = userService.getUserByAuth(auth);
+        if (current == null)
+            throw new AccessDeniedException(null);
+
         StorageMember member = getMember(memberId);
 
         if (member.getUser().getId() != current.getId())
@@ -83,9 +85,11 @@ public class StorageMemberService {
     }
 
     @Transactional
-    public void declineInvite(final long memberId, Authentication auth)
+    public void declineInvite(final long memberId, User current)
             throws ItemNotFoundException, AccessDeniedException {
-        User current = userService.getUserByAuth(auth);
+        if (current == null)
+            throw new AccessDeniedException(null);
+
         StorageMember member = getMember(memberId);
 
         if (member.getUser().getId() != current.getId())
@@ -95,10 +99,11 @@ public class StorageMemberService {
     }
 
     @Transactional
-    public StorageMember inviteMemberToStorage(final long storageId, final String memberEmail, Authentication auth)
+    public StorageMember inviteMemberToStorage(final long storageId, final String memberEmail, User current)
             throws ItemNotFoundException, MemberException, AccessDeniedException {
+        if (current == null)
+            throw new AccessDeniedException(null);
 
-        User current = userService.getUserByAuth(auth);
         Storage storage = getStorage(storageId);
         User target = userService.getUserByEmail(memberEmail);
 
@@ -131,10 +136,12 @@ public class StorageMemberService {
     }
 
     @Transactional
-    public void removeMemberFromStorage(final long storageId, final long userId, Authentication auth)
+    public void removeMemberFromStorage(final long storageId, final long userId, User current)
             throws ItemNotFoundException, AccessDeniedException {
 
-        User current = userService.getUserByAuth(auth);
+        if(current == null)
+            throw new AccessDeniedException(null);
+
         Storage storage = getStorage(storageId);
 
         if (!current.isAdmin() && storage.getOwner().getId() != current.getId())

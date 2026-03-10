@@ -13,9 +13,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.model.RunningLowSetting;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.RunningLowRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,22 +29,22 @@ public class RunningLowServiceGetSettingsForStorageTests {
     @InjectMocks
     private RunningLowService service;
 
-    private Authentication auth;
+    private User user = new User();
 
     @Test
     void successfulGet() {
         RunningLowSetting setting = new RunningLowSetting();
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         doReturn(List.of(setting)).when(repository).findByStorageId(1);
 
-        assertDoesNotThrow(() -> service.getSettingsForStorage(1, auth));
-        assertEquals(setting, service.getSettingsForStorage(1, auth).get(0));
+        assertDoesNotThrow(() -> service.getSettingsForStorage(1, user));
+        assertEquals(setting, service.getSettingsForStorage(1, user).get(0));
     }
 
     @Test
     void throwsAccessDenied() {
-        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, user);
 
-        assertThrows(AccessDeniedException.class, () -> service.getSettingsForStorage(1, auth));
+        assertThrows(AccessDeniedException.class, () -> service.getSettingsForStorage(1, user));
     }
 }

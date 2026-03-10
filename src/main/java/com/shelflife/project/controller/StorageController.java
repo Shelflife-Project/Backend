@@ -8,8 +8,10 @@ import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
 import com.shelflife.project.dto.storage.CreateStorageRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
+import com.shelflife.project.model.User;
 import com.shelflife.project.service.StorageGetterService;
 import com.shelflife.project.service.StorageService;
+import com.shelflife.project.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -50,6 +52,9 @@ public class StorageController {
     @Autowired
     private StorageGetterService storageGetterService;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping()
     @Operation(summary = "Get owned and member storages", description = "Retrieves all storages owned by the authenticated user and storages where the user is a member.")
     @ApiResponses(value = {
@@ -76,7 +81,9 @@ public class StorageController {
             } else {
                 pageable = PageRequest.of(page, size, sort);
             }
-            return ResponseEntity.ok(storageGetterService.getStorages(auth, search, pageable));
+
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageGetterService.getStorages(user, search, pageable));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -99,7 +106,8 @@ public class StorageController {
             @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(storageGetterService.getStorage(auth, id));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageGetterService.getStorage(user, id));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccessDeniedException e) {
@@ -124,7 +132,8 @@ public class StorageController {
             @Valid @RequestBody CreateStorageRequest request,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(storageService.createStorage(request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageService.createStorage(request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (IllegalArgumentException e) {
@@ -153,7 +162,8 @@ public class StorageController {
             @Valid @RequestBody ChangeStorageNameRequest request,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(storageService.changeName(id, request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageService.changeName(id, request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (IllegalArgumentException e) {
@@ -174,7 +184,8 @@ public class StorageController {
             @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id,
             Authentication auth) {
         try {
-            storageService.deleteStorageRequest(id, auth);
+            User user = userService.getUserByAuth(auth);
+            storageService.deleteStorageRequest(id, user);
             return ResponseEntity.ok().build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

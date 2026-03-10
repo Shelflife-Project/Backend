@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.purchase.ToPurchaseItem;
 import com.shelflife.project.model.Product;
@@ -32,9 +31,6 @@ public class ShoppingListServiceTests {
     @Mock
     private UserService userService;
 
-    @Mock
-    private Authentication auth;
-
     @InjectMocks
     private ShoppingListService shoppingListService;
 
@@ -49,8 +45,6 @@ public class ShoppingListServiceTests {
 
     @Test
     public void getAggregatedForUser_sumsAmountsAcrossStorages() {
-        when(userService.getUserByAuth(auth)).thenReturn(user);
-
         Storage s1 = new Storage();
         s1.setId(1L);
         Storage s2 = new Storage();
@@ -84,7 +78,7 @@ public class ShoppingListServiceTests {
         when(shoppingListRepository.findByStorageIdIn(Arrays.asList(1L, 2L)))
                 .thenReturn(Arrays.asList(si1, si2, si3));
 
-        List<ToPurchaseItem> result = shoppingListService.getAggregatedForUser(auth);
+        List<ToPurchaseItem> result = shoppingListService.getAggregatedForUser(user);
 
         assertEquals(2, result.size());
 

@@ -18,12 +18,12 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.storage.EditItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.StorageItem;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageItemRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,7 +39,7 @@ public class StorageItemServiceEditItemTests {
     @InjectMocks
     private StorageItemService storageItemService;
 
-    private Authentication auth;
+    private User user = new User();
 
     @Test
     void successfulForTomorrow() {
@@ -52,10 +52,10 @@ public class StorageItemServiceEditItemTests {
         item.setExpiresAt(LocalDate.now());
 
         doReturn(Optional.of(item)).when(storageItemRepository).findById(1L);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         when(storageItemRepository.save(any(StorageItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        StorageItem result = storageItemService.editItem(1, validRequest(LocalDate.now().plusDays(1)), auth);
+        StorageItem result = storageItemService.editItem(1, validRequest(LocalDate.now().plusDays(1)), user);
 
         assertEquals(LocalDate.now().plusDays(1), result.getExpiresAt());
 
@@ -75,9 +75,9 @@ public class StorageItemServiceEditItemTests {
         EditItemRequest request = validRequest(LocalDate.now().minusDays(1));
 
         doReturn(Optional.of(item)).when(storageItemRepository).findById(1L);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
 
-        assertThrows(IllegalArgumentException.class, () -> storageItemService.editItem(1, request, auth));
+        assertThrows(IllegalArgumentException.class, () -> storageItemService.editItem(1, request, user));
 
         verify(storageItemRepository, never()).save(any());
     }
@@ -93,11 +93,11 @@ public class StorageItemServiceEditItemTests {
         item.setExpiresAt(LocalDate.now());
 
         doReturn(Optional.of(item)).when(storageItemRepository).findById(1L);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         when(storageItemRepository.save(any(StorageItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         EditItemRequest request = validRequest(LocalDate.now());
-        StorageItem result = storageItemService.editItem(1, request, auth);
+        StorageItem result = storageItemService.editItem(1, request, user);
         assertEquals(LocalDate.now(), result.getExpiresAt());
 
         verify(storageItemRepository).save(any(StorageItem.class));
@@ -114,10 +114,10 @@ public class StorageItemServiceEditItemTests {
         item.setExpiresAt(LocalDate.now());
 
         doReturn(Optional.of(item)).when(storageItemRepository).findById(1L);
-        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, user);
 
         assertThrows(AccessDeniedException.class,
-                () -> storageItemService.editItem(1, validRequest(LocalDate.now()), auth));
+                () -> storageItemService.editItem(1, validRequest(LocalDate.now()), user));
 
         verify(storageItemRepository, never()).save(any());
     }
@@ -126,7 +126,7 @@ public class StorageItemServiceEditItemTests {
     void throwsItemNotFound() {
         doReturn(Optional.empty()).when(storageItemRepository).findById(1L);
         assertThrows(ItemNotFoundException.class,
-                () -> storageItemService.editItem(1, validRequest(LocalDate.now()), auth));
+                () -> storageItemService.editItem(1, validRequest(LocalDate.now()), user));
 
         verify(storageItemRepository, never()).save(any());
     }

@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.security.core.Authentication;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.shelflife.project.exception.ItemNotFoundException;
@@ -41,8 +40,6 @@ public class StorageItemServiceGetExpiredItemsTests {
 
     @Autowired
     private StorageItemService service;
-
-    Authentication auth;
 
     private User user;
     private Storage storage;

@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
@@ -19,7 +18,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
@@ -37,8 +35,6 @@ public class StorageGetterServiceTests {
     @Spy
     @InjectMocks
     private StorageGetterService storageGetterService;
-
-    private Authentication auth;
 
     @Test
     void noAuth_getStorage_throwsNotFound() {
@@ -59,11 +55,9 @@ public class StorageGetterServiceTests {
     }
 
     @Test
-    void auth_getStorage_throwsAccessDeniedForAnonymous() {
-        doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
-
+    void auth_getStorage_throwsAccessDeniedWithNull() {
         assertThrows(AccessDeniedException.class, () -> {
-            storageGetterService.getStorage(auth, 1);
+            storageGetterService.getStorage(null, 1);
         });
     }
 
@@ -73,11 +67,10 @@ public class StorageGetterServiceTests {
         user.setId(1);
         user.setAdmin(false);
 
-        doReturn(user).when(userService).getUserByAuth(auth);
         doReturn(false).when(storageRepository).isMemberOrOwner(1, 1);
 
         assertThrows(AccessDeniedException.class, () -> {
-            storageGetterService.getStorage(auth, 1);
+            storageGetterService.getStorage(user, 1);
         });
     }
 
@@ -86,11 +79,10 @@ public class StorageGetterServiceTests {
         User user = new User();
         user.setAdmin(true);
 
-        doReturn(user).when(userService).getUserByAuth(auth);
         doReturn(new Storage()).when(storageGetterService).getStorage(1);
 
         assertDoesNotThrow(() -> {
-            storageGetterService.getStorage(auth, 1);
+            storageGetterService.getStorage(user, 1);
         });
 
         verify(storageGetterService).getStorage(1);
@@ -102,23 +94,20 @@ public class StorageGetterServiceTests {
         user.setId(1);
         user.setAdmin(false);
 
-        doReturn(user).when(userService).getUserByAuth(auth);
         doReturn(true).when(storageRepository).isMemberOrOwner(1, 1);
         doReturn(new Storage()).when(storageGetterService).getStorage(1);
 
         assertDoesNotThrow(() -> {
-            storageGetterService.getStorage(auth, 1);
+            storageGetterService.getStorage(user, 1);
         });
 
         verify(storageGetterService).getStorage(1);
     }
 
     @Test
-    void getStorages_throwsAccessDeniedAsAnonymous() {
-        doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
-
+    void getStorages_throwsAccessDeniedWithNull() {
         assertThrows(AccessDeniedException.class, () -> {
-            storageGetterService.getStorages(auth, "", Pageable.unpaged());
+            storageGetterService.getStorages(null, "", Pageable.unpaged());
         });
     }
 
@@ -127,11 +116,10 @@ public class StorageGetterServiceTests {
         User user = new User();
         user.setAdmin(true);
 
-        doReturn(user).when(userService).getUserByAuth(auth);
         doReturn(List.of()).when(storageRepository).searchAll(anyString(), any(Pageable.class));
 
         assertDoesNotThrow(() -> {
-            storageGetterService.getStorages(auth, "", Pageable.unpaged());
+            storageGetterService.getStorages(user, "", Pageable.unpaged());
         });
 
         verify(storageRepository).searchAll(anyString(), any(Pageable.class));
@@ -143,10 +131,8 @@ public class StorageGetterServiceTests {
         user.setId(1);
         user.setAdmin(false);
 
-        doReturn(user).when(userService).getUserByAuth(auth);
-
         assertDoesNotThrow(() -> {
-            storageGetterService.getStorages(auth, "", Pageable.unpaged());
+            storageGetterService.getStorages(user, "", Pageable.unpaged());
         });
 
         verify(storageRepository).findAccessibleStorages(user.getId(), "", Pageable.unpaged());

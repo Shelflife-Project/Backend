@@ -20,7 +20,9 @@ import com.shelflife.project.dto.storage.InviteMemberRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.MemberException;
 import com.shelflife.project.model.StorageMember;
+import com.shelflife.project.model.User;
 import com.shelflife.project.service.StorageMemberService;
+import com.shelflife.project.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -35,6 +37,9 @@ public class StorageMemberController {
     @Autowired
     private StorageMemberService storageMemberService;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping
     @Operation(summary = "Get the members of a storage")
     @ApiResponses(value = {
@@ -48,7 +53,8 @@ public class StorageMemberController {
     })
     public ResponseEntity<List<StorageMember>> getStorageMembers(@PathVariable long storageId, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageMemberService.getStorageMembers(storageId, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageMemberService.getStorageMembers(storageId, user));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccessDeniedException e) {
@@ -60,7 +66,7 @@ public class StorageMemberController {
     @Operation(summary = "Invite a member to the storage")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved members", content = {
-                @Content(schema = @Schema(implementation = StorageMember.class))
+                    @Content(schema = @Schema(implementation = StorageMember.class))
             }),
             @ApiResponse(responseCode = "400", description = "Bad request", content = {
                     @Content(schema = @Schema(example = "{ \"email\": \"User is already a member or was already invited\" }"))
@@ -75,8 +81,9 @@ public class StorageMemberController {
     public ResponseEntity<?> inviteMember(@PathVariable long storageId, @Valid @RequestBody InviteMemberRequest request,
             Authentication auth) {
         try {
+            User user = userService.getUserByAuth(auth);
             return ResponseEntity
-                    .ok(storageMemberService.inviteMemberToStorage(storageId, request.getEmail(), auth));
+                    .ok(storageMemberService.inviteMemberToStorage(storageId, request.getEmail(), user));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -100,7 +107,8 @@ public class StorageMemberController {
     public ResponseEntity<?> deleteMember(@PathVariable long storageId, @PathVariable long userId,
             Authentication auth) {
         try {
-            storageMemberService.removeMemberFromStorage(storageId, userId, auth);
+            User user = userService.getUserByAuth(auth);
+            storageMemberService.removeMemberFromStorage(storageId, userId, user);
             return ResponseEntity.ok().build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));

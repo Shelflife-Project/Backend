@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.dto.product.CreateProductRequest;
@@ -24,9 +23,6 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
-
-    @Autowired
-    private UserService userService;
 
     public List<Product> getProducts(Pageable pageable) {
         return productRepository.findAll(pageable).toList();
@@ -56,25 +52,26 @@ public class ProductService {
         return productRepository.existsById(id);
     }
 
-    public boolean canEditProduct(final long productId, Authentication auth) {
+    public boolean canEditProduct(final long productId, User user) {
+        if(user == null)
+            return false;
+        
         try {
-            User user = userService.getUserByAuth(auth);
             Product p = getProductByID(productId);
-
             return p.getOwnerId() == user.getId() || user.isAdmin();
-
         } catch (ItemNotFoundException | AccessDeniedException e) {
             return false;
         }
     }
 
     @Transactional
-    public Product saveProduct(CreateProductRequest request, Authentication auth)
+    public Product saveProduct(CreateProductRequest request, User currentUser)
             throws AccessDeniedException, BarcodeExistsException, IllegalArgumentException {
 
-        User currentUser = userService.getUserByAuth(auth);
-        Product product = new Product();
+        if(currentUser == null)
+            throw new AccessDeniedException(null);
 
+        Product product = new Product();
         product.setOwner(currentUser);
 
         if (request.getBarcode() != null) {
@@ -112,9 +109,9 @@ public class ProductService {
     }
 
     @Transactional
-    public Product updateProduct(long productId, UpdateProductRequest request, Authentication auth)
+    public Product updateProduct(long productId, UpdateProductRequest request, User currentUser)
             throws BarcodeExistsException, AccessDeniedException, IllegalArgumentException, ItemNotFoundException {
-        if (!canEditProduct(productId, auth))
+        if (!canEditProduct(productId, currentUser))
             throw new AccessDeniedException(null);
 
         Product productDB = getProductByID(productId);
@@ -157,8 +154,9 @@ public class ProductService {
     }
 
     @Transactional
-    public void removeProduct(long id, Authentication auth) throws AccessDeniedException, ItemNotFoundException {
-        User currentUser = userService.getUserByAuth(auth);
+    public void removeProduct(long id, User currentUser) throws AccessDeniedException, ItemNotFoundException {
+        if(currentUser == null)
+            throw new AccessDeniedException(null);
 
         Product product = getProductByID(id);
         if (!currentUser.isAdmin() && currentUser.getId() != product.getOwnerId())

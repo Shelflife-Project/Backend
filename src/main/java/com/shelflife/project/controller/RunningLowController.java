@@ -8,7 +8,9 @@ import com.shelflife.project.dto.runninglow.EditSettingRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.RunningLowExistsException;
 import com.shelflife.project.model.RunningLowSetting;
+import com.shelflife.project.model.User;
 import com.shelflife.project.service.RunningLowService;
+import com.shelflife.project.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -44,6 +46,9 @@ public class RunningLowController {
     @Autowired
     private RunningLowService runningLowService;
 
+    @Autowired
+    private UserService userService;
+
     @Operation(summary = "Get running low settings", description = "Retrieves all running low settings for a specific storage. User must have access to the storage.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved settings", content = {
@@ -55,10 +60,11 @@ public class RunningLowController {
     })
     @GetMapping
     public ResponseEntity<List<RunningLowSetting>> getSettings(
-            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long storageId, 
+            @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long storageId,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(runningLowService.getSettingsForStorage(storageId, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(runningLowService.getSettingsForStorage(storageId, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -85,7 +91,8 @@ public class RunningLowController {
             @Valid @RequestBody CreateSettingRequest request,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(runningLowService.createSetting(storageId, request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(runningLowService.createSetting(storageId, request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ItemNotFoundException e) {
@@ -113,11 +120,12 @@ public class RunningLowController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<?> editSetting(
-            @Parameter(description = "The unique identifier of the running low setting", example = "1") @PathVariable long id, 
+            @Parameter(description = "The unique identifier of the running low setting", example = "1") @PathVariable long id,
             @Valid @RequestBody EditSettingRequest request,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(runningLowService.editSetting(id, request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(runningLowService.editSetting(id, request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ItemNotFoundException e) {
@@ -136,10 +144,11 @@ public class RunningLowController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSetting(
-            @Parameter(description = "The unique identifier of the running low setting", example = "1") @PathVariable long id, 
+            @Parameter(description = "The unique identifier of the running low setting", example = "1") @PathVariable long id,
             Authentication auth) {
         try {
-            runningLowService.deleteSetting(id, auth);
+            User user = userService.getUserByAuth(auth);
+            runningLowService.deleteSetting(id, user);
             return ResponseEntity.ok().build();
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

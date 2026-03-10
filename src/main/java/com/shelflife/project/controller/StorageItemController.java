@@ -22,8 +22,10 @@ import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.dto.storage.EditItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageItem;
+import com.shelflife.project.model.User;
 import com.shelflife.project.service.RunningLowService;
 import com.shelflife.project.service.StorageItemService;
+import com.shelflife.project.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -41,6 +43,9 @@ public class StorageItemController {
     @Autowired
     private RunningLowService runningLowService;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping("/items")
     @Operation(summary = "Get items in a storage")
     @ApiResponses(value = {
@@ -54,7 +59,8 @@ public class StorageItemController {
     })
     public ResponseEntity<List<StorageItem>> getStorageItems(@PathVariable long storageId, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageItemService.getItemsInStorage(storageId, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageItemService.getItemsInStorage(storageId, user));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccessDeniedException e) {
@@ -79,8 +85,9 @@ public class StorageItemController {
     public ResponseEntity<?> addItem(@PathVariable long storageId, @Valid @RequestBody AddItemRequest request,
             Authentication auth) {
         try {
+            User user = userService.getUserByAuth(auth);
             return ResponseEntity
-                    .ok(storageItemService.addItemToStorage(storageId, request, auth));
+                    .ok(storageItemService.addItemToStorage(storageId, request, user));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(e.getField(), e.getMessage()));
         } catch (AccessDeniedException e) {
@@ -109,7 +116,8 @@ public class StorageItemController {
     public ResponseEntity<?> editItem(@PathVariable long itemId, @Valid @RequestBody EditItemRequest request,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(storageItemService.editItem(itemId, request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageItemService.editItem(itemId, request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (IllegalArgumentException e) {
@@ -132,7 +140,8 @@ public class StorageItemController {
     })
     public ResponseEntity<List<StorageItem>> getExpired(@PathVariable long storageId, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageItemService.getExpiredItemsInStorage(storageId, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageItemService.getExpiredItemsInStorage(storageId, user));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccessDeniedException e) {
@@ -153,7 +162,8 @@ public class StorageItemController {
     })
     public ResponseEntity<List<StorageItem>> getAboutToExpire(@PathVariable long storageId, Authentication auth) {
         try {
-            return ResponseEntity.ok(storageItemService.getItemsAboutToExpire(storageId, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageItemService.getItemsAboutToExpire(storageId, user));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccessDeniedException e) {
@@ -172,7 +182,8 @@ public class StorageItemController {
     public ResponseEntity<List<RunningLowNotification>> getRunningLow(@PathVariable long storageId,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(runningLowService.getRunningLowInStorage(storageId, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(runningLowService.getRunningLowInStorage(storageId, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -188,7 +199,8 @@ public class StorageItemController {
     public ResponseEntity<Void> deleteItem(@PathVariable long storageId, @PathVariable long itemId,
             Authentication auth) {
         try {
-            storageItemService.removeItemFromStorage(itemId, auth);
+            User user = userService.getUserByAuth(auth);
+            storageItemService.removeItemFromStorage(itemId, user);
             return ResponseEntity.ok().build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

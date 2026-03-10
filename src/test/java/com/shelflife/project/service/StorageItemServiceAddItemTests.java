@@ -20,13 +20,13 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.StorageItem;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageRepository;
 
@@ -49,7 +49,7 @@ public class StorageItemServiceAddItemTests {
     @InjectMocks
     private StorageItemService storageItemService;
 
-    private Authentication auth;
+    private User user = new User();
 
     @Test
     void successfulAdd() {
@@ -62,10 +62,10 @@ public class StorageItemServiceAddItemTests {
 
         doReturn(storage).when(storageItemService).getStorage(1);
         doReturn(product).when(productService).getProductByID(1);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         when(storageItemRepository.save(any(StorageItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        StorageItem result = storageItemService.addItemToStorage(1, validRequest(1), auth);
+        StorageItem result = storageItemService.addItemToStorage(1, validRequest(1), user);
 
         assertNotNull(result);
         assertEquals(storage, result.getStorage());
@@ -83,9 +83,9 @@ public class StorageItemServiceAddItemTests {
         AddItemRequest request = validRequest(1);
         request.setExpiresAt(LocalDate.now().minusDays(1));
 
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
 
-        assertThrows(IllegalArgumentException.class, () -> storageItemService.addItemToStorage(1, request, auth));
+        assertThrows(IllegalArgumentException.class, () -> storageItemService.addItemToStorage(1, request, user));
 
         verify(storageItemRepository, never()).save(any());
     }
@@ -101,13 +101,13 @@ public class StorageItemServiceAddItemTests {
 
         doReturn(storage).when(storageItemService).getStorage(1);
         doReturn(product).when(productService).getProductByID(1);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         when(storageItemRepository.save(any(StorageItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AddItemRequest request = validRequest(1);
         request.setExpiresAt(LocalDate.now());
 
-        StorageItem result = storageItemService.addItemToStorage(1, request, auth);
+        StorageItem result = storageItemService.addItemToStorage(1, request, user);
 
         assertNotNull(result);
         assertEquals(storage, result.getStorage());
@@ -119,9 +119,9 @@ public class StorageItemServiceAddItemTests {
 
     @Test
     void throwsAccessDenied() {
-        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, user);
 
-        assertThrows(AccessDeniedException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), auth));
+        assertThrows(AccessDeniedException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), user));
 
         verify(storageItemRepository, never()).save(any());
         verify(productService, never()).getProductByID(anyLong());
@@ -129,10 +129,10 @@ public class StorageItemServiceAddItemTests {
 
     @Test
     void throwsItemNotFoundForStorage() {
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
 
         doThrow(ItemNotFoundException.class).when(storageItemService).getStorage(1);
-        assertThrows(ItemNotFoundException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), auth));
+        assertThrows(ItemNotFoundException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), user));
 
         verify(storageItemRepository, never()).save(any());
     }
@@ -142,11 +142,11 @@ public class StorageItemServiceAddItemTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         doReturn(storage).when(storageItemService).getStorage(1);
         doThrow(ItemNotFoundException.class).when(productService).getProductByID(1);
 
-        assertThrows(ItemNotFoundException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), auth));
+        assertThrows(ItemNotFoundException.class, () -> storageItemService.addItemToStorage(1, validRequest(1), user));
 
         verify(storageItemRepository, never()).save(any());
     }

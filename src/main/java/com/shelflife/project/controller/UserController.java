@@ -65,7 +65,7 @@ public class UserController {
     })
     public ResponseEntity<List<User>> getUsers(Authentication auth) {
         try {
-            List<User> users = service.getUsers(auth);
+            List<User> users = service.getUsers(service.getUserByAuth(auth));
             return ResponseEntity.ok(users);
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -152,7 +152,7 @@ public class UserController {
     })
     public ResponseEntity<Void> deleteUser(@PathVariable long id, Authentication auth) {
         try {
-            service.removeUser(id, auth);
+            service.removeUser(id, service.getUserByAuth(auth));
             return ResponseEntity.ok().build();
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -183,7 +183,7 @@ public class UserController {
 
         try {
             long selfId = service.getUserByAuth(auth).getId();
-            User updated = service.updateUser(id, request, auth);
+            User updated = service.updateUser(id, request, service.getUserByAuth(auth));
 
             if (request.getEmail() != null && updated.getId() == selfId) {
                 jwtService.invalidateToken((String) auth.getCredentials());

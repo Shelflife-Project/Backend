@@ -3,11 +3,8 @@ package com.shelflife.project.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
@@ -16,8 +13,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.shelflife.project.dto.user.ChangePasswordRequest;
@@ -34,31 +29,19 @@ public class UserServiceChangePasswordTests {
     @Mock
     PasswordEncoder encoder;
 
-    @Mock
-    Authentication auth;
-
     @Spy
     @InjectMocks
     UserService service;
-
-    @Test
-    void throwsAccessDeniedAsAnonymous() {
-        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
-
-        assertThrows(AccessDeniedException.class, () -> service.changePassword(validRequest(), auth));
-        verifyNoInteractions(repo);
-    }
 
     @Test
     void throwsInvalidPassword() {
         User user = new User();
         user.setPassword("encoded-old");
 
-        doReturn(user).when(service).getUserByAuth(auth);
         when(encoder.matches("old", "encoded-old"))
                 .thenReturn(false);
 
-        assertThrows(InvalidPasswordException.class, () -> service.changePassword(validRequest(), auth));
+        assertThrows(InvalidPasswordException.class, () -> service.changePassword(validRequest(), user));
         verify(repo, never()).save(any());
     }
 
@@ -70,11 +53,10 @@ public class UserServiceChangePasswordTests {
         ChangePasswordRequest req = validRequest();
         req.setNewPasswordRepeat("different");
 
-        doReturn(user).when(service).getUserByAuth(auth);
         when(encoder.matches("old", "encoded-old"))
                 .thenReturn(true);
 
-        assertThrows(PasswordsDontMatchException.class, () -> service.changePassword(req, auth));
+        assertThrows(PasswordsDontMatchException.class, () -> service.changePassword(req, user));
         verify(repo, never()).save(any());
     }
 
@@ -83,13 +65,12 @@ public class UserServiceChangePasswordTests {
         User user = new User();
         user.setPassword("encoded-old");
 
-        doReturn(user).when(service).getUserByAuth(auth);
         when(encoder.matches("old", "encoded-old"))
                 .thenReturn(true);
         when(encoder.encode("new"))
                 .thenReturn("encoded-new");
 
-        service.changePassword(validRequest(), auth);
+        service.changePassword(validRequest(), user);
 
         assertEquals("encoded-new", user.getPassword());
         verify(repo).save(user);

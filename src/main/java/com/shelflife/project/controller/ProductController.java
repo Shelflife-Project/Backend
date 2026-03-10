@@ -11,8 +11,10 @@ import com.shelflife.project.exception.BarcodeExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Image;
 import com.shelflife.project.model.Product;
+import com.shelflife.project.model.User;
 import com.shelflife.project.service.ImageService;
 import com.shelflife.project.service.ProductService;
+import com.shelflife.project.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -48,6 +50,9 @@ public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private ImageService imageService;
@@ -139,7 +144,9 @@ public class ProductController {
             @RequestParam("pfp") MultipartFile file,
             Authentication auth) {
         try {
-            if (!productService.canEditProduct(id, auth))
+            User user = userService.getUserByAuth(auth);
+
+            if (!productService.canEditProduct(id, user))
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 
             imageService.uploadImage(file, id + "_productIcon");
@@ -166,7 +173,8 @@ public class ProductController {
     @PostMapping()
     public ResponseEntity<?> createProduct(@Valid @RequestBody CreateProductRequest request, Authentication auth) {
         try {
-            return ResponseEntity.ok(productService.saveProduct(request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(productService.saveProduct(request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (BarcodeExistsException e) {
@@ -185,7 +193,8 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable long id, Authentication auth) {
         try {
-            productService.removeProduct(id, auth);
+            User user = userService.getUserByAuth(auth);
+            productService.removeProduct(id, user);
             return ResponseEntity.ok().build();
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -213,7 +222,8 @@ public class ProductController {
     public ResponseEntity<?> updateProduct(@PathVariable long id, @Valid @RequestBody UpdateProductRequest request,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(productService.updateProduct(id, request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(productService.updateProduct(id, request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (BarcodeExistsException e) {

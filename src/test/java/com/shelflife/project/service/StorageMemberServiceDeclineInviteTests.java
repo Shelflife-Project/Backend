@@ -16,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageMember;
@@ -35,8 +34,6 @@ public class StorageMemberServiceDeclineInviteTests {
     @InjectMocks
     private StorageMemberService storageMemberService;
 
-    private Authentication auth;
-
     @Test
     void successfulDecline() {
         User invited = new User();
@@ -47,18 +44,15 @@ public class StorageMemberServiceDeclineInviteTests {
         member.setUser(invited);
         member.setAccepted(false);
 
-        doReturn(invited).when(userService).getUserByAuth(auth);
         doReturn(member).when(storageMemberService).getMember(1);
 
-        assertDoesNotThrow(() -> storageMemberService.declineInvite(1, auth));
+        assertDoesNotThrow(() -> storageMemberService.declineInvite(1, invited));
         verify(storageMemberRepository).delete(member);
     }
 
     @Test
-    void throwsAccessDeniedAsAnonymous() {
-        doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
-
-        assertThrows(AccessDeniedException.class, () -> storageMemberService.declineInvite(1, auth));
+    void throwsAccessDeniedWithNull() {
+        assertThrows(AccessDeniedException.class, () -> storageMemberService.declineInvite(1, null));
         verifyNoInteractions(storageMemberRepository);
     }
 
@@ -67,10 +61,9 @@ public class StorageMemberServiceDeclineInviteTests {
         User user = new User();
         user.setId(1);
 
-        doReturn(user).when(userService).getUserByAuth(auth);
         doThrow(ItemNotFoundException.class).when(storageMemberService).getMember(1);
 
-        assertThrows(ItemNotFoundException.class, () -> storageMemberService.declineInvite(1, auth));
+        assertThrows(ItemNotFoundException.class, () -> storageMemberService.declineInvite(1, user));
         verify(storageMemberRepository, never()).save(any());
     }
 
@@ -87,10 +80,9 @@ public class StorageMemberServiceDeclineInviteTests {
         member.setUser(invited);
         member.setAccepted(false);
 
-        doReturn(user).when(userService).getUserByAuth(auth);
         doReturn(member).when(storageMemberService).getMember(1);
 
-        assertThrows(AccessDeniedException.class, () -> storageMemberService.declineInvite(1, auth));
+        assertThrows(AccessDeniedException.class, () -> storageMemberService.declineInvite(1, user));
         verify(storageMemberRepository, never()).save(any());
     }
 }

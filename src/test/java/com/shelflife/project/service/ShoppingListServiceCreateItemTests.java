@@ -14,13 +14,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.shopping.CreateShoppingItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.ShoppingItemExistsException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.Storage;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ShoppingListItemRepository;
 import com.shelflife.project.repository.StorageRepository;
 
@@ -47,31 +47,31 @@ public class ShoppingListServiceCreateItemTests {
     @InjectMocks
     private ShoppingListService shoppingListService;
 
-    private Authentication auth;
+    private User user;
 
     @Test
     void throwsAccessDenied() {
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(false);
-        assertThrows(AccessDeniedException.class, () -> shoppingListService.createItem(1, request(1, 10), auth));
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(false);
+        assertThrows(AccessDeniedException.class, () -> shoppingListService.createItem(1, request(1, 10), user));
 
         verifyNoInteractions(shoppingListItemRepository);
     }
 
     @Test
     void throwsStorageNotFound() {
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(true);
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(true);
         when(storageGetterService.getStorage(1)).thenThrow(ItemNotFoundException.class);
-        assertThrows(ItemNotFoundException.class, () -> shoppingListService.createItem(1, request(1, 10), auth));
+        assertThrows(ItemNotFoundException.class, () -> shoppingListService.createItem(1, request(1, 10), user));
 
         verifyNoInteractions(shoppingListItemRepository);
     }
 
     @Test
     void throwsProductNotFound() {
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(true);
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(true);
         when(storageGetterService.getStorage(1)).thenReturn(new Storage());
         when(productService.getProductByID(1)).thenThrow(ItemNotFoundException.class);
-        assertThrows(ItemNotFoundException.class, () -> shoppingListService.createItem(1, request(1, 10), auth));
+        assertThrows(ItemNotFoundException.class, () -> shoppingListService.createItem(1, request(1, 10), user));
 
         verifyNoInteractions(shoppingListItemRepository);
     }
@@ -84,12 +84,12 @@ public class ShoppingListServiceCreateItemTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(true);
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(true);
         when(storageGetterService.getStorage(1)).thenReturn(storage);
         when(productService.getProductByID(1)).thenReturn(product);
         when(shoppingListItemRepository.existsByProductIdAndStorageId(1, 1)).thenReturn(true);
 
-        assertThrows(ShoppingItemExistsException.class, () -> shoppingListService.createItem(1, request(1, 10), auth));
+        assertThrows(ShoppingItemExistsException.class, () -> shoppingListService.createItem(1, request(1, 10), user));
 
         verify(shoppingListItemRepository, never()).save(any());
     }
@@ -102,12 +102,12 @@ public class ShoppingListServiceCreateItemTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(true);
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(true);
         when(storageGetterService.getStorage(1)).thenReturn(storage);
         when(productService.getProductByID(1)).thenReturn(product);
         when(shoppingListItemRepository.existsByProductIdAndStorageId(1, 1)).thenReturn(false);
 
-        assertThrows(IllegalArgumentException.class, () -> shoppingListService.createItem(1, request(1, -10), auth));
+        assertThrows(IllegalArgumentException.class, () -> shoppingListService.createItem(1, request(1, -10), user));
 
         verify(shoppingListItemRepository, never()).save(any());
     }
@@ -120,12 +120,12 @@ public class ShoppingListServiceCreateItemTests {
         Storage storage = new Storage();
         storage.setId(1);
 
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(true);
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(true);
         when(storageGetterService.getStorage(1)).thenReturn(storage);
         when(productService.getProductByID(1)).thenReturn(product);
         when(shoppingListItemRepository.existsByProductIdAndStorageId(1, 1)).thenReturn(false);
 
-        assertDoesNotThrow(() -> shoppingListService.createItem(1, request(1, 10), auth));
+        assertDoesNotThrow(() -> shoppingListService.createItem(1, request(1, 10), user));
     }
 
     private CreateShoppingItemRequest request(long productId, int amountToBuy) {

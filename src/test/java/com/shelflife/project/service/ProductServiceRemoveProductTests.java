@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
@@ -29,21 +28,13 @@ public class ProductServiceRemoveProductTests {
     @Mock
     ProductRepository repo;
 
-    @Mock
-    Authentication auth;
-
-    @Mock
-    UserService userService;
-
     @Spy
     @InjectMocks
     ProductService productService;
 
     @Test
-    void throwsAccessDeniedAsAnonymous() {
-        when(userService.getUserByAuth(auth)).thenThrow(AccessDeniedException.class);
-
-        assertThrows(AccessDeniedException.class, () -> productService.removeProduct(1, auth));
+    void throwsAccessDeniedWithNull() {
+        assertThrows(AccessDeniedException.class, () -> productService.removeProduct(1, null));
         verifyNoInteractions(repo);
     }
 
@@ -53,10 +44,9 @@ public class ProductServiceRemoveProductTests {
         User owner = testUser(2, false);
         Product product = testProduct(1, owner);
 
-        when(userService.getUserByAuth(auth)).thenReturn(user);
         when(repo.findById(1L)).thenReturn(Optional.of(product));
 
-        assertThrows(AccessDeniedException.class, () -> productService.removeProduct(1, auth));
+        assertThrows(AccessDeniedException.class, () -> productService.removeProduct(1, user));
         verify(repo, never()).deleteById(any());
     }
 
@@ -66,10 +56,9 @@ public class ProductServiceRemoveProductTests {
         User owner = testUser(2, false);
         Product product = testProduct(1, owner);
 
-        when(userService.getUserByAuth(auth)).thenReturn(user);
         when(repo.findById(1L)).thenReturn(Optional.of(product));
 
-        assertDoesNotThrow(() -> productService.removeProduct(1, auth));
+        assertDoesNotThrow(() -> productService.removeProduct(1, user));
         verify(repo).deleteById(1L);
     }
 
@@ -78,10 +67,9 @@ public class ProductServiceRemoveProductTests {
         User user = testUser(1, false);
         Product product = testProduct(1, user);
 
-        when(userService.getUserByAuth(auth)).thenReturn(user);
         when(repo.findById(1L)).thenReturn(Optional.of(product));
 
-        assertDoesNotThrow(() -> productService.removeProduct(1, auth));
+        assertDoesNotThrow(() -> productService.removeProduct(1, user));
         verify(repo).deleteById(1L);
     }
 
@@ -89,9 +77,7 @@ public class ProductServiceRemoveProductTests {
     void throwsItemNotFound() {
         User user = testUser(1, false);
 
-        when(userService.getUserByAuth(auth)).thenReturn(user);
-
-        assertThrows(ItemNotFoundException.class, () -> productService.removeProduct(1, auth));
+        assertThrows(ItemNotFoundException.class, () -> productService.removeProduct(1, user));
         verify(repo, never()).deleteById(any());
     }
 

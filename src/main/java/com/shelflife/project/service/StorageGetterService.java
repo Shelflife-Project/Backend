@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.exception.ItemNotFoundException;
@@ -19,9 +18,6 @@ public class StorageGetterService {
     @Autowired
     private StorageRepository storageRepository;
 
-    @Autowired
-    private UserService userService;
-
     public Storage getStorage(final long id) throws ItemNotFoundException {
         Optional<Storage> storage = storageRepository.findById(id);
 
@@ -31,10 +27,11 @@ public class StorageGetterService {
         return storage.get();
     }
 
-    public Storage getStorage(Authentication auth, final long storageId)
+    public Storage getStorage(User user, final long storageId)
             throws AccessDeniedException, ItemNotFoundException {
 
-        User user = userService.getUserByAuth(auth);
+        if (user == null)
+            throw new AccessDeniedException(null);
 
         if (!user.isAdmin()) {
             if (!storageRepository.isMemberOrOwner(storageId, user.getId())) {
@@ -45,9 +42,11 @@ public class StorageGetterService {
         return getStorage(storageId);
     }
 
-    public List<Storage> getStorages(Authentication auth, String search, Pageable pageable)
+    public List<Storage> getStorages(User user, String search, Pageable pageable)
             throws AccessDeniedException {
-        User user = userService.getUserByAuth(auth);
+
+        if (user == null)
+            throw new AccessDeniedException(null);
 
         if (user.isAdmin())
             return storageRepository.searchAll(search, pageable);

@@ -5,7 +5,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageMember;
+import com.shelflife.project.model.User;
 import com.shelflife.project.service.StorageMemberService;
+import com.shelflife.project.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,6 +33,9 @@ public class InviteController {
     @Autowired
     private StorageMemberService service;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping
     @Operation(summary = "Get invites that were not accepted yet")
     @ApiResponses(value = {
@@ -39,7 +44,8 @@ public class InviteController {
     })
     public ResponseEntity<List<StorageMember>> getInvites(Authentication auth) {
         try {
-            return ResponseEntity.ok(service.getInvites(auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(service.getInvites(user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -54,7 +60,8 @@ public class InviteController {
     })
     public ResponseEntity<?> acceptInvite(@PathVariable long id, Authentication auth) {
         try {
-            service.acceptInvite(id, auth);
+            User user = userService.getUserByAuth(auth);
+            service.acceptInvite(id, user);
             return ResponseEntity.ok().build();
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -72,7 +79,8 @@ public class InviteController {
     })
     public ResponseEntity<?> declineInvite(@PathVariable long id, Authentication auth) {
         try {
-            service.declineInvite(id, auth);
+            User user = userService.getUserByAuth(auth);
+            service.declineInvite(id, user);
             return ResponseEntity.ok().build();
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

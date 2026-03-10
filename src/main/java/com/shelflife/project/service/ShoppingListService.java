@@ -52,18 +52,18 @@ public class ShoppingListService {
         return s.get();
     }
 
-    public List<ShoppingListItem> getForStorage(final long storageId, Authentication auth)
+    public List<ShoppingListItem> getForStorage(final long storageId, User current)
             throws AccessDeniedException {
-        if (!storageAccessService.canAccessStorage(storageId, auth))
+        if (!storageAccessService.canAccessStorage(storageId, current))
             throw new AccessDeniedException("You can't access this storage");
 
         return repository.findByStorageId(storageId);
     }
 
     @Transactional
-    public ShoppingListItem createItem(final long storageId, CreateShoppingItemRequest request, Authentication auth)
+    public ShoppingListItem createItem(final long storageId, CreateShoppingItemRequest request, User current)
             throws AccessDeniedException, ItemNotFoundException {
-        if (!storageAccessService.canAccessStorage(storageId, auth))
+        if (!storageAccessService.canAccessStorage(storageId, current))
             throw new AccessDeniedException("You can't access this storage");
 
         Storage storage = storageGetterService.getStorage(storageId);
@@ -84,11 +84,11 @@ public class ShoppingListService {
     }
 
     @Transactional
-    public ShoppingListItem editItem(final long itemId, EditShoppingItemRequest request, Authentication auth)
+    public ShoppingListItem editItem(final long itemId, EditShoppingItemRequest request, User current)
             throws AccessDeniedException, ItemNotFoundException {
         ShoppingListItem item = getItem(itemId);
 
-        if (!storageAccessService.canAccessStorage(item.getStorage().getId(), auth))
+        if (!storageAccessService.canAccessStorage(item.getStorage().getId(), current))
             throw new AccessDeniedException("You can't access this storage");
 
         if (request.getAmountToBuy() < 0)
@@ -99,10 +99,10 @@ public class ShoppingListService {
     }
 
     @Transactional
-    public void deleteItem(final long itemId, Authentication auth) throws ItemNotFoundException, AccessDeniedException {
+    public void deleteItem(final long itemId, User current) throws ItemNotFoundException, AccessDeniedException {
         ShoppingListItem item = getItem(itemId);
 
-        if (!storageAccessService.canAccessStorage(item.getStorage().getId(), auth))
+        if (!storageAccessService.canAccessStorage(item.getStorage().getId(), current))
             throw new AccessDeniedException("You can't access this storage");
 
         repository.delete(item);

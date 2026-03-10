@@ -27,7 +27,9 @@ import com.shelflife.project.dto.shopping.EditShoppingItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.ShoppingItemExistsException;
 import com.shelflife.project.model.ShoppingListItem;
+import com.shelflife.project.model.User;
 import com.shelflife.project.service.ShoppingListService;
+import com.shelflife.project.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -38,6 +40,9 @@ public class ShoppingListController {
     @Autowired
     private ShoppingListService service;
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping
     @Operation(summary = "Get shopping list items for a storage", description = "Returns shopping list items for the given storage if the user has access")
     @ApiResponses({
@@ -47,7 +52,8 @@ public class ShoppingListController {
     public ResponseEntity<List<ShoppingListItem>> getForStorage(
             @Parameter(description = "Storage id") @PathVariable long storageId, Authentication auth) {
         try {
-            return ResponseEntity.ok(service.getForStorage(storageId, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(service.getForStorage(storageId, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -65,13 +71,15 @@ public class ShoppingListController {
             @Valid @RequestBody CreateShoppingItemRequest request,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(service.createItem(storageId, request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(service.createItem(storageId, request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (ShoppingItemExistsException e) {
-            return ResponseEntity.badRequest().body(Map.of("productId", "This product is already added to the shopping list"));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("productId", "This product is already added to the shopping list"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of(e.getMessage(), "Invalid value"));
         }
@@ -89,7 +97,8 @@ public class ShoppingListController {
             @Valid @RequestBody EditShoppingItemRequest request,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(service.editItem(id, request, auth));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(service.editItem(id, request, user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (ItemNotFoundException e) {
@@ -109,7 +118,8 @@ public class ShoppingListController {
     public ResponseEntity<Void> delete(@Parameter(description = "Shopping list item id") @PathVariable long id,
             Authentication auth) {
         try {
-            service.deleteItem(id, auth);
+            User user = userService.getUserByAuth(auth);
+            service.deleteItem(id, user);
             return ResponseEntity.ok().build();
         } catch (ItemNotFoundException e) {
             return ResponseEntity.notFound().build();

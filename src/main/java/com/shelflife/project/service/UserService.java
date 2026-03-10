@@ -125,9 +125,6 @@ public class UserService {
     public String login(@Valid LoginRequest request, Authentication auth)
             throws AccessDeniedException, InvalidPasswordException, ItemNotFoundException {
 
-        if (isAuthenticated(auth))
-            throw new AccessDeniedException(null);
-
         User dbUser = getUserByEmail(request.getEmail().toLowerCase());
         if (!encoder.matches(request.getPassword(), dbUser.getPassword()))
             throw new InvalidPasswordException();

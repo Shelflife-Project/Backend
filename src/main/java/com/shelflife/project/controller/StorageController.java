@@ -81,7 +81,9 @@ public class StorageController {
             } else {
                 pageable = PageRequest.of(page, size, sort);
             }
-            return ResponseEntity.ok(storageGetterService.getStorages(auth, search, pageable));
+
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageGetterService.getStorages(user, search, pageable));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -104,7 +106,8 @@ public class StorageController {
             @Parameter(description = "The unique identifier of the storage", example = "1") @PathVariable long id,
             Authentication auth) {
         try {
-            return ResponseEntity.ok(storageGetterService.getStorage(auth, id));
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(storageGetterService.getStorage(user, id));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccessDeniedException e) {

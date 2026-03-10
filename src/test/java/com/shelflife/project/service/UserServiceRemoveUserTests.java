@@ -3,8 +3,6 @@ package com.shelflife.project.service;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -17,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.shelflife.project.exception.ItemNotFoundException;
@@ -32,18 +29,13 @@ public class UserServiceRemoveUserTests {
     @Mock
     PasswordEncoder encoder;
 
-    @Mock
-    Authentication auth;
-
     @Spy
     @InjectMocks
     UserService service;
 
     @Test
-    void throwsAccessDeniedAsAnonymous() {
-        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
-
-        assertThrows(AccessDeniedException.class, () -> service.removeUser(1, auth));
+    void throwsAccessDeniedWithNull() {
+        assertThrows(AccessDeniedException.class, () -> service.removeUser(1, null));
         verifyNoInteractions(repo);
     }
 
@@ -52,9 +44,7 @@ public class UserServiceRemoveUserTests {
         User user = new User();
         user.setAdmin(false);
 
-        doReturn(user).when(service).getUserByAuth(auth);
-
-        assertThrows(AccessDeniedException.class, () -> service.removeUser(1, auth));
+        assertThrows(AccessDeniedException.class, () -> service.removeUser(1, user));
         verifyNoInteractions(repo);
     }
 
@@ -64,9 +54,7 @@ public class UserServiceRemoveUserTests {
         user.setId(1);
         user.setAdmin(true);
 
-        doReturn(user).when(service).getUserByAuth(auth);
-
-        assertThrows(AccessDeniedException.class, () -> service.removeUser(1, auth));
+        assertThrows(AccessDeniedException.class, () -> service.removeUser(1, user));
         verifyNoInteractions(repo);
     }
 
@@ -76,9 +64,7 @@ public class UserServiceRemoveUserTests {
         user.setId(1);
         user.setAdmin(true);
 
-        doReturn(user).when(service).getUserByAuth(auth);
-
-        assertThrows(ItemNotFoundException.class, () -> service.removeUser(2, auth));
+        assertThrows(ItemNotFoundException.class, () -> service.removeUser(2, user));
         verify(repo, never()).deleteById(any());
     }
 
@@ -91,10 +77,9 @@ public class UserServiceRemoveUserTests {
         User userToDelete = new User();
         userToDelete.setId(2);
 
-        doReturn(user).when(service).getUserByAuth(auth);
         when(repo.existsById(2L)).thenReturn(true);
 
-        assertDoesNotThrow(() -> service.removeUser(2, auth));
+        assertDoesNotThrow(() -> service.removeUser(2, user));
         verify(repo).deleteById(2L);
     }
 }

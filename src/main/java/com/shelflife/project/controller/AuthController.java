@@ -1,7 +1,6 @@
 package com.shelflife.project.controller;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,13 +43,15 @@ public class AuthController {
     private UserService userService;
 
     @Operation(summary = "Log in with email and password")
-        @ApiResponses(value = {
+    @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful login", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
             @ApiResponse(responseCode = "403", description = "You are already logged in", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class))),
             @ApiResponse(responseCode = "400", description = "Couldn't log in", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class)))
     })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @Parameter(description = "Login Data, including email and password", schema = @Schema(implementation = LoginRequest.class), examples = @ExampleObject(value = "{\"email\": \"user@example.com\", \"password\": \"password123\"}")) @RequestBody LoginRequest request, HttpServletResponse response,
+    public ResponseEntity<?> login(
+            @Valid @Parameter(description = "Login Data, including email and password", schema = @Schema(implementation = LoginRequest.class), examples = @ExampleObject(value = "{\"email\": \"user@example.com\", \"password\": \"password123\"}")) @RequestBody LoginRequest request,
+            HttpServletResponse response,
             Authentication auth) {
         try {
             String token = userService.login(request, auth);
@@ -72,12 +73,16 @@ public class AuthController {
 
     @Operation(summary = "Sign up with email and password")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Successful signup", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
+            @ApiResponse(responseCode = "201", description = "Successful signup", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = User.class)) }),
             @ApiResponse(responseCode = "403", description = "Won't sign up, already logged in", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Void.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content(mediaType = "application/json")})
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = {
+                    @Content(mediaType = "application/json") })
     })
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @Parameter(description = "Sign up Data, including email, password and password repeat") @RequestBody SignUpRequest request, HttpServletResponse response,
+    public ResponseEntity<?> signup(
+            @Valid @Parameter(description = "Sign up Data, including email, password and password repeat") @RequestBody SignUpRequest request,
+            HttpServletResponse response,
             Authentication auth) {
         try {
             return ResponseEntity.status(HttpStatus.CREATED).body(userService.signUp(request, auth));
@@ -93,10 +98,12 @@ public class AuthController {
     @Operation(summary = "Log out of the current session")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful logout"),
-            @ApiResponse(responseCode = "403", description = "You are not logged in"),  
+            @ApiResponse(responseCode = "403", description = "You are not logged in"),
     })
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@Parameter(description = "Authentication information of the user") Authentication auth, HttpServletResponse response) {
+    public ResponseEntity<?> logout(
+            @Parameter(description = "Authentication information of the user") Authentication auth,
+            HttpServletResponse response) {
         final Cookie cookie = new Cookie("jwt", null);
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
@@ -111,7 +118,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "You are not logged in"));
         }
     }
- 
+
     @Operation(summary = "Change the password of the current user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful password change"),
@@ -121,7 +128,7 @@ public class AuthController {
     @PostMapping("/password/change")
     public ResponseEntity<?> changePassword(Authentication auth, @Valid @RequestBody ChangePasswordRequest request) {
         try {
-            userService.changePassword(request, auth);
+            userService.changePassword(request, userService.getUserByAuth(auth));
             return ResponseEntity.ok().build();
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -133,17 +140,18 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-        @Operation(summary = "Get current user", description = "Retrieve profile of the authenticated user")
-        @ApiResponses(value = {
+    @Operation(summary = "Get current user", description = "Retrieve profile of the authenticated user")
+    @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "You are logged in", content = @Content(mediaType = "application/json", schema = @Schema(implementation = User.class), examples = @ExampleObject(value = "{\"id\": 1, \"username\": \"jane_doe\", \"admin\": false}"))),
             @ApiResponse(responseCode = "403", description = "You are not logged in", content = @Content(schema = @Schema(implementation = Void.class)))
-        })
-        public ResponseEntity<User> getMe(HttpServletResponse response, Authentication auth) {
-        Optional<User> self = userService.getOptionalUserByAuth(auth);
+    })
+    public ResponseEntity<User> getMe(HttpServletResponse response, Authentication auth) {
 
-        if (!self.isPresent())
+        try {
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(user);
+        } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-
-        return ResponseEntity.ok(self.get());
+        }
     }
 }

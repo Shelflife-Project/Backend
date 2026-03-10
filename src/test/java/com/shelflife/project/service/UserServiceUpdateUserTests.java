@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -21,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.user.ChangeUserDataRequest;
 import com.shelflife.project.exception.EmailExistsException;
@@ -33,18 +30,13 @@ public class UserServiceUpdateUserTests {
     @Mock
     UserRepository repo;
 
-    @Mock
-    Authentication auth;
-
     @InjectMocks
     @Spy
     UserService service;
 
     @Test
     void throwsAccessDeniedAsAnonymous() {
-        doThrow(AccessDeniedException.class).when(service).getUserByAuth(auth);
-
-        assertThrows(AccessDeniedException.class, () -> service.updateUser(1L, emptyRequest(), auth));
+        assertThrows(AccessDeniedException.class, () -> service.updateUser(1L, emptyRequest(), null));
         verifyNoInteractions(repo);
     }
 
@@ -53,10 +45,9 @@ public class UserServiceUpdateUserTests {
         User current = testUser(1L, false);
         User userToUpdate = testUser(2L, false);
 
-        doReturn(current).when(service).getUserByAuth(auth);
         when(repo.findById(2L)).thenReturn(Optional.of(userToUpdate));
 
-        assertThrows(AccessDeniedException.class, () -> service.updateUser(2L, emptyRequest(), auth));
+        assertThrows(AccessDeniedException.class, () -> service.updateUser(2L, emptyRequest(), current));
         verify(repo, never()).save(any());
     }
 
@@ -66,11 +57,10 @@ public class UserServiceUpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setEmail("exists@test.test");
 
-        doReturn(current).when(service).getUserByAuth(auth);
         when(repo.findById(1L)).thenReturn(Optional.of(current));
         when(repo.existsByEmail("exists@test.test")).thenReturn(true);
 
-        assertThrows(EmailExistsException.class, () -> service.updateUser(1L, req, auth));
+        assertThrows(EmailExistsException.class, () -> service.updateUser(1L, req, current));
         verify(repo, never()).save(any());
     }
 
@@ -82,10 +72,9 @@ public class UserServiceUpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setIsAdmin(true);
 
-        doReturn(current).when(service).getUserByAuth(auth);
         when(repo.findById(2L)).thenReturn(Optional.of(userToUpdate));
 
-        assertThrows(AccessDeniedException.class, () -> service.updateUser(2L, req, auth));
+        assertThrows(AccessDeniedException.class, () -> service.updateUser(2L, req, current));
         verify(repo, never()).save(any());
     }
 
@@ -96,10 +85,9 @@ public class UserServiceUpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setIsAdmin(false);
 
-        doReturn(admin).when(service).getUserByAuth(auth);
         when(repo.findById(1L)).thenReturn(Optional.of(admin));
 
-        assertThrows(AccessDeniedException.class, () -> service.updateUser(1L, req, auth));
+        assertThrows(AccessDeniedException.class, () -> service.updateUser(1L, req, admin));
         verify(repo, never()).save(any());
     }
 
@@ -111,12 +99,11 @@ public class UserServiceUpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setIsAdmin(true);
 
-        doReturn(admin).when(service).getUserByAuth(auth);
         when(repo.findById(2L)).thenReturn(Optional.of(userToUpdate));
 
         when(repo.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        User result = assertDoesNotThrow(() -> service.updateUser(2L, req, auth));
+        User result = assertDoesNotThrow(() -> service.updateUser(2L, req, admin));
 
         assertTrue(result.isAdmin());
         verify(repo).save(userToUpdate);
@@ -128,11 +115,10 @@ public class UserServiceUpdateUserTests {
         ChangeUserDataRequest req = new ChangeUserDataRequest();
         req.setUsername("newname");
 
-        doReturn(current).when(service).getUserByAuth(auth);
         when(repo.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(repo.findById(1L)).thenReturn(Optional.of(current));
 
-        User result = assertDoesNotThrow(() -> service.updateUser(1L, req, auth));
+        User result = assertDoesNotThrow(() -> service.updateUser(1L, req, current));
 
         assertEquals("newname", result.getUsername());
         verify(repo).save(current);

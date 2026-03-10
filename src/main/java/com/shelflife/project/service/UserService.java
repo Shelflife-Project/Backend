@@ -35,13 +35,6 @@ public class UserService {
     @Autowired
     private PasswordEncoder encoder;
 
-    public Optional<User> getOptionalUserByAuth(Authentication auth) {
-        if (auth == null || !auth.isAuthenticated())
-            return Optional.empty();
-
-        return repo.findByEmail(auth.getName());
-    }
-
     public User getUserByAuth(Authentication auth) throws AccessDeniedException {
         if (auth == null || !auth.isAuthenticated())
             throw new AccessDeniedException(null);
@@ -63,30 +56,12 @@ public class UserService {
         }
     }
 
-    public boolean isAdmin(long userId) {
-        try {
-            User user = getUserById(userId);
-            return user.isAdmin();
-        } catch (ItemNotFoundException e) {
-            return false;
-        }
-    }
-
-    public boolean isAdmin(Authentication auth) {
-        try {
-            User user = getUserByAuth(auth);
-            return user.isAdmin();
-        } catch (AccessDeniedException e) {
-            return false;
-        }
-    }
-
     public List<User> getUsers() {
         return repo.findAll();
     }
 
-    public List<User> getUsers(Authentication auth) throws AccessDeniedException {
-        if (!isAdmin(auth))
+    public List<User> getUsers(User currentUser) throws AccessDeniedException {
+        if (currentUser == null || !currentUser.isAdmin())
             throw new AccessDeniedException(null);
 
         return repo.findAll();
@@ -170,9 +145,8 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(@Valid ChangePasswordRequest request, Authentication auth)
-            throws AccessDeniedException, InvalidPasswordException, PasswordsDontMatchException {
-        User currentUser = getUserByAuth(auth);
+    public void changePassword(@Valid ChangePasswordRequest request, User currentUser)
+            throws InvalidPasswordException, PasswordsDontMatchException {
 
         if (!encoder.matches(request.getOldPassword(), currentUser.getPassword()))
             throw new InvalidPasswordException();
@@ -185,10 +159,12 @@ public class UserService {
     }
 
     @Transactional
-    public User updateUser(long id, ChangeUserDataRequest request, Authentication auth)
+    public User updateUser(long id, ChangeUserDataRequest request, User currentUser)
             throws ItemNotFoundException, AccessDeniedException, EmailExistsException, IllegalArgumentException {
 
-        User currentUser = getUserByAuth(auth);
+        if(currentUser == null)
+            throw new AccessDeniedException(null);
+
         User dbUser = getUserById(id);
 
         if (!currentUser.isAdmin() && currentUser.getId() != dbUser.getId())
@@ -226,8 +202,9 @@ public class UserService {
     }
 
     @Transactional
-    public void removeUser(long id, Authentication auth) throws ItemNotFoundException, AccessDeniedException {
-        User currentUser = getUserByAuth(auth);
+    public void removeUser(long id, User currentUser) throws ItemNotFoundException, AccessDeniedException {
+        if(currentUser == null)
+            throw new AccessDeniedException(null);
 
         if (!currentUser.isAdmin())
             throw new AccessDeniedException(null);

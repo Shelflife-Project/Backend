@@ -20,7 +20,7 @@ public class StorageAccessService {
      * @return True if you are an ADMIN, or an OWNER, or an accepted MEMBER
      */
     public boolean canAccessStorage(long storageId, long userId) {
-        if (userService.isAdmin(userId))
+        if (userService.getUserById(userId).isAdmin())
             return true;
 
         if (storageRepository.isMemberOrOwner(storageId, userId))

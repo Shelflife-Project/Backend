@@ -28,9 +28,6 @@ public class ProductServiceRemoveProductTests {
     @Mock
     ProductRepository repo;
 
-    @Mock
-    UserService userService;
-
     @Spy
     @InjectMocks
     ProductService productService;

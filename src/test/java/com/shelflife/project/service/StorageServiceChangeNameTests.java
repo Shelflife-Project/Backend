@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -17,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
 import com.shelflife.project.model.Storage;
@@ -27,9 +25,6 @@ import com.shelflife.project.repository.StorageRepository;
 @ExtendWith(MockitoExtension.class)
 public class StorageServiceChangeNameTests {
     @Mock
-    private UserService userService;
-
-    @Mock
     private StorageRepository storageRepository;
 
     @Mock
@@ -38,8 +33,6 @@ public class StorageServiceChangeNameTests {
     @Spy
     @InjectMocks
     private StorageService storageService;
-
-    Authentication auth;
 
     @Test
     void successfulAsOwner() {
@@ -53,11 +46,10 @@ public class StorageServiceChangeNameTests {
         ChangeStorageNameRequest request = new ChangeStorageNameRequest();
         request.setName("new");
 
-        doReturn(owner).when(userService).getUserByAuth(auth);
         doReturn(testStorage).when(storageGetterService).getStorage(1);
         when(storageRepository.save(any(Storage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Storage storage = storageService.changeName(1, request, auth);
+        Storage storage = storageService.changeName(1, request, owner);
         assertNotNull(storage);
         assertEquals("new", storage.getName());
 
@@ -80,11 +72,10 @@ public class StorageServiceChangeNameTests {
         ChangeStorageNameRequest request = new ChangeStorageNameRequest();
         request.setName("new");
 
-        doReturn(admin).when(userService).getUserByAuth(auth);
         doReturn(testStorage).when(storageGetterService).getStorage(1);
         when(storageRepository.save(any(Storage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Storage storage = storageService.changeName(1, request, auth);
+        Storage storage = storageService.changeName(1, request, admin);
         assertNotNull(storage);
         assertEquals("new", storage.getName());
 
@@ -93,30 +84,32 @@ public class StorageServiceChangeNameTests {
 
     @Test
     void emptyNameErrorForNull() {
+        User user = new User();
+
         ChangeStorageNameRequest request = new ChangeStorageNameRequest();
         request.setName(null);
 
-        assertThrows(IllegalArgumentException.class, () -> storageService.changeName(1, request, auth));
+        assertThrows(IllegalArgumentException.class, () -> storageService.changeName(1, request, user));
         verifyNoInteractions(storageRepository);
     }
 
     @Test
     void emptyNameErrorForBlank() {
+        User user = new User();
+
         ChangeStorageNameRequest request = new ChangeStorageNameRequest();
         request.setName("");
 
-        assertThrows(IllegalArgumentException.class, () -> storageService.changeName(1, request, auth));
+        assertThrows(IllegalArgumentException.class, () -> storageService.changeName(1, request, user));
         verifyNoInteractions(storageRepository);
     }
 
     @Test
-    void throwsAccessDeniedForAnonymous() {
+    void throwsAccessDeniedWithNull() {
         ChangeStorageNameRequest request = new ChangeStorageNameRequest();
         request.setName("test");
 
-        doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
-
-        assertThrows(AccessDeniedException.class, () -> storageService.changeName(1, request, auth));
+        assertThrows(AccessDeniedException.class, () -> storageService.changeName(1, request, null));
         verifyNoInteractions(storageRepository);
     }
 
@@ -136,10 +129,9 @@ public class StorageServiceChangeNameTests {
         ChangeStorageNameRequest request = new ChangeStorageNameRequest();
         request.setName("new");
 
-        doReturn(user).when(userService).getUserByAuth(auth);
         doReturn(testStorage).when(storageGetterService).getStorage(1);
 
-        assertThrows(AccessDeniedException.class, () -> storageService.changeName(1, request, auth));
+        assertThrows(AccessDeniedException.class, () -> storageService.changeName(1, request, user));
         verifyNoInteractions(storageRepository);
     }
 }

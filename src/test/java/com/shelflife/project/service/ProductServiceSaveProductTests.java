@@ -30,9 +30,6 @@ public class ProductServiceSaveProductTests {
     private ProductRepository repo;
 
     @Mock
-    private UserService userService;
-
-    @Mock
     private Authentication auth;
 
     @Spy

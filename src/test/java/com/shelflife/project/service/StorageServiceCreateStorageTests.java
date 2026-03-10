@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -27,9 +25,6 @@ import com.shelflife.project.repository.StorageRepository;
 @ExtendWith(MockitoExtension.class)
 public class StorageServiceCreateStorageTests {
     @Mock
-    private UserService userService;
-
-    @Mock
     private StorageRepository storageRepository;
 
     @Spy
@@ -44,10 +39,9 @@ public class StorageServiceCreateStorageTests {
         CreateStorageRequest request = new CreateStorageRequest();
         request.setName("test");
 
-        doReturn(user).when(userService).getUserByAuth(auth);
         when(storageRepository.save(any(Storage.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Storage storage = storageService.createStorage(request, auth);
+        Storage storage = storageService.createStorage(request, user);
         assertNotNull(storage);
         assertEquals(user, storage.getOwner());
         assertEquals("test", storage.getName());
@@ -57,30 +51,32 @@ public class StorageServiceCreateStorageTests {
 
     @Test
     void emptyNameErrorForNull() {
+        User user = new User();
+
         CreateStorageRequest request = new CreateStorageRequest();
         request.setName(null);
 
-        assertThrows(IllegalArgumentException.class, () -> storageService.createStorage(request, auth));
+        assertThrows(IllegalArgumentException.class, () -> storageService.createStorage(request, user));
         verifyNoInteractions(storageRepository);
     }
 
     @Test
     void emptyNameErrorForBlank() {
+        User user = new User();
+
         CreateStorageRequest request = new CreateStorageRequest();
         request.setName("");
 
-        assertThrows(IllegalArgumentException.class, () -> storageService.createStorage(request, auth));
+        assertThrows(IllegalArgumentException.class, () -> storageService.createStorage(request, user));
         verifyNoInteractions(storageRepository);
     }
 
     @Test
-    void throwsAccessDeniedForAnonymous() {
+    void throwsAccessDeniedWithNull() {
         CreateStorageRequest request = new CreateStorageRequest();
         request.setName("test");
 
-        doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
-
-        assertThrows(AccessDeniedException.class, () -> storageService.createStorage(request, auth));
+        assertThrows(AccessDeniedException.class, () -> storageService.createStorage(request, null));
         verifyNoInteractions(storageRepository);
     }
 }

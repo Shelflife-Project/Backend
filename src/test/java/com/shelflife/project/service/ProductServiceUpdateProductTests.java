@@ -30,9 +30,6 @@ public class ProductServiceUpdateProductTests {
     @Mock
     private ProductRepository repo;
 
-    @Mock
-    private UserService userService;
-
     @Spy
     @InjectMocks
     private ProductService productService;

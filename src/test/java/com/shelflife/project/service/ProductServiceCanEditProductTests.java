@@ -19,9 +19,6 @@ import com.shelflife.project.repository.ProductRepository;
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceCanEditProductTests {
     @Mock
-    private UserService userService;
-
-    @Mock
     private ProductRepository productRepository;
 
     @Spy

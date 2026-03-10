@@ -61,6 +61,7 @@ public class StorageController {
             })
     })
     public ResponseEntity<List<Storage>> getStorages(Authentication auth,
+            @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -75,7 +76,7 @@ public class StorageController {
             } else {
                 pageable = PageRequest.of(page, size, sort);
             }
-            return ResponseEntity.ok(storageGetterService.getStorages(auth, pageable));
+            return ResponseEntity.ok(storageGetterService.getStorages(auth, search, pageable));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

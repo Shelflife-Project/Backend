@@ -45,28 +45,13 @@ public class StorageGetterService {
         return getStorage(storageId);
     }
 
-    public List<Storage> getStorages() {
-        return storageRepository.findAll();
-    }
-
-    public List<Storage> getStorages(Pageable pageable) {
-        return storageRepository.findAll(pageable).getContent();
-    }
-
-    public List<Storage> getStorages(Authentication auth) throws AccessDeniedException {
+    public List<Storage> getStorages(Authentication auth, String search, Pageable pageable)
+            throws AccessDeniedException {
         User user = userService.getUserByAuth(auth);
 
         if (user.isAdmin())
-            return getStorages();
+            return storageRepository.searchAll(search, pageable);
 
-        return storageRepository.findAccessibleStorages(user.getId());
-    }
-
-    public List<Storage> getStorages(Authentication auth, Pageable pageable) throws AccessDeniedException {
-        User user = userService.getUserByAuth(auth);
-
-        if (user.isAdmin())
-            return getStorages(pageable);
-        return storageRepository.findAccessibleStorages(user.getId(), pageable);
+        return storageRepository.findAccessibleStorages(user.getId(), search, pageable);
     }
 }

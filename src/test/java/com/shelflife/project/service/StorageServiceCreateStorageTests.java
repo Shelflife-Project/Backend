@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.storage.CreateStorageRequest;
 import com.shelflife.project.model.Storage;
@@ -30,8 +29,6 @@ public class StorageServiceCreateStorageTests {
     @Spy
     @InjectMocks
     private StorageService storageService;
-
-    Authentication auth;
 
     @Test
     void successfulCreation() {

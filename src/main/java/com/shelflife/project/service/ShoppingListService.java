@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.dto.purchase.ToPurchaseItem;
@@ -38,9 +37,6 @@ public class ShoppingListService {
 
     @Autowired
     private ProductService productService;
-
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private StorageRepository storageRepository;
@@ -108,10 +104,11 @@ public class ShoppingListService {
         repository.delete(item);
     }
 
-    public List<ToPurchaseItem> getAggregatedForUser(Authentication auth) {
-        User current = userService.getUserByAuth(auth);
+    public List<ToPurchaseItem> getAggregatedForUser(User user) throws AccessDeniedException {
+        if(user == null)
+            throw new AccessDeniedException(null);
 
-        List<Storage> storages = storageRepository.findAccessibleStorages(current.getId());
+        List<Storage> storages = storageRepository.findAccessibleStorages(user.getId());
         if (storages == null || storages.isEmpty())
             return java.util.Collections.emptyList();
 

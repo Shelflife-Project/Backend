@@ -16,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
@@ -30,16 +29,11 @@ public class StorageItemServiceRemoveItemTests {
     private StorageItemRepository storageItemRepository;
 
     @Mock
-    private UserService userService;
-
-    @Mock
     private StorageAccessService storageAccessService;
 
     @Spy
     @InjectMocks
     private StorageItemService storageItemService;
-
-    private Authentication auth;
 
     @Test
     void successfulRemove() {
@@ -53,22 +47,20 @@ public class StorageItemServiceRemoveItemTests {
         item.setId(3);
         item.setStorage(storage);
 
-        when(userService.getUserByAuth(auth)).thenReturn(user);
         when(storageItemRepository.findById(3L)).thenReturn(Optional.of(item));
 
-        doReturn(true).when(storageAccessService).canAccessStorage(2, user.getId());
+        doReturn(true).when(storageAccessService).canAccessStorage(2, user);
 
-        storageItemService.removeItemFromStorage(3, auth);
+        storageItemService.removeItemFromStorage(3, user);
 
         verify(storageItemRepository).deleteById(3L);
     }
 
     @Test
     void throwsItemNotFound() {
-        when(userService.getUserByAuth(auth)).thenReturn(new User());
         when(storageItemRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ItemNotFoundException.class, () -> storageItemService.removeItemFromStorage(1L, auth));
+        assertThrows(ItemNotFoundException.class, () -> storageItemService.removeItemFromStorage(1L, new User()));
 
         verify(storageItemRepository, never()).deleteById(anyLong());
     }
@@ -85,11 +77,10 @@ public class StorageItemServiceRemoveItemTests {
         item.setId(3);
         item.setStorage(storage);
 
-        when(userService.getUserByAuth(auth)).thenReturn(user);
         when(storageItemRepository.findById(3L)).thenReturn(Optional.of(item));
-        doReturn(false).when(storageAccessService).canAccessStorage(2, user.getId());
+        doReturn(false).when(storageAccessService).canAccessStorage(2, user);
 
-        assertThrows(AccessDeniedException.class, () -> storageItemService.removeItemFromStorage(3, auth));
+        assertThrows(AccessDeniedException.class, () -> storageItemService.removeItemFromStorage(3, user));
         verify(storageItemRepository, never()).deleteById(anyLong());
     }
 

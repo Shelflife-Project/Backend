@@ -15,13 +15,13 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.runninglow.EditSettingRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Product;
 import com.shelflife.project.model.RunningLowSetting;
 import com.shelflife.project.model.Storage;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.RunningLowRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +42,7 @@ public class RunningLowServiceEditSettingTests {
     @Spy
     private RunningLowService service;
 
-    private Authentication auth;
+    private User user = new User();
 
     @Test
     void successfulEdit_withTen() {
@@ -60,10 +60,10 @@ public class RunningLowServiceEditSettingTests {
         setting.setRunningLow(4);
 
         doReturn(setting).when(service).getSetting(1);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         when(repository.save(any(RunningLowSetting.class))).thenAnswer(answer -> answer.getArgument(0));
 
-        RunningLowSetting edited = service.editSetting(1, request, auth);
+        RunningLowSetting edited = service.editSetting(1, request, user);
 
         assertNotNull(edited);
         assertEquals(1, edited.getStorage().getId());
@@ -87,10 +87,10 @@ public class RunningLowServiceEditSettingTests {
         setting.setRunningLow(4);
 
         doReturn(setting).when(service).getSetting(1);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
         when(repository.save(any(RunningLowSetting.class))).thenAnswer(answer -> answer.getArgument(0));
 
-        RunningLowSetting edited = service.editSetting(1, request, auth);
+        RunningLowSetting edited = service.editSetting(1, request, user);
 
         assertNotNull(edited);
         assertEquals(1, edited.getStorage().getId());
@@ -103,7 +103,7 @@ public class RunningLowServiceEditSettingTests {
         EditSettingRequest request = new EditSettingRequest(10);
 
         doThrow(ItemNotFoundException.class).when(service).getSetting(1);
-        assertThrows(ItemNotFoundException.class, () -> service.editSetting(1, request, auth));
+        assertThrows(ItemNotFoundException.class, () -> service.editSetting(1, request, user));
     }
 
     @Test
@@ -122,8 +122,8 @@ public class RunningLowServiceEditSettingTests {
         setting.setRunningLow(4);
 
         doReturn(setting).when(service).getSetting(1);
-        doReturn(true).when(storageAccessService).canAccessStorage(1, auth);
-        assertThrows(IllegalArgumentException.class, () -> service.editSetting(1, request, auth));
+        doReturn(true).when(storageAccessService).canAccessStorage(1, user);
+        assertThrows(IllegalArgumentException.class, () -> service.editSetting(1, request, user));
     }
 
     @Test
@@ -143,7 +143,7 @@ public class RunningLowServiceEditSettingTests {
 
         doReturn(setting).when(service).getSetting(1);
 
-        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
-        assertThrows(AccessDeniedException.class, () -> service.editSetting(1, request, auth));
+        doReturn(false).when(storageAccessService).canAccessStorage(1, user);
+        assertThrows(AccessDeniedException.class, () -> service.editSetting(1, request, user));
     }
 }

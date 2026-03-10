@@ -15,11 +15,11 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.ShoppingListItem;
 import com.shelflife.project.model.Storage;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ShoppingListItemRepository;
 import com.shelflife.project.repository.StorageRepository;
 
@@ -47,7 +47,7 @@ public class ShoppingListServiceDeleteItemTests {
     @InjectMocks
     private ShoppingListService shoppingListService;
 
-    private Authentication auth;
+    private User user = new User();
 
     @Test
     void throwsNotFound() {
@@ -59,7 +59,7 @@ public class ShoppingListServiceDeleteItemTests {
         item.setStorage(storage);
 
         doThrow(ItemNotFoundException.class).when(shoppingListService).getItem(1);
-        assertThrows(ItemNotFoundException.class, () -> shoppingListService.deleteItem(1, auth));
+        assertThrows(ItemNotFoundException.class, () -> shoppingListService.deleteItem(1, user));
 
         verifyNoInteractions(shoppingListItemRepository);
     }
@@ -74,8 +74,8 @@ public class ShoppingListServiceDeleteItemTests {
         item.setStorage(storage);
 
         doReturn(item).when(shoppingListService).getItem(1);
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(false);
-        assertThrows(AccessDeniedException.class, () -> shoppingListService.deleteItem(1, auth));
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(false);
+        assertThrows(AccessDeniedException.class, () -> shoppingListService.deleteItem(1, user));
 
         verifyNoInteractions(shoppingListItemRepository);
     }
@@ -90,8 +90,8 @@ public class ShoppingListServiceDeleteItemTests {
         item.setStorage(storage);
 
         doReturn(item).when(shoppingListService).getItem(1);
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(true);
-        assertDoesNotThrow(() -> shoppingListService.deleteItem(1, auth));
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(true);
+        assertDoesNotThrow(() -> shoppingListService.deleteItem(1, user));
 
         verify(shoppingListItemRepository).delete(item);
     }

@@ -12,8 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ShoppingListItemRepository;
 import com.shelflife.project.repository.StorageRepository;
 
@@ -40,20 +40,20 @@ public class ShoppingListServiceGetForStorageTests {
     @InjectMocks
     private ShoppingListService shoppingListService;
 
-    private Authentication auth;
+    private User user = new User();
 
     @Test
     void throwsAccessDenied() {
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(false);
-        assertThrows(AccessDeniedException.class, () -> shoppingListService.getForStorage(1, auth));
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(false);
+        assertThrows(AccessDeniedException.class, () -> shoppingListService.getForStorage(1, user));
 
         verifyNoInteractions(shoppingListItemRepository);
     }
 
     @Test
     void returnsShoppingList() {
-        when(storageAccessService.canAccessStorage(1, auth)).thenReturn(true);
-        assertDoesNotThrow(() -> shoppingListService.getForStorage(1, auth));
+        when(storageAccessService.canAccessStorage(1, user)).thenReturn(true);
+        assertDoesNotThrow(() -> shoppingListService.getForStorage(1, user));
 
         verify(shoppingListItemRepository).findByStorageId(1);
     }

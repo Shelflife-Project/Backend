@@ -1,7 +1,6 @@
 package com.shelflife.project.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.shelflife.project.model.User;
@@ -17,7 +16,7 @@ public class StorageAccessService {
      */
     public boolean canAccessStorage(long storageId, User user) {
         if(user == null)
-            throw new AccessDeniedException(null);
+            return false;
 
         if(user.isAdmin())
             return true;

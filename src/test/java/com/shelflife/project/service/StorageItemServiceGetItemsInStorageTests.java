@@ -15,10 +15,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageItem;
+import com.shelflife.project.model.User;
 import com.shelflife.project.repository.StorageItemRepository;
 import com.shelflife.project.repository.StorageRepository;
 
@@ -39,7 +39,7 @@ public class StorageItemServiceGetItemsInStorageTests {
     @InjectMocks
     private StorageItemService service;
 
-    Authentication auth;
+    private User user = new User();
 
     @Test
     void noauth_throwsNotFound() {
@@ -63,8 +63,8 @@ public class StorageItemServiceGetItemsInStorageTests {
 
     @Test
     void auth_throwsAccessDenied() {
-        doReturn(false).when(storageAccessService).canAccessStorage(1, auth);
+        doReturn(false).when(storageAccessService).canAccessStorage(1, user);
 
-        assertThrows(AccessDeniedException.class, () -> service.getItemsInStorage(1, auth));
+        assertThrows(AccessDeniedException.class, () -> service.getItemsInStorage(1, user));
     }
 }

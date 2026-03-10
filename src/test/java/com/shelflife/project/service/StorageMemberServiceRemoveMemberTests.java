@@ -2,8 +2,6 @@ package com.shelflife.project.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
@@ -40,8 +37,6 @@ public class StorageMemberServiceRemoveMemberTests {
     @InjectMocks
     private StorageMemberService service;
 
-    private Authentication auth;
-
     @Test
     void noauth_throwsItemNotFound() {
         when(storageMemberRepository.findByStorageIdAndUserId(1, 1)).thenReturn(Optional.empty());
@@ -53,15 +48,13 @@ public class StorageMemberServiceRemoveMemberTests {
         User user = new User();
 
         when(storageRepository.findById(1L)).thenReturn(Optional.empty());
-        doReturn(user).when(userService).getUserByAuth(auth);
 
-        assertThrows(ItemNotFoundException.class, () -> service.removeMemberFromStorage(1, 1, auth));
+        assertThrows(ItemNotFoundException.class, () -> service.removeMemberFromStorage(1, 1, user));
     }
 
     @Test
-    void auth_throwsAccessDeniedAsAnonymous() {
-        doThrow(AccessDeniedException.class).when(userService).getUserByAuth(auth);
-        assertThrows(AccessDeniedException.class, () -> service.removeMemberFromStorage(1, 1, auth));
+    void auth_throwsAccessDeniedWithNull() {
+        assertThrows(AccessDeniedException.class, () -> service.removeMemberFromStorage(1, 1, null));
     }
 
     @Test
@@ -77,9 +70,8 @@ public class StorageMemberServiceRemoveMemberTests {
         user.setId(2);
 
         when(storageRepository.findById(1L)).thenReturn(Optional.of(storage));
-        doReturn(user).when(userService).getUserByAuth(auth);
 
-        assertThrows(AccessDeniedException.class, () -> service.removeMemberFromStorage(1, 1, auth));
+        assertThrows(AccessDeniedException.class, () -> service.removeMemberFromStorage(1, 1, user));
     }
 
     @Test
@@ -103,9 +95,8 @@ public class StorageMemberServiceRemoveMemberTests {
 
         when(storageMemberRepository.findByStorageIdAndUserId(1, 1)).thenReturn(Optional.of(member));
         when(storageRepository.findById(1L)).thenReturn(Optional.of(storage));
-        doReturn(admin).when(userService).getUserByAuth(auth);
 
-        assertDoesNotThrow(() -> service.removeMemberFromStorage(1, 1, auth));
+        assertDoesNotThrow(() -> service.removeMemberFromStorage(1, 1, admin));
         verify(storageMemberRepository).deleteById(10L);
     }
 
@@ -127,9 +118,8 @@ public class StorageMemberServiceRemoveMemberTests {
 
         when(storageMemberRepository.findByStorageIdAndUserId(1, 1)).thenReturn(Optional.of(member));
         when(storageRepository.findById(1L)).thenReturn(Optional.of(storage));
-        doReturn(owner).when(userService).getUserByAuth(auth);
 
-        assertDoesNotThrow(() -> service.removeMemberFromStorage(1, 1, auth));
+        assertDoesNotThrow(() -> service.removeMemberFromStorage(1, 1, owner));
         verify(storageMemberRepository).deleteById(10L);
     }
 }

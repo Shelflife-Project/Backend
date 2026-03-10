@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
 
 import com.shelflife.project.dto.product.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
@@ -34,18 +33,17 @@ public class ProductServiceUpdateProductTests {
     @Mock
     private UserService userService;
 
-    @Mock
-    private Authentication auth;
-
     @Spy
     @InjectMocks
     private ProductService productService;
 
     @Test
     void throwsAccessDeniedWhenCantEdit() {
-        doReturn(false).when(productService).canEditProduct(1, auth);
+        User user = new User();
+        
+        doReturn(false).when(productService).canEditProduct(1, user);
 
-        assertThrows(AccessDeniedException.class, () -> productService.updateProduct(1L, emptyRequest(), auth));
+        assertThrows(AccessDeniedException.class, () -> productService.updateProduct(1L, emptyRequest(), user));
     }
 
     @Test
@@ -54,10 +52,9 @@ public class ProductServiceUpdateProductTests {
         User owner = testUser(2L, false);
         Product productToUpdate = testProduct(1L, owner);
 
-        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(productToUpdate));
 
-        assertThrows(AccessDeniedException.class, () -> productService.updateProduct(1L, emptyRequest(), auth));
+        assertThrows(AccessDeniedException.class, () -> productService.updateProduct(1L, emptyRequest(), current));
         verify(repo, never()).save(any());
     }
 
@@ -68,11 +65,10 @@ public class ProductServiceUpdateProductTests {
         UpdateProductRequest req = new UpdateProductRequest();
         req.setBarcode("12345");
 
-        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
         when(repo.existsByBarcode("12345")).thenReturn(true);
 
-        assertThrows(BarcodeExistsException.class, () -> productService.updateProduct(1L, req, auth));
+        assertThrows(BarcodeExistsException.class, () -> productService.updateProduct(1L, req, current));
         verify(repo, never()).save(any());
     }
 
@@ -83,10 +79,9 @@ public class ProductServiceUpdateProductTests {
         UpdateProductRequest req = new UpdateProductRequest();
         req.setExpirationDaysDelta(0);
 
-        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
 
-        assertThrows(IllegalArgumentException.class, () -> productService.updateProduct(1L, req, auth));
+        assertThrows(IllegalArgumentException.class, () -> productService.updateProduct(1L, req, current));
         verify(repo, never()).save(any());
     }
 
@@ -97,10 +92,9 @@ public class ProductServiceUpdateProductTests {
         Product p = testProduct(1L, owner);
         UpdateProductRequest req = new UpdateProductRequest();
 
-        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
 
-        assertDoesNotThrow(() -> productService.updateProduct(1L, req, auth));
+        assertDoesNotThrow(() -> productService.updateProduct(1L, req, current));
         verify(repo).save(p);
     }
 
@@ -111,10 +105,9 @@ public class ProductServiceUpdateProductTests {
         UpdateProductRequest req = new UpdateProductRequest();
         req.setExpirationDaysDelta(21);
 
-        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
 
-        assertDoesNotThrow(() -> productService.updateProduct(1L, req, auth));
+        assertDoesNotThrow(() -> productService.updateProduct(1L, req, current));
         verify(repo).save(p);
     }
 
@@ -128,12 +121,11 @@ public class ProductServiceUpdateProductTests {
         req.setExpirationDaysDelta(21);
         req.setBarcode("6789");
 
-        when(userService.getUserByAuth(auth)).thenReturn(current);
         when(repo.findById(1L)).thenReturn(Optional.of(p));
         when(repo.save(any(Product.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Product newP = productService.updateProduct(1L, req, auth);
+        Product newP = productService.updateProduct(1L, req, current);
         assertEquals("testName", newP.getName());
         assertEquals("newCat", newP.getCategory());
         assertEquals("6789", newP.getBarcode());

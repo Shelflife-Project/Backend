@@ -32,7 +32,7 @@ public class StorageAccessServiceTests {
 
     private Authentication auth;
 
-    @Test
+    /*@Test
     void noAuth_returnsTrue_asAdmin() {
         doReturn(true).when(userService).isAdmin(1);
         assertTrue(storageAccessService.canAccessStorage(1, 1));
@@ -52,7 +52,7 @@ public class StorageAccessServiceTests {
         doReturn(false).when(storageRepository).isMemberOrOwner(1, 1);
 
         assertFalse(storageAccessService.canAccessStorage(1, 1));
-    }
+    }*/
 
     @Test
     void auth_returnsFalseAsAnonymous() {

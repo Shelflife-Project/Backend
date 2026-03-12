@@ -31,6 +31,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -111,6 +112,31 @@ public class UserController {
 
         } catch (ItemNotFoundException e) {
             return ResponseEntity.ok().header("Content-Type", "image/svg+xml").body(resource);
+        }
+    }
+
+    @GetMapping("/{id}/pfp/small")
+    @Operation(summary = "Get optimized 64x64 icon of a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(mediaType = "image/*")
+            }, description = "Returns an optimized image (max 64x64). If there is no uploaded image, a placeholder will be returned"),
+    })
+    public ResponseEntity<byte[]> getSmallPfp(@PathVariable long id) {
+        String filename = id + "_user";
+
+        try {
+            ImageService.OptimizedImage optimized = imageService.loadOptimizedImage(
+                    filename,
+                    "classpath:avatar-default.svg",
+                    64,
+                    64);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(optimized.mimeType()))
+                    .body(optimized.bytes());
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 

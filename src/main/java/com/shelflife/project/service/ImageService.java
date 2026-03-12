@@ -1,10 +1,17 @@
 package com.shelflife.project.service;
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+
+import javax.imageio.ImageIO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,11 +50,12 @@ public class ImageService {
         Path path = Paths.get(uploadPath, filename);
         Image image;
 
-        if (!file.getContentType().startsWith("image/"))
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/"))
             throw new InvalidMimeTypeException(file.getContentType(), "Invalid type");
 
         if (!Files.exists(dirPath))
-            Files.createDirectory(dirPath);
+            Files.createDirectories(dirPath);
 
         try {
             image = getImage(filename);
@@ -55,11 +63,61 @@ public class ImageService {
             image = new Image();
         }
 
+        byte[] content;
+        String outputMimeType;
+
+        if (isSvg(contentType)) {
+            content = file.getBytes();
+            outputMimeType = contentType;
+        } else {
+            BufferedImage sourceImage = ImageIO.read(file.getInputStream());
+            if (sourceImage == null)
+                throw new InvalidMimeTypeException(contentType, "Invalid or unsupported image data");
+
+            BufferedImage resized = resizeToFit(sourceImage, 512, 512);
+            String outputFormat = formatFromMimeType(contentType);
+            outputMimeType = mimeTypeFromFormat(outputFormat);
+            content = writeImage(resized, outputFormat);
+        }
+
         image.setFilename(filename);
-        image.setMimetype(file.getContentType());
+        image.setMimetype(outputMimeType);
         imageRepository.save(image);
 
-        Files.write(path, file.getBytes());
+        Files.write(path, content);
+    }
+
+    public OptimizedImage loadOptimizedImage(String filename, String placeholderPath, int maxWidth, int maxHeight)
+            throws IOException {
+        Resource resource = loadImage(filename, placeholderPath);
+        String mimeType = "image/svg+xml";
+
+        if (imageExists(filename)) {
+            try {
+                mimeType = getImage(filename).getMimetype();
+            } catch (ItemNotFoundException e) {
+                Path path = Paths.get(uploadPath, filename);
+                String detected = Files.probeContentType(path);
+                if (detected != null)
+                    mimeType = detected;
+            }
+        }
+
+        byte[] bytes = resource.getInputStream().readAllBytes();
+
+        if (isSvg(mimeType))
+            return new OptimizedImage(bytes, mimeType);
+
+        BufferedImage sourceImage = ImageIO.read(new ByteArrayInputStream(bytes));
+        if (sourceImage == null)
+            return new OptimizedImage(bytes, mimeType);
+
+        BufferedImage resized = resizeToFit(sourceImage, maxWidth, maxHeight);
+        String outputFormat = formatFromMimeType(mimeType);
+        String outputMimeType = mimeTypeFromFormat(outputFormat);
+        byte[] optimizedBytes = writeImage(resized, outputFormat);
+
+        return new OptimizedImage(optimizedBytes, outputMimeType);
     }
 
     public Resource loadImage(String filename, String placeholderPath) {
@@ -87,5 +145,70 @@ public class ImageService {
 
         Image image = getImage(filename);
         imageRepository.delete(image);
+    }
+
+    public record OptimizedImage(byte[] bytes, String mimeType) {
+    }
+
+    private boolean isSvg(String mimeType) {
+        return mimeType != null && mimeType.toLowerCase().contains("svg");
+    }
+
+    private String formatFromMimeType(String mimeType) {
+        if (mimeType == null)
+            return "png";
+
+        String lower = mimeType.toLowerCase();
+        if (lower.contains("jpeg") || lower.contains("jpg"))
+            return "jpg";
+        if (lower.contains("gif"))
+            return "gif";
+        if (lower.contains("bmp"))
+            return "bmp";
+
+        return "png";
+    }
+
+    private String mimeTypeFromFormat(String format) {
+        if ("jpg".equalsIgnoreCase(format) || "jpeg".equalsIgnoreCase(format))
+            return "image/jpeg";
+        if ("gif".equalsIgnoreCase(format))
+            return "image/gif";
+        if ("bmp".equalsIgnoreCase(format))
+            return "image/bmp";
+
+        return "image/png";
+    }
+
+    private BufferedImage resizeToFit(BufferedImage source, int maxWidth, int maxHeight) {
+        int originalWidth = source.getWidth();
+        int originalHeight = source.getHeight();
+
+        if (originalWidth <= maxWidth && originalHeight <= maxHeight)
+            return source;
+
+        double scale = Math.min((double) maxWidth / originalWidth, (double) maxHeight / originalHeight);
+        int targetWidth = Math.max(1, (int) Math.round(originalWidth * scale));
+        int targetHeight = Math.max(1, (int) Math.round(originalHeight * scale));
+
+        int imageType = source.getColorModel().hasAlpha()
+            ? BufferedImage.TYPE_INT_ARGB
+            : BufferedImage.TYPE_INT_RGB;
+
+        BufferedImage resized = new BufferedImage(targetWidth, targetHeight, imageType);
+        Graphics2D graphics = resized.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics.drawImage(source, 0, 0, targetWidth, targetHeight, null);
+        graphics.dispose();
+
+        return resized;
+    }
+
+    private byte[] writeImage(BufferedImage image, String format) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(image, format, out);
+        return out.toByteArray();
     }
 }

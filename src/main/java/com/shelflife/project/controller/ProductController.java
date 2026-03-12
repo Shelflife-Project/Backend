@@ -33,6 +33,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -124,6 +125,31 @@ public class ProductController {
 
         } catch (ItemNotFoundException e) {
             return ResponseEntity.ok().header("Content-Type", "image/svg+xml").body(resource);
+        }
+    }
+
+    @GetMapping("/{id}/icon/small")
+    @Operation(summary = "Get optimized 64x64 icon of a product")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(mediaType = "image/*")
+            }, description = "Returns an optimized image (max 64x64). If there is no uploaded image, a placeholder will be returned"),
+    })
+    public ResponseEntity<byte[]> getSmallIcon(@PathVariable long id) {
+        String filename = id + "_productIcon";
+
+        try {
+            ImageService.OptimizedImage optimized = imageService.loadOptimizedImage(
+                    filename,
+                    "classpath:product-svgrepo-com.svg",
+                    64,
+                    64);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(optimized.mimeType()))
+                    .body(optimized.bytes());
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 

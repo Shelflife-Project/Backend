@@ -180,7 +180,7 @@ public class ProductController {
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "Couldn't upload image"));
         } catch (InvalidMimeTypeException e) {
-            return ResponseEntity.badRequest().body(Map.of("pfp", "Invalid mime type"));
+            return ResponseEntity.badRequest().body(Map.of("pfp", e.getMessage()));
         }
     }
 

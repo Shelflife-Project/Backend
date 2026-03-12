@@ -63,28 +63,11 @@ public class ImageService {
             image = new Image();
         }
 
-        byte[] content;
-        String outputMimeType;
-
-        if (isSvg(contentType)) {
-            content = file.getBytes();
-            outputMimeType = contentType;
-        } else {
-            BufferedImage sourceImage = ImageIO.read(file.getInputStream());
-            if (sourceImage == null)
-                throw new InvalidMimeTypeException(contentType, "Invalid or unsupported image data");
-
-            BufferedImage resized = resizeToFit(sourceImage, 512, 512);
-            String outputFormat = formatFromMimeType(contentType);
-            outputMimeType = mimeTypeFromFormat(outputFormat);
-            content = writeImage(resized, outputFormat);
-        }
-
         image.setFilename(filename);
-        image.setMimetype(outputMimeType);
+        image.setMimetype(contentType);
         imageRepository.save(image);
 
-        Files.write(path, content);
+        Files.write(path, file.getBytes());
     }
 
     public OptimizedImage loadOptimizedImage(String filename, String placeholderPath, int maxWidth, int maxHeight)
@@ -113,11 +96,9 @@ public class ImageService {
             return new OptimizedImage(bytes, mimeType);
 
         BufferedImage resized = resizeToFit(sourceImage, maxWidth, maxHeight);
-        String outputFormat = formatFromMimeType(mimeType);
-        String outputMimeType = mimeTypeFromFormat(outputFormat);
-        byte[] optimizedBytes = writeImage(resized, outputFormat);
+        byte[] optimizedBytes = writeImage(resized, mimeType);
 
-        return new OptimizedImage(optimizedBytes, outputMimeType);
+        return new OptimizedImage(optimizedBytes, mimeType);
     }
 
     public Resource loadImage(String filename, String placeholderPath) {
@@ -154,32 +135,6 @@ public class ImageService {
         return mimeType != null && mimeType.toLowerCase().contains("svg");
     }
 
-    private String formatFromMimeType(String mimeType) {
-        if (mimeType == null)
-            return "png";
-
-        String lower = mimeType.toLowerCase();
-        if (lower.contains("jpeg") || lower.contains("jpg"))
-            return "jpg";
-        if (lower.contains("gif"))
-            return "gif";
-        if (lower.contains("bmp"))
-            return "bmp";
-
-        return "png";
-    }
-
-    private String mimeTypeFromFormat(String format) {
-        if ("jpg".equalsIgnoreCase(format) || "jpeg".equalsIgnoreCase(format))
-            return "image/jpeg";
-        if ("gif".equalsIgnoreCase(format))
-            return "image/gif";
-        if ("bmp".equalsIgnoreCase(format))
-            return "image/bmp";
-
-        return "image/png";
-    }
-
     private BufferedImage resizeToFit(BufferedImage source, int maxWidth, int maxHeight) {
         int originalWidth = source.getWidth();
         int originalHeight = source.getHeight();
@@ -192,8 +147,8 @@ public class ImageService {
         int targetHeight = Math.max(1, (int) Math.round(originalHeight * scale));
 
         int imageType = source.getColorModel().hasAlpha()
-            ? BufferedImage.TYPE_INT_ARGB
-            : BufferedImage.TYPE_INT_RGB;
+                ? BufferedImage.TYPE_INT_ARGB
+                : BufferedImage.TYPE_INT_RGB;
 
         BufferedImage resized = new BufferedImage(targetWidth, targetHeight, imageType);
         Graphics2D graphics = resized.createGraphics();
@@ -208,6 +163,9 @@ public class ImageService {
 
     private byte[] writeImage(BufferedImage image, String format) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        format = format.split("/")[1];
+
         ImageIO.write(image, format, out);
         return out.toByteArray();
     }

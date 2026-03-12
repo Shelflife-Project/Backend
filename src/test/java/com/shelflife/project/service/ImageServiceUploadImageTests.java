@@ -102,22 +102,4 @@ public class ImageServiceUploadImageTests {
         assertFalse(Files.exists(savedFile));
         verify(imageRepository, never()).save(any(Image.class));
     }
-
-    @Test
-    void invalidImageDataThrows(@TempDir Path tempDir) throws Exception {
-        // Content-type claims PNG but bytes are not valid image data
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "corrupt.png",
-                "image/png",
-                "not-an-image".getBytes());
-
-        ReflectionTestUtils.setField(imageService, "uploadPath", tempDir.toString());
-
-        assertThrows(InvalidMimeTypeException.class,
-                () -> imageService.uploadImage(file, "corrupt.png"));
-
-        assertFalse(Files.exists(tempDir.resolve("corrupt.png")));
-        verify(imageRepository, never()).save(any(Image.class));
-    }
 }

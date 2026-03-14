@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.shelflife.project.docs.UserControllerDocs;
 import com.shelflife.project.dto.user.ChangeUserDataRequest;
 import com.shelflife.project.exception.EmailExistsException;
 import com.shelflife.project.exception.ItemNotFoundException;
@@ -14,11 +15,6 @@ import com.shelflife.project.service.ImageService;
 import com.shelflife.project.service.JwtService;
 import com.shelflife.project.service.UserService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,7 +41,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+public class UserController implements UserControllerDocs {
 
     @Autowired
     private JwtService jwtService;
@@ -57,13 +53,6 @@ public class UserController {
     private ImageService imageService;
 
     @GetMapping()
-    @Operation(summary = "Get all users", description = "Only for admins")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved users"),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     public ResponseEntity<List<User>> getUsers(Authentication auth) {
         try {
             List<User> users = service.getUsers(service.getUserByAuth(auth));
@@ -74,13 +63,6 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get user by ID", description = "Retrieve a user by its ID.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved user"),
-            @ApiResponse(responseCode = "404", description = "User not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     public ResponseEntity<User> getUser(@PathVariable long id, Authentication auth) {
         try {
             return ResponseEntity.ok(service.getUserById(id, auth));
@@ -92,12 +74,6 @@ public class UserController {
     }
 
     @GetMapping("/{id}/pfp")
-    @Operation(summary = "Get the icon of a user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(mediaType = "image/*")
-            }, description = "Returns an image with it's own mime type header. If there is no uploaded image, a placeholder svg will be returned"),
-    })
     public ResponseEntity<Resource> getPfp(@PathVariable long id) {
         String filename = id + "_user";
         Resource resource = imageService.loadImage(filename, "classpath:avatar-default.svg");
@@ -116,12 +92,6 @@ public class UserController {
     }
 
     @GetMapping("/{id}/pfp/small")
-    @Operation(summary = "Get optimized 64x64 icon of a user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(mediaType = "image/*")
-            }, description = "Returns an optimized image (max 64x64). If there is no uploaded image, a placeholder will be returned"),
-    })
     public ResponseEntity<byte[]> getSmallPfp(@PathVariable long id) {
         String filename = id + "_user";
 
@@ -141,18 +111,6 @@ public class UserController {
     }
 
     @PostMapping("/{id}/pfp")
-    @Operation(summary = "Upload an icon for a user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "500", description = "An IO Exception occured", content = {
-                    @Content(schema = @Schema(example = "{ \"error\": \"Couldn't upload image\" }"))
-            }),
-            @ApiResponse(responseCode = "400", description = "Invalid mime type", content = {
-                    @Content(schema = @Schema(example = "{ \"pfp\": \"Invalid mime type\" }"))
-            }),
-    })
     public ResponseEntity<?> uploadPfp(@PathVariable long id, @RequestParam("pfp") MultipartFile file,
             Authentication auth) {
         try {
@@ -170,12 +128,6 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful removal"),
-            @ApiResponse(responseCode = "403", description = "Access denied"),
-            @ApiResponse(responseCode = "404", description = "User not found")
-    })
     public ResponseEntity<Void> deleteUser(@PathVariable long id, Authentication auth) {
         try {
             service.removeUser(id, service.getUserByAuth(auth));
@@ -188,21 +140,6 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    @Operation(summary = "Update user data")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful update", content = {
-                    @Content(schema = @Schema(implementation = User.class))
-            }),
-            @ApiResponse(responseCode = "400", description = "Invalid argument", content = {
-                    @Content(schema = @Schema(example = "{ \"email\": \"Email already exists\" }"))
-            }),
-            @ApiResponse(responseCode = "403", description = "You can't edit this user", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "404", description = "User not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     public ResponseEntity<?> updateUserData(@PathVariable long id, Authentication auth,
             @Valid @RequestBody ChangeUserDataRequest request, HttpServletRequest httpRequest,
             HttpServletResponse response) {

@@ -1,6 +1,7 @@
 package com.shelflife.project.controller;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -72,9 +73,9 @@ public class StorageControllerGetStoragesPagedTests {
         mockMvc.perform(get("/api/storages")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(testStorage.getId()))
-                .andExpect(jsonPath("$[1].id").value(otherTestStorage.getId()));
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].id").value(testStorage.getId()))
+                .andExpect(jsonPath("$.data[1].id").value(otherTestStorage.getId()));
     }
 
     @Test
@@ -85,13 +86,17 @@ public class StorageControllerGetStoragesPagedTests {
         mockMvc.perform(get("/api/storages?size=1&page=0")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testStorage.getId()));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.hasPrevious", is(false)))
+                .andExpect(jsonPath("$.hasNext", is(true)))
+                .andExpect(jsonPath("$.data[0].id").value(testStorage.getId()));
 
         mockMvc.perform(get("/api/storages?size=1&page=1")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(otherTestStorage.getId()));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.hasPrevious", is(true)))
+                .andExpect(jsonPath("$.hasNext", is(false)))
+                .andExpect(jsonPath("$.data[0].id").value(otherTestStorage.getId()));
     }
 }

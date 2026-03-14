@@ -1,9 +1,9 @@
 package com.shelflife.project.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -42,7 +42,7 @@ public class StorageGetterService {
         return getStorage(storageId);
     }
 
-    public List<Storage> getStorages(User user, String search, Pageable pageable)
+    public Page<Storage> getStorages(User user, String search, Pageable pageable)
             throws AccessDeniedException {
 
         if (user == null)

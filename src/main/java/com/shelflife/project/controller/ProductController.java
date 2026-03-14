@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.shelflife.project.dto.PaginatedResponse;
 import com.shelflife.project.dto.product.CreateProductRequest;
 import com.shelflife.project.dto.product.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
@@ -29,6 +30,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -63,7 +65,7 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved products")
     })
     @GetMapping()
-    public List<Product> getProducts(
+    public PaginatedResponse<Product> getProducts(
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,
@@ -79,7 +81,8 @@ public class ProductController {
             pageable = PageRequest.of(page, size, sort);
         }
 
-        return productService.findProducts(search, pageable);
+        Page<Product> res = productService.findProducts(search, pageable);
+        return new PaginatedResponse<>(res);
     }
 
     @Operation(summary = "Get product by ID", description = "Retrieve a product by its ID.")

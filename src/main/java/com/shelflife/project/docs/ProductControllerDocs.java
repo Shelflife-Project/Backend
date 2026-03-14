@@ -18,7 +18,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+@Tag(name = "Products", description = "Endpoints for handling products")
 public interface ProductControllerDocs {
     @Operation(summary = "Get all products", description = "Retrieve a list of all products based on optional filters.")
     @ApiResponses(value = {

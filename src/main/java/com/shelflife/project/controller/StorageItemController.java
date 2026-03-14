@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shelflife.project.docs.StorageItemControllerDocs;
 import com.shelflife.project.dto.runninglow.RunningLowNotification;
 import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.dto.storage.EditItemRequest;
@@ -27,16 +28,11 @@ import com.shelflife.project.service.RunningLowService;
 import com.shelflife.project.service.StorageItemService;
 import com.shelflife.project.service.UserService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/storages/{storageId}")
-public class StorageItemController {
+public class StorageItemController implements StorageItemControllerDocs {
     @Autowired
     private StorageItemService storageItemService;
 
@@ -47,16 +43,6 @@ public class StorageItemController {
     private UserService userService;
 
     @GetMapping("/items")
-    @Operation(summary = "Get items in a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved items"),
-            @ApiResponse(responseCode = "404", description = "Storage with this id was not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     public ResponseEntity<List<StorageItem>> getStorageItems(@PathVariable long storageId, Authentication auth) {
         try {
             User user = userService.getUserByAuth(auth);
@@ -69,19 +55,6 @@ public class StorageItemController {
     }
 
     @PostMapping("/items")
-    @Operation(summary = "Add item to a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully added item"),
-            @ApiResponse(responseCode = "404", description = "Storage with this id was not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "400", description = "Invalid argument", content = {
-                    @Content(schema = @Schema(example = "{\"productId\": \"Invalid ID\"}"))
-            })
-    })
     public ResponseEntity<?> addItem(@PathVariable long storageId, @Valid @RequestBody AddItemRequest request,
             Authentication auth) {
         try {
@@ -98,21 +71,6 @@ public class StorageItemController {
     }
 
     @PatchMapping("/items/{itemId}")
-    @Operation(summary = "Edit a field of an item")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful edit", content = {
-                    @Content(schema = @Schema(implementation = StorageItem.class), mediaType = "application/json")
-            }),
-            @ApiResponse(responseCode = "403", description = "You can't access this item", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "404", description = "Item not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "400", description = "Illegal argument", content = {
-                    @Content(schema = @Schema(example = "{\"expiresAt\": \"Invalid date\"}"))
-            })
-    })
     public ResponseEntity<?> editItem(@PathVariable long itemId, @Valid @RequestBody EditItemRequest request,
             Authentication auth) {
         try {
@@ -128,16 +86,6 @@ public class StorageItemController {
     }
 
     @GetMapping("/expired")
-    @Operation(summary = "Get expired items in a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful retrieval of expired items"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "404", description = "Storage not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     public ResponseEntity<List<StorageItem>> getExpired(@PathVariable long storageId, Authentication auth) {
         try {
             User user = userService.getUserByAuth(auth);
@@ -150,16 +98,6 @@ public class StorageItemController {
     }
 
     @GetMapping("/abouttoexpire")
-    @Operation(summary = "Get items that expire tomorrow in a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful retrieval of items"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "404", description = "Storage not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     public ResponseEntity<List<StorageItem>> getAboutToExpire(@PathVariable long storageId, Authentication auth) {
         try {
             User user = userService.getUserByAuth(auth);
@@ -172,13 +110,6 @@ public class StorageItemController {
     }
 
     @GetMapping("/runninglow")
-    @Operation(summary = "Get items that are running low in a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful retrieval of items"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     public ResponseEntity<List<RunningLowNotification>> getRunningLow(@PathVariable long storageId,
             Authentication auth) {
         try {
@@ -190,12 +121,6 @@ public class StorageItemController {
     }
 
     @DeleteMapping("/items/{itemId}")
-    @Operation(summary = "Remove an item from a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful removal"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage"),
-            @ApiResponse(responseCode = "404", description = "Item not found")
-    })
     public ResponseEntity<Void> deleteItem(@PathVariable long storageId, @PathVariable long itemId,
             Authentication auth) {
         try {

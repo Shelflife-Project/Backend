@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.shelflife.project.docs.ProductControllerDocs;
 import com.shelflife.project.dto.product.CreateProductRequest;
 import com.shelflife.project.dto.product.UpdateProductRequest;
 import com.shelflife.project.exception.BarcodeExistsException;
@@ -16,11 +17,6 @@ import com.shelflife.project.service.ImageService;
 import com.shelflife.project.service.ProductService;
 import com.shelflife.project.service.UserService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 import java.io.IOException;
@@ -47,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/products")
-public class ProductController {
+public class ProductController implements ProductControllerDocs {
 
     @Autowired
     private ProductService productService;
@@ -58,10 +54,6 @@ public class ProductController {
     @Autowired
     private ImageService imageService;
 
-    @Operation(summary = "Get all products", description = "Retrieve a list of all products based on optional filters.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved products")
-    })
     @GetMapping()
     public List<Product> getProducts(
             @RequestParam(defaultValue = "") String search,
@@ -82,13 +74,6 @@ public class ProductController {
         return productService.findProducts(search, pageable);
     }
 
-    @Operation(summary = "Get product by ID", description = "Retrieve a product by its ID.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved product"),
-            @ApiResponse(responseCode = "404", description = "Product not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProduct(@PathVariable long id) {
         try {
@@ -98,19 +83,12 @@ public class ProductController {
         }
     }
 
-    @Operation(summary = "Gets categories that are in the database")
     @GetMapping("/categories")
     public ResponseEntity<List<String>> getCategories() {
         return ResponseEntity.ok(productService.getCategories());
     }
 
     @GetMapping("/{id}/icon")
-    @Operation(summary = "Get the icon of a product")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(mediaType = "image/*")
-            }, description = "Returns an image with it's own mime type header. If there is no uploaded image, a placeholder svg will be returned"),
-    })
     public ResponseEntity<Resource> getIcon(@PathVariable long id) {
         String filename = id + "_productIcon";
         Resource resource = imageService.loadImage(filename, "classpath:product-svgrepo-com.svg");
@@ -129,12 +107,6 @@ public class ProductController {
     }
 
     @GetMapping("/{id}/icon/small")
-    @Operation(summary = "Get optimized 64x64 icon of a product")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(mediaType = "image/*")
-            }, description = "Returns an optimized image (max 64x64). If there is no uploaded image, a placeholder will be returned"),
-    })
     public ResponseEntity<byte[]> getSmallIcon(@PathVariable long id) {
         String filename = id + "_productIcon";
 
@@ -154,18 +126,6 @@ public class ProductController {
     }
 
     @PostMapping("/{id}/icon")
-    @Operation(summary = "Upload an icon for a product")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "500", description = "An IO Exception occured", content = {
-                    @Content(schema = @Schema(example = "{ \"error\": \"Couldn't upload image\" }"))
-            }),
-            @ApiResponse(responseCode = "400", description = "Invalid mime type", content = {
-                    @Content(schema = @Schema(example = "{ \"pfp\": \"Invalid mime type\" }"))
-            }),
-    })
     public ResponseEntity<Map<String, String>> uploadIcon(@PathVariable long id,
             @RequestParam("pfp") MultipartFile file,
             Authentication auth) {
@@ -184,18 +144,6 @@ public class ProductController {
         }
     }
 
-    @Operation(summary = "Create a new product")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Product created successfully", content = {
-                    @Content(schema = @Schema(implementation = Product.class))
-            }),
-            @ApiResponse(responseCode = "400", description = "Invalid input or barcode already exists", content = {
-                    @Content(schema = @Schema(example = "{ \"barcode\": \"Barcode already exists\" }"))
-            }),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     @PostMapping()
     public ResponseEntity<?> createProduct(@Valid @RequestBody CreateProductRequest request, Authentication auth) {
         try {
@@ -210,12 +158,6 @@ public class ProductController {
         }
     }
 
-    @Operation(summary = "Delete a product")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Product deleted successfully"),
-            @ApiResponse(responseCode = "403", description = "Access denied"),
-            @ApiResponse(responseCode = "404", description = "Product not found")
-    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable long id, Authentication auth) {
         try {
@@ -229,21 +171,6 @@ public class ProductController {
         }
     }
 
-    @Operation(summary = "Update a product")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Product updated successfully", content = {
-                    @Content(schema = @Schema(implementation = Product.class))
-            }),
-            @ApiResponse(responseCode = "400", description = "Invalid input or barcode already exists", content = {
-                    @Content(schema = @Schema(example = "{ \"barcode\": \"Barcode already exists\" }"))
-            }),
-            @ApiResponse(responseCode = "403", description = "Access denied", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "404", description = "Product not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable long id, @Valid @RequestBody UpdateProductRequest request,
             Authentication auth) {

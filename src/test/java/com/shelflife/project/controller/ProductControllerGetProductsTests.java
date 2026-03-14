@@ -86,13 +86,13 @@ public class ProductControllerGetProductsTests {
         mockMvc.perform(get("/api/products")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
-                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
-                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
-                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].id").value(testProduct.getId()))
+                .andExpect(jsonPath("$.data[0].name").value(testProduct.getName()))
+                .andExpect(jsonPath("$.data[0].barcode").value(testProduct.getBarcode()))
+                .andExpect(jsonPath("$.data[0].category").value(testProduct.getCategory()))
+                .andExpect(jsonPath("$.data[0].ownerId").value(testProduct.getOwnerId()))
+                .andExpect(jsonPath("$.data[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 
     @Test
@@ -103,13 +103,13 @@ public class ProductControllerGetProductsTests {
         mockMvc.perform(get("/api/products")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
-                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
-                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
-                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].id").value(testProduct.getId()))
+                .andExpect(jsonPath("$.data[0].name").value(testProduct.getName()))
+                .andExpect(jsonPath("$.data[0].barcode").value(testProduct.getBarcode()))
+                .andExpect(jsonPath("$.data[0].category").value(testProduct.getCategory()))
+                .andExpect(jsonPath("$.data[0].ownerId").value(testProduct.getOwnerId()))
+                .andExpect(jsonPath("$.data[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 
     @Test
@@ -127,12 +127,12 @@ public class ProductControllerGetProductsTests {
         mockMvc.perform(get("/api/products?page=0&size=1")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testProduct.getId()))
-                .andExpect(jsonPath("$[0].name").value(testProduct.getName()))
-                .andExpect(jsonPath("$[0].barcode").value(testProduct.getBarcode()))
-                .andExpect(jsonPath("$[0].category").value(testProduct.getCategory()))
-                .andExpect(jsonPath("$[0].ownerId").value(testProduct.getOwnerId()))
-                .andExpect(jsonPath("$[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].id").value(testProduct.getId()))
+                .andExpect(jsonPath("$.data[0].name").value(testProduct.getName()))
+                .andExpect(jsonPath("$.data[0].barcode").value(testProduct.getBarcode()))
+                .andExpect(jsonPath("$.data[0].category").value(testProduct.getCategory()))
+                .andExpect(jsonPath("$.data[0].ownerId").value(testProduct.getOwnerId()))
+                .andExpect(jsonPath("$.data[0].expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
     }
 }

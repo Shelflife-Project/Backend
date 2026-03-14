@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -28,11 +29,11 @@ public class ProductService {
         return productRepository.findAll(pageable).toList();
     }
 
-    public List<Product> findProducts(String search, Pageable pageable) {
+    public Page<Product> findProducts(String search, Pageable pageable) {
         if(!search.isBlank())
-            return productRepository.searchProducts(search, pageable).toList();
+            return productRepository.searchProducts(search, pageable);
 
-        return productRepository.findAll(pageable).toList();
+        return productRepository.findAll(pageable);
     }
 
     public List<String> getCategories() {

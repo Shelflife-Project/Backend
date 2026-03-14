@@ -80,10 +80,10 @@ public class StorageControllerGetStoragesTests {
         mockMvc.perform(get("/api/storages")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testUserStorage.getId()))
-                .andExpect(jsonPath("$[0].name").value(testUserStorage.getName()))
-                .andExpect(jsonPath("$[0].owner.id").value(testUserStorage.getOwner().getId()));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].id").value(testUserStorage.getId()))
+                .andExpect(jsonPath("$.data[0].name").value(testUserStorage.getName()))
+                .andExpect(jsonPath("$.data[0].owner.id").value(testUserStorage.getOwner().getId()));
     }
 
     @Test
@@ -94,9 +94,9 @@ public class StorageControllerGetStoragesTests {
         mockMvc.perform(get("/api/storages")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(testUserStorage.getId()))
-                .andExpect(jsonPath("$[1].id").value(testAdminStorage.getId()));
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].id").value(testUserStorage.getId()))
+                .andExpect(jsonPath("$.data[1].id").value(testAdminStorage.getId()));
     }
 
     @Test

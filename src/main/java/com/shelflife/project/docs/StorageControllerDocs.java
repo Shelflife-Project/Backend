@@ -1,12 +1,11 @@
 package com.shelflife.project.docs;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.shelflife.project.dto.PaginatedResponse;
 import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
 import com.shelflife.project.dto.storage.CreateStorageRequest;
 import com.shelflife.project.model.Storage;
@@ -32,7 +31,7 @@ public interface StorageControllerDocs {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
-    public ResponseEntity<List<Storage>> getStorages(Authentication auth,
+    public ResponseEntity<PaginatedResponse<Storage>> getStorages(Authentication auth,
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,

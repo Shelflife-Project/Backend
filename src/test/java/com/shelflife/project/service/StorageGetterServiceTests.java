@@ -7,7 +7,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -16,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -116,7 +116,7 @@ public class StorageGetterServiceTests {
         User user = new User();
         user.setAdmin(true);
 
-        doReturn(List.of()).when(storageRepository).searchAll(anyString(), any(Pageable.class));
+        doReturn(Page.empty()).when(storageRepository).searchAll(anyString(), any(Pageable.class));
 
         assertDoesNotThrow(() -> {
             storageGetterService.getStorages(user, "", Pageable.unpaged());

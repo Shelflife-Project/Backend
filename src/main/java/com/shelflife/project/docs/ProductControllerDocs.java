@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.shelflife.project.dto.PaginatedResponse;
 import com.shelflife.project.dto.product.CreateProductRequest;
 import com.shelflife.project.dto.product.UpdateProductRequest;
 import com.shelflife.project.model.Product;
@@ -26,7 +27,7 @@ public interface ProductControllerDocs {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved products")
     })
-    public List<Product> getProducts(
+    public PaginatedResponse<Product> getProducts(
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,

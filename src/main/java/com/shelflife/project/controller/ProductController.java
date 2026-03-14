@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.shelflife.project.dto.PaginatedResponse;
 import com.shelflife.project.docs.ProductControllerDocs;
 import com.shelflife.project.dto.product.CreateProductRequest;
 import com.shelflife.project.dto.product.UpdateProductRequest;
@@ -25,6 +26,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -55,7 +57,7 @@ public class ProductController implements ProductControllerDocs {
     private ImageService imageService;
 
     @GetMapping()
-    public List<Product> getProducts(
+    public PaginatedResponse<Product> getProducts(
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,
@@ -71,7 +73,8 @@ public class ProductController implements ProductControllerDocs {
             pageable = PageRequest.of(page, size, sort);
         }
 
-        return productService.findProducts(search, pageable);
+        Page<Product> res = productService.findProducts(search, pageable);
+        return new PaginatedResponse<>(res);
     }
 
     @GetMapping("/{id}")

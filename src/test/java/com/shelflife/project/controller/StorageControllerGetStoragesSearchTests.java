@@ -86,9 +86,9 @@ public class StorageControllerGetStoragesSearchTests {
         mockMvc.perform(get("/api/storages?search=test")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id").value(testUserStorage.getId()))
-                .andExpect(jsonPath("$[1].id").value(testAdminStorage.getId()));
+                .andExpect(jsonPath("$.data", hasSize(2)))
+                .andExpect(jsonPath("$.data[0].id").value(testUserStorage.getId()))
+                .andExpect(jsonPath("$.data[1].id").value(testAdminStorage.getId()));
     }
 
     @Test
@@ -99,8 +99,8 @@ public class StorageControllerGetStoragesSearchTests {
         mockMvc.perform(get("/api/storages?search=test")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testUserStorage.getId()));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].id").value(testUserStorage.getId()));
     }
 
     @Test
@@ -118,7 +118,7 @@ public class StorageControllerGetStoragesSearchTests {
         mockMvc.perform(get("/api/storages?search=user&page=0&size=1")
                 .cookie(jwtCookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(testUserStorage.getId()));
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].id").value(testUserStorage.getId()));
     }
 }

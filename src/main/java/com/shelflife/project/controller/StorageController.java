@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shelflife.project.dto.PaginatedResponse;
 import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
 import com.shelflife.project.dto.storage.CreateStorageRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
@@ -23,10 +24,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -65,7 +66,7 @@ public class StorageController {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
-    public ResponseEntity<List<Storage>> getStorages(Authentication auth,
+    public ResponseEntity<PaginatedResponse<Storage>> getStorages(Authentication auth,
             @RequestParam(defaultValue = "") String search,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) Integer size,
@@ -83,7 +84,9 @@ public class StorageController {
             }
 
             User user = userService.getUserByAuth(auth);
-            return ResponseEntity.ok(storageGetterService.getStorages(user, search, pageable));
+            Page<Storage> res = storageGetterService.getStorages(user, search, pageable);
+
+            return ResponseEntity.ok(new PaginatedResponse<Storage>(res));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

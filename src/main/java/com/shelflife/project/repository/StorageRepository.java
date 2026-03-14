@@ -1,5 +1,6 @@
 package com.shelflife.project.repository;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,7 +18,7 @@ public interface StorageRepository extends JpaRepository<Storage, Long> {
 			FROM Storage s
 			WHERE lower(s.name) LIKE lower(concat('%', :search, '%'))
 			""")
-	List<Storage> searchAll(String search, Pageable pageable);
+	Page<Storage> searchAll(String search, Pageable pageable);
 
 	/**
 	 * @param storageId
@@ -68,7 +69,7 @@ public interface StorageRepository extends JpaRepository<Storage, Long> {
 			LEFT JOIN s.members sm
 			WHERE s.owner.id = :userId OR (sm.user.id = :userId AND sm.isAccepted)
 			""")
-	List<Storage> findAccessibleStorages(long userId, Pageable pageable);
+	Page<Storage> findAccessibleStorages(long userId, Pageable pageable);
 
 	/**
 	 * @param userId The ID of the user that you need the accessible storages of
@@ -82,5 +83,5 @@ public interface StorageRepository extends JpaRepository<Storage, Long> {
 			WHERE (s.owner.id = :userId OR (sm.user.id = :userId AND sm.isAccepted)) AND
 			lower(s.name) LIKE lower(concat('%', :search, '%'))
 			""")
-	List<Storage> findAccessibleStorages(long userId, String search, Pageable pageable);
+	Page<Storage> findAccessibleStorages(long userId, String search, Pageable pageable);
 }

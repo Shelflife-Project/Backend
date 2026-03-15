@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.shelflife.project.docs.RunningLowControllerDocs;
 import com.shelflife.project.dto.runninglow.RunningLowNotification;
 import com.shelflife.project.model.User;
 import com.shelflife.project.service.RunningLowService;
@@ -19,7 +20,7 @@ import com.shelflife.project.service.UserService;
 
 @RestController
 @RequestMapping("/api")
-public class RunningLowController {
+public class RunningLowController implements RunningLowControllerDocs {
     @Autowired
     private UserService userService;
 

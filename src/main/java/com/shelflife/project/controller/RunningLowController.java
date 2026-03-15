@@ -22,7 +22,7 @@ import com.shelflife.project.service.UserService;
 public class RunningLowController {
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private RunningLowService runningLowService;
 
@@ -38,8 +38,13 @@ public class RunningLowController {
     }
 
     @GetMapping("/runninglow")
-    public String getAggregatedRunningLow(Authentication auth) {
-        return new String();
+    public ResponseEntity<List<RunningLowNotification>> getAggregatedRunningLow(Authentication auth) {
+        try {
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(runningLowService.getRunningLowByUser(user));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
     }
-    
+
 }

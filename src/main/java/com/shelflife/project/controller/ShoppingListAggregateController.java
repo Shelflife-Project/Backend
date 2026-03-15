@@ -18,7 +18,7 @@ import com.shelflife.project.service.ShoppingListService;
 import com.shelflife.project.service.UserService;
 
 @RestController
-@RequestMapping("/api/tobuy/shopping")
+@RequestMapping("/api/shoppinglist")
 public class ShoppingListAggregateController implements ShoppingListAggregateControllerDocs {
     @Autowired
     private ShoppingListService service;

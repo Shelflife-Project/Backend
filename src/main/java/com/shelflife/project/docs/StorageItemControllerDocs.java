@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
-import com.shelflife.project.dto.runninglow.RunningLowNotification;
 import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.dto.storage.EditItemRequest;
 import com.shelflife.project.model.StorageItem;
@@ -86,16 +85,6 @@ public interface StorageItemControllerDocs {
             })
     })
     public ResponseEntity<List<StorageItem>> getAboutToExpire(long storageId, Authentication auth);
-
-    @Operation(summary = "Get items that are running low in a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful retrieval of items"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
-    public ResponseEntity<List<RunningLowNotification>> getRunningLow(long storageId,
-            Authentication auth);
 
     @Operation(summary = "Remove an item from a storage")
     @ApiResponses(value = {

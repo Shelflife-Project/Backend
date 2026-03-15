@@ -39,4 +39,21 @@ public interface ExpireControllerDocs {
     })
     public ResponseEntity<List<StorageItem>> getAboutToExpireInStorage(long storageId, Authentication auth);
 
+    @Operation(summary = "Get all expired items aggregated for a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of expired items"),
+            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+                    @Content(schema = @Schema(implementation = Void.class))
+            })
+    })
+    public ResponseEntity<List<StorageItem>> getExpired(Authentication auth);
+
+    @Operation(summary = "Get all items about to expire aggregated for a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of items"),
+            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+                    @Content(schema = @Schema(implementation = Void.class))
+            })
+    })
+    public ResponseEntity<List<StorageItem>> getAboutToExpire(Authentication auth);
 }

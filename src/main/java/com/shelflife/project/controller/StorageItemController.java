@@ -85,30 +85,6 @@ public class StorageItemController implements StorageItemControllerDocs {
         }
     }
 
-    @GetMapping("/expired")
-    public ResponseEntity<List<StorageItem>> getExpired(@PathVariable long storageId, Authentication auth) {
-        try {
-            User user = userService.getUserByAuth(auth);
-            return ResponseEntity.ok(storageItemService.getExpiredItemsInStorage(storageId, user));
-        } catch (ItemNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-    }
-
-    @GetMapping("/abouttoexpire")
-    public ResponseEntity<List<StorageItem>> getAboutToExpire(@PathVariable long storageId, Authentication auth) {
-        try {
-            User user = userService.getUserByAuth(auth);
-            return ResponseEntity.ok(storageItemService.getItemsAboutToExpire(storageId, user));
-        } catch (ItemNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-    }
-
     @GetMapping("/runninglow")
     public ResponseEntity<List<RunningLowNotification>> getRunningLow(@PathVariable long storageId,
             Authentication auth) {

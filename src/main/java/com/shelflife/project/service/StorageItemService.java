@@ -58,35 +58,6 @@ public class StorageItemService {
         return getItemsInStorage(storageId);
     }
 
-    public List<StorageItem> getExpiredItemsInStorage(final long storageId) throws ItemNotFoundException {
-        if (!storageRepository.existsById(storageId))
-            throw new ItemNotFoundException("id", "Storage with this id was not found");
-
-        return storageItemRepository.findExpired(storageId);
-    }
-
-    public List<StorageItem> getExpiredItemsInStorage(final long storageId, User current)
-            throws ItemNotFoundException, AccessDeniedException {
-        if (!storageAccessService.canAccessStorage(storageId, current))
-            throw new AccessDeniedException("You can't access this storage");
-
-        return getExpiredItemsInStorage(storageId);
-    }
-
-    public List<StorageItem> getItemsAboutToExpire(final long storageId) throws ItemNotFoundException {
-        LocalDate date = LocalDate.now().plusDays(1);
-        return storageItemRepository.findByExpiresAtBefore(storageId, date);
-    }
-
-    public List<StorageItem> getItemsAboutToExpire(final long storageId, User current)
-            throws ItemNotFoundException, AccessDeniedException {
-
-        if (!storageAccessService.canAccessStorage(storageId, current))
-            throw new AccessDeniedException("You can't access this storage");
-
-        return getItemsAboutToExpire(storageId);
-    }
-
     @Transactional
     public StorageItem addItemToStorage(final long storageId, AddItemRequest request, User current)
             throws AccessDeniedException, ItemNotFoundException, IllegalArgumentException {

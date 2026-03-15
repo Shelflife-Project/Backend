@@ -25,7 +25,7 @@ public interface ExpireControllerDocs {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
-    public ResponseEntity<List<StorageItem>> getExpired(long storageId, Authentication auth);
+    public ResponseEntity<List<StorageItem>> getExpiredInStorage(long storageId, Authentication auth);
 
     @Operation(summary = "Get items that expire tomorrow in a storage")
     @ApiResponses(value = {
@@ -37,6 +37,6 @@ public interface ExpireControllerDocs {
                     @Content(schema = @Schema(implementation = Void.class))
             })
     })
-    public ResponseEntity<List<StorageItem>> getAboutToExpire(long storageId, Authentication auth);
+    public ResponseEntity<List<StorageItem>> getAboutToExpireInStorage(long storageId, Authentication auth);
 
 }

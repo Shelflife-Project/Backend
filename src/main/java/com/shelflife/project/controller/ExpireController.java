@@ -16,7 +16,7 @@ import com.shelflife.project.docs.ExpireControllerDocs;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.User;
-import com.shelflife.project.service.StorageItemService;
+import com.shelflife.project.service.ExpirationGetterService;
 import com.shelflife.project.service.UserService;
 
 @RestController
@@ -27,13 +27,13 @@ public class ExpireController implements ExpireControllerDocs {
     private UserService userService;
 
     @Autowired
-    private StorageItemService storageItemService;
+    private ExpirationGetterService expirationGetterService;
 
-    @GetMapping("/expired")
-    public ResponseEntity<List<StorageItem>> getExpired(@PathVariable long storageId, Authentication auth) {
+    @GetMapping("/storages/{storageId}/expired")
+    public ResponseEntity<List<StorageItem>> getExpiredInStorage(@PathVariable long storageId, Authentication auth) {
         try {
             User user = userService.getUserByAuth(auth);
-            return ResponseEntity.ok(storageItemService.getExpiredItemsInStorage(storageId, user));
+            return ResponseEntity.ok(expirationGetterService.getExpiredItemsInStorage(storageId, user));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (AccessDeniedException e) {
@@ -41,13 +41,34 @@ public class ExpireController implements ExpireControllerDocs {
         }
     }
 
-    @GetMapping("/abouttoexpire")
-    public ResponseEntity<List<StorageItem>> getAboutToExpire(@PathVariable long storageId, Authentication auth) {
+    @GetMapping("/storages/{storageId}/abouttoexpire")
+    public ResponseEntity<List<StorageItem>> getAboutToExpireInStorage(@PathVariable long storageId,
+            Authentication auth) {
         try {
             User user = userService.getUserByAuth(auth);
-            return ResponseEntity.ok(storageItemService.getItemsAboutToExpire(storageId, user));
+            return ResponseEntity.ok(expirationGetterService.getItemsAboutToExpire(storageId, user));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/expired")
+    public ResponseEntity<List<StorageItem>> getExpired(Authentication auth) {
+        try {
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(expirationGetterService.getExpiredItemsAggregated(user));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/abouttoexpire")
+    public ResponseEntity<List<StorageItem>> getAboutToExpire(Authentication auth) {
+        try {
+            User user = userService.getUserByAuth(auth);
+            return ResponseEntity.ok(expirationGetterService.getItemsAboutToExpireAggregated(user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

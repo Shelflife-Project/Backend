@@ -24,4 +24,13 @@ public interface RunningLowControllerDocs {
     })
     public ResponseEntity<List<RunningLowNotification>> getRunningLow(long storageId,
             Authentication auth);
+
+    @Operation(summary = "Get all items running low aggregated for a user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful retrieval of items"),
+            @ApiResponse(responseCode = "403", description = "Access denied", content = {
+                    @Content(schema = @Schema(implementation = Void.class))
+            })
+    })
+    public ResponseEntity<List<RunningLowNotification>> getAggregatedRunningLow(Authentication auth);
 }

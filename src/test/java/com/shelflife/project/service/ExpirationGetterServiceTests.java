@@ -28,7 +28,7 @@ import jakarta.transaction.Transactional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class StorageItemServiceGetExpiredItemsTests {
+public class ExpirationGetterServiceTests {
     @Autowired
     private StorageRepository storageRepository;
 
@@ -39,7 +39,7 @@ public class StorageItemServiceGetExpiredItemsTests {
     private UserRepository userRepository;
 
     @Autowired
-    private StorageItemService service;
+    private ExpirationGetterService service;
 
     private User user;
     private Storage storage;
@@ -101,7 +101,6 @@ public class StorageItemServiceGetExpiredItemsTests {
         storageItemRepository.flush();
 
         assertDoesNotThrow(() -> service.getExpiredItemsInStorage(storage.getId()));
-        assertEquals(2, service.getItemsInStorage(storage.getId()).size());
         assertEquals(1, service.getExpiredItemsInStorage(storage.getId()).size());
         assertEquals(item.getExpiresAt(),
                 service.getExpiredItemsInStorage(storage.getId()).get(0).getExpiresAt());
@@ -121,7 +120,6 @@ public class StorageItemServiceGetExpiredItemsTests {
         storageItemRepository.flush();
 
         assertDoesNotThrow(() -> service.getExpiredItemsInStorage(storage.getId()));
-        assertEquals(2, service.getItemsInStorage(storage.getId()).size());
         assertEquals(1, service.getItemsAboutToExpire(storage.getId()).size());
         assertEquals(item.getExpiresAt(),
                 service.getItemsAboutToExpire(storage.getId()).get(0).getExpiresAt());

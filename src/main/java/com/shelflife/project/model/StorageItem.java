@@ -5,8 +5,6 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,7 +25,6 @@ public class StorageItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "storage_id")
     private Storage storage;

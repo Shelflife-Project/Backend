@@ -28,7 +28,7 @@ import jakarta.transaction.Transactional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
-public class StorageItemServiceGetExpiredItemsTests {
+public class ExpirationGetterServiceTests {
     @Autowired
     private StorageRepository storageRepository;
 
@@ -39,7 +39,7 @@ public class StorageItemServiceGetExpiredItemsTests {
     private UserRepository userRepository;
 
     @Autowired
-    private StorageItemService service;
+    private ExpirationGetterService service;
 
     private User user;
     private Storage storage;
@@ -101,7 +101,6 @@ public class StorageItemServiceGetExpiredItemsTests {
         storageItemRepository.flush();
 
         assertDoesNotThrow(() -> service.getExpiredItemsInStorage(storage.getId()));
-        assertEquals(2, service.getItemsInStorage(storage.getId()).size());
         assertEquals(1, service.getExpiredItemsInStorage(storage.getId()).size());
         assertEquals(item.getExpiresAt(),
                 service.getExpiredItemsInStorage(storage.getId()).get(0).getExpiresAt());
@@ -121,9 +120,46 @@ public class StorageItemServiceGetExpiredItemsTests {
         storageItemRepository.flush();
 
         assertDoesNotThrow(() -> service.getExpiredItemsInStorage(storage.getId()));
-        assertEquals(2, service.getItemsInStorage(storage.getId()).size());
         assertEquals(1, service.getItemsAboutToExpire(storage.getId()).size());
         assertEquals(item.getExpiresAt(),
                 service.getItemsAboutToExpire(storage.getId()).get(0).getExpiresAt());
+    }
+
+    @Test
+    void returnsAggregatedExpiredItems() {
+        StorageItem expiredItem = new StorageItem();
+        expiredItem.setStorage(storage);
+        expiredItem.setProduct(product);
+        expiredItem.setExpiresAt(LocalDate.now().minusDays(1));
+
+        storage.getItems().add(expiredItem);
+        storageRepository.save(storage);
+
+        storageRepository.flush();
+        storageItemRepository.flush();
+
+        assertDoesNotThrow(() -> service.getExpiredItemsAggregated(user));
+        assertEquals(1, service.getExpiredItemsAggregated(user).size());
+        assertEquals(expiredItem.getExpiresAt(),
+                service.getExpiredItemsAggregated(user).get(0).getExpiresAt());
+    }
+
+    @Test
+    void returnsAggregatedItemsAboutToExpire() {
+        StorageItem aboutToExpireItem = new StorageItem();
+        aboutToExpireItem.setStorage(storage);
+        aboutToExpireItem.setProduct(product);
+        aboutToExpireItem.setExpiresAt(LocalDate.now());
+
+        storage.getItems().add(aboutToExpireItem);
+        storageRepository.save(storage);
+
+        storageRepository.flush();
+        storageItemRepository.flush();
+
+        assertDoesNotThrow(() -> service.getItemsAboutToExpireAggregated(user));
+        assertEquals(1, service.getItemsAboutToExpireAggregated(user).size());
+        assertEquals(aboutToExpireItem.getExpiresAt(),
+                service.getItemsAboutToExpireAggregated(user).get(0).getExpiresAt());
     }
 }

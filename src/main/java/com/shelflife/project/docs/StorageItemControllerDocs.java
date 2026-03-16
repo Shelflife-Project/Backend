@@ -62,30 +62,6 @@ public interface StorageItemControllerDocs {
     public ResponseEntity<?> editItem(long itemId, EditItemRequest request,
             Authentication auth);
 
-    @Operation(summary = "Get expired items in a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful retrieval of expired items"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "404", description = "Storage not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
-    public ResponseEntity<List<StorageItem>> getExpired(long storageId, Authentication auth);
-
-    @Operation(summary = "Get items that expire tomorrow in a storage")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successful retrieval of items"),
-            @ApiResponse(responseCode = "403", description = "You can't access this storage", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            }),
-            @ApiResponse(responseCode = "404", description = "Storage not found", content = {
-                    @Content(schema = @Schema(implementation = Void.class))
-            })
-    })
-    public ResponseEntity<List<StorageItem>> getAboutToExpire(long storageId, Authentication auth);
-
     @Operation(summary = "Remove an item from a storage")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful removal"),

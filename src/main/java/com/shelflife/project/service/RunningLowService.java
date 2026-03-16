@@ -1,9 +1,12 @@
 package com.shelflife.project.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -57,6 +60,19 @@ public class RunningLowService {
             throw new AccessDeniedException("You can't access this storage");
 
         return repository.findItemsRunningLow(storageId);
+    }
+
+    public List<RunningLowNotification> getRunningLowByUser(User current) throws AccessDeniedException {
+        Page<Storage> storages = storageGetterService.getStorages(current, "", Pageable.unpaged());
+
+        List<RunningLowNotification> notifications = new ArrayList<>();
+
+        for (Storage storage : storages) {
+            List<RunningLowNotification> sNotifications = repository.findItemsRunningLow(storage.getId());
+            notifications.addAll(sNotifications);
+        }
+
+        return notifications;
     }
 
     @Transactional

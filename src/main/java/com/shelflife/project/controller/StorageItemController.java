@@ -18,13 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.shelflife.project.docs.StorageItemControllerDocs;
-import com.shelflife.project.dto.runninglow.RunningLowNotification;
 import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.dto.storage.EditItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.StorageItem;
 import com.shelflife.project.model.User;
-import com.shelflife.project.service.RunningLowService;
 import com.shelflife.project.service.StorageItemService;
 import com.shelflife.project.service.UserService;
 
@@ -35,9 +33,6 @@ import jakarta.validation.Valid;
 public class StorageItemController implements StorageItemControllerDocs {
     @Autowired
     private StorageItemService storageItemService;
-
-    @Autowired
-    private RunningLowService runningLowService;
 
     @Autowired
     private UserService userService;
@@ -82,17 +77,6 @@ public class StorageItemController implements StorageItemControllerDocs {
             return ResponseEntity.badRequest().body(Map.of(e.getMessage(), "Illegal argument"));
         } catch (ItemNotFoundException e) {
             return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/runninglow")
-    public ResponseEntity<List<RunningLowNotification>> getRunningLow(@PathVariable long storageId,
-            Authentication auth) {
-        try {
-            User user = userService.getUserByAuth(auth);
-            return ResponseEntity.ok(runningLowService.getRunningLowInStorage(storageId, user));
-        } catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 

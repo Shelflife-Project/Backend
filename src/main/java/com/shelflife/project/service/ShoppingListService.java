@@ -1,5 +1,6 @@
 package com.shelflife.project.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.shelflife.project.dto.shopping.CreateShoppingItemRequest;
 import com.shelflife.project.dto.shopping.EditShoppingItemRequest;
+import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.ShoppingItemExistsException;
 import com.shelflife.project.model.Product;
@@ -24,6 +26,10 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class ShoppingListService {
+
+    @Autowired
+    private StorageItemService storageItemService;
+
     @Autowired
     private ShoppingListItemRepository repository;
 
@@ -95,6 +101,29 @@ public class ShoppingListService {
 
         if (!storageAccessService.canAccessStorage(item.getStorage().getId(), current))
             throw new AccessDeniedException("You can't access this storage");
+
+        repository.delete(item);
+    }
+
+    @Transactional
+    public void addItemsToStorageAndRemove(final long shoppingItemId, final long storageId, User current)
+            throws ItemNotFoundException, AccessDeniedException {
+        ShoppingListItem item = getItem(shoppingItemId);
+
+        if (item.getStorage().getId() != storageId) {
+            throw new ItemNotFoundException("Shopping item was not found");
+        }
+
+        if (!storageAccessService.canAccessStorage(storageId, current))
+            throw new AccessDeniedException("You can't access this storage");
+
+        for (int i = 0; i < item.getAmountToBuy(); i++) {
+            AddItemRequest request = new AddItemRequest();
+            request.setProductId(item.getProduct().getId());
+            request.setExpiresAt(LocalDate.now().plusDays(item.getProduct().getExpirationDaysDelta()));
+
+            storageItemService.addItemToStorage(storageId, request, current);
+        }
 
         repository.delete(item);
     }

@@ -49,6 +49,20 @@ public class ShoppingListController implements ShoppingListControllerDocs {
         }
     }
 
+    @PostMapping("/{id}")
+    public ResponseEntity<Void> addItemsToStorageAndRemove(@PathVariable long storageId, @PathVariable long id,
+            Authentication auth) {
+        try {
+            User user = userService.getUserByAuth(auth);
+            service.addItemsToStorageAndRemove(id, storageId, user);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (ItemNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping
     public ResponseEntity<?> create(@PathVariable long storageId,
             @Valid @RequestBody CreateShoppingItemRequest request,

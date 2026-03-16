@@ -1,16 +1,15 @@
 package com.shelflife.project.service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
-import com.shelflife.project.dto.purchase.ToPurchaseItem;
 import com.shelflife.project.dto.shopping.CreateShoppingItemRequest;
 import com.shelflife.project.dto.shopping.EditShoppingItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
@@ -20,7 +19,6 @@ import com.shelflife.project.model.ShoppingListItem;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
 import com.shelflife.project.repository.ShoppingListItemRepository;
-import com.shelflife.project.repository.StorageRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -37,9 +35,6 @@ public class ShoppingListService {
 
     @Autowired
     private ProductService productService;
-
-    @Autowired
-    private StorageRepository storageRepository;
 
     public ShoppingListItem getItem(final long id) throws ItemNotFoundException {
         Optional<ShoppingListItem> s = repository.findById(id);
@@ -104,35 +99,16 @@ public class ShoppingListService {
         repository.delete(item);
     }
 
-    public List<ToPurchaseItem> getAggregatedForUser(User user) throws AccessDeniedException {
-        if(user == null)
-            throw new AccessDeniedException(null);
+    public List<ShoppingListItem> getShoppingListItemsAggregated(User current) throws AccessDeniedException {
+        Page<Storage> storages = storageGetterService.getStorages(current, "", Pageable.unpaged());
 
-        List<Storage> storages = storageRepository.findAccessibleStorages(user.getId());
-        if (storages == null || storages.isEmpty())
-            return java.util.Collections.emptyList();
+        List<ShoppingListItem> items = new ArrayList<>();
 
-        List<Long> storageIds = new ArrayList<>();
-        for (Storage s : storages)
-            storageIds.add(s.getId());
-
-        List<ShoppingListItem> items = repository.findByStorageIdIn(storageIds);
-
-        Map<Long, ToPurchaseItem> agg = new HashMap<>();
-        for (ShoppingListItem si : items) {
-            long pid = si.getProduct().getId();
-            ToPurchaseItem t = agg.get(pid);
-            if (t == null) {
-                t = new ToPurchaseItem();
-                t.setProductId(pid);
-                t.setProductName(si.getProduct().getName());
-                t.setAmountToBuy(si.getAmountToBuy());
-                agg.put(pid, t);
-            } else {
-                t.setAmountToBuy(t.getAmountToBuy() + si.getAmountToBuy());
-            }
+        for (Storage storage : storages) {
+            List<ShoppingListItem> sItems = getForStorage(storage.getId(), current);
+            items.addAll(sItems);
         }
 
-        return new ArrayList<>(agg.values());
+        return items;
     }
 }

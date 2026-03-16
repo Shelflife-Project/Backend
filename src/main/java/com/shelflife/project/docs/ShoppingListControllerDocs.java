@@ -25,6 +25,17 @@ public interface ShoppingListControllerDocs {
     public ResponseEntity<List<ShoppingListItem>> getForStorage(
             @Parameter(description = "Storage id") long storageId, Authentication auth);
 
+    @Operation(summary = "Move shopping list items to storage and remove entry", description = "Moves all items from the shopping list entry with the given id to the storage, then removes the shopping list entry.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Items moved and entry removed"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Shopping list item not found")
+    })
+    public ResponseEntity<Void> addItemsToStorageAndRemove(
+            @Parameter(description = "Storage id") long storageId,
+            @Parameter(description = "Shopping list item id") long id,
+            Authentication auth);
+
     @Operation(summary = "Create a shopping list item", description = "Add a product to the shopping list for the specified storage")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Created"),

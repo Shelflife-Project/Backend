@@ -1,5 +1,6 @@
 package com.shelflife.project.service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.shelflife.project.dto.purchase.ToPurchaseItem;
 import com.shelflife.project.dto.shopping.CreateShoppingItemRequest;
 import com.shelflife.project.dto.shopping.EditShoppingItemRequest;
+import com.shelflife.project.dto.storage.AddItemRequest;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.exception.ShoppingItemExistsException;
 import com.shelflife.project.model.Product;
@@ -26,6 +28,10 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class ShoppingListService {
+
+    @Autowired
+    private StorageItemService storageItemService;
+
     @Autowired
     private ShoppingListItemRepository repository;
 
@@ -40,6 +46,10 @@ public class ShoppingListService {
 
     @Autowired
     private StorageRepository storageRepository;
+
+    ShoppingListService(StorageItemService storageItemService) {
+        this.storageItemService = storageItemService;
+    }
 
     public ShoppingListItem getItem(final long id) throws ItemNotFoundException {
         Optional<ShoppingListItem> s = repository.findById(id);
@@ -104,8 +114,28 @@ public class ShoppingListService {
         repository.delete(item);
     }
 
+    @Transactional
+    public void addItemsToStorageAndRemove(final long shoppingItemId, final long storageId, User current)
+            throws ItemNotFoundException, AccessDeniedException {
+        ShoppingListItem item = getItem(shoppingItemId);
+
+        if (!storageAccessService.canAccessStorage(item.getStorage().getId(), current))
+            throw new AccessDeniedException("You can't access this storage");
+
+        for(int i = 0; i < item.getAmountToBuy(); i++)
+        {
+            AddItemRequest request = new AddItemRequest();
+            request.setProductId(item.getProduct().getId());
+            request.setExpiresAt(LocalDate.now().plusDays(item.getProduct().getExpirationDaysDelta()));
+            
+            storageItemService.addItemToStorage(storageId, request, current);
+        }
+
+        repository.delete(item);
+    }
+
     public List<ToPurchaseItem> getAggregatedForUser(User user) throws AccessDeniedException {
-        if(user == null)
+        if (user == null)
             throw new AccessDeniedException(null);
 
         List<Storage> storages = storageRepository.findAccessibleStorages(user.getId());

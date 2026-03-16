@@ -47,10 +47,6 @@ public class ShoppingListService {
     @Autowired
     private StorageRepository storageRepository;
 
-    ShoppingListService(StorageItemService storageItemService) {
-        this.storageItemService = storageItemService;
-    }
-
     public ShoppingListItem getItem(final long id) throws ItemNotFoundException {
         Optional<ShoppingListItem> s = repository.findById(id);
         if (!s.isPresent())
@@ -119,15 +115,18 @@ public class ShoppingListService {
             throws ItemNotFoundException, AccessDeniedException {
         ShoppingListItem item = getItem(shoppingItemId);
 
-        if (!storageAccessService.canAccessStorage(item.getStorage().getId(), current))
+        if (item.getStorage().getId() != storageId) {
+            throw new ItemNotFoundException("Shopping item was not found");
+        }
+
+        if (!storageAccessService.canAccessStorage(storageId, current))
             throw new AccessDeniedException("You can't access this storage");
 
-        for(int i = 0; i < item.getAmountToBuy(); i++)
-        {
+        for (int i = 0; i < item.getAmountToBuy(); i++) {
             AddItemRequest request = new AddItemRequest();
             request.setProductId(item.getProduct().getId());
             request.setExpiresAt(LocalDate.now().plusDays(item.getProduct().getExpirationDaysDelta()));
-            
+
             storageItemService.addItemToStorage(storageId, request, current);
         }
 

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.shelflife.project.docs.ShoppingListAggregateControllerDocs;
-import com.shelflife.project.dto.purchase.ToPurchaseItem;
+import com.shelflife.project.model.ShoppingListItem;
 import com.shelflife.project.model.User;
 import com.shelflife.project.service.ShoppingListService;
 import com.shelflife.project.service.UserService;
@@ -27,10 +27,10 @@ public class ShoppingListAggregateController implements ShoppingListAggregateCon
     private UserService userService;
 
     @GetMapping("")
-    public ResponseEntity<List<ToPurchaseItem>> getAggregated(Authentication auth) {
+    public ResponseEntity<List<ShoppingListItem>> getAggregated(Authentication auth) {
         try {
             User user = userService.getUserByAuth(auth);
-            return ResponseEntity.ok(service.getAggregatedForUser(user));
+            return ResponseEntity.ok(service.getShoppingListItemsAggregated(user));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

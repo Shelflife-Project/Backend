@@ -13,6 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 @EnableMethodSecurity
@@ -20,6 +21,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
+
+    @Value("${frontend-url}")
+    private String allowedOrigin;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -46,7 +50,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOriginPattern("http://localhost:*");
+        config.addAllowedOriginPattern(allowedOrigin);
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
 

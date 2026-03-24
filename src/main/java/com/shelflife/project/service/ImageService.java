@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -86,7 +87,10 @@ public class ImageService {
             }
         }
 
-        byte[] bytes = resource.getInputStream().readAllBytes();
+        byte[] bytes = { 0 };
+        try (InputStream is = resource.getInputStream()) {
+            bytes = is.readAllBytes();
+        }
 
         if (isSvg(mimeType))
             return new OptimizedImage(bytes, mimeType);

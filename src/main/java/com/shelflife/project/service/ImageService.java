@@ -107,10 +107,11 @@ public class ImageService {
 
     public Resource loadImage(String filename, String placeholderPath) {
         ResourceLoader loader = new DefaultResourceLoader();
-
+        
+        Optional<Image> image = imageRepository.findByFilename(filename);
         Path path = Paths.get(uploadPath, filename);
 
-        if (!imageExists(filename))
+        if (!imageExists(filename) || image.isEmpty())
             return loader.getResource(placeholderPath);
 
         return loader.getResource("file:" + path.toString());

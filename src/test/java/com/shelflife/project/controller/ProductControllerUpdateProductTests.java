@@ -170,14 +170,14 @@ public class ProductControllerUpdateProductTests {
     }
 
     @Test
-    void doesntSaveInvalidBarcode() throws Exception {
+    void doesntSaveExistingBarcode() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
 
         mockMvc.perform(patch("/api/products/" + testProduct.getId())
                 .cookie(jwtCookie)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"barcode\":\"\"}"))
+                .content("{\"barcode\":\"12345\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("barcode").exists());
 

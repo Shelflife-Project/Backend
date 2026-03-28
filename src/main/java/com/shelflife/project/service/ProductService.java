@@ -135,9 +135,6 @@ public class ProductService {
         }
 
         if (request.getBarcode() != null) {
-            if (request.getBarcode().isBlank())
-                throw new IllegalArgumentException("barcode");
-
             if (productRepository.existsByBarcode(request.getBarcode()))
                 throw new BarcodeExistsException(request.getBarcode());
 

@@ -30,7 +30,7 @@ public class ProductService {
     }
 
     public Page<Product> findProducts(String search, Pageable pageable) {
-        if(!search.isBlank())
+        if (!search.isBlank())
             return productRepository.searchProducts(search, pageable);
 
         return productRepository.findAll(pageable);
@@ -54,9 +54,9 @@ public class ProductService {
     }
 
     public boolean canEditProduct(final long productId, User user) {
-        if(user == null)
+        if (user == null)
             return false;
-        
+
         try {
             Product p = getProductByID(productId);
             return p.getOwnerId() == user.getId() || user.isAdmin();
@@ -69,7 +69,7 @@ public class ProductService {
     public Product saveProduct(CreateProductRequest request, User currentUser)
             throws AccessDeniedException, BarcodeExistsException, IllegalArgumentException {
 
-        if(currentUser == null)
+        if (currentUser == null)
             throw new AccessDeniedException(null);
 
         Product product = new Product();
@@ -123,7 +123,7 @@ public class ProductService {
             productDB.setName(request.getName());
         }
 
-        if(request.getDescription() != null) {
+        if (request.getDescription() != null) {
             productDB.setDescription(request.getDescription());
         }
 
@@ -135,8 +135,10 @@ public class ProductService {
         }
 
         if (request.getBarcode() != null) {
-            if (productRepository.existsByBarcode(request.getBarcode()))
-                throw new BarcodeExistsException(request.getBarcode());
+            if (!request.getBarcode().isBlank()) {
+                if (productRepository.existsByBarcode(request.getBarcode()))
+                    throw new BarcodeExistsException(request.getBarcode());
+            }
 
             productDB.setBarcode(request.getBarcode());
         }
@@ -153,7 +155,7 @@ public class ProductService {
 
     @Transactional
     public void removeProduct(long id, User currentUser) throws AccessDeniedException, ItemNotFoundException {
-        if(currentUser == null)
+        if (currentUser == null)
             throw new AccessDeniedException(null);
 
         Product product = getProductByID(id);

@@ -103,6 +103,10 @@ ShelfLife is a modern web application designed to help people efficiently manage
 | filename | VARCHAR(255) | Image filename |
 | mimetype | VARCHAR(255) | MIME type |
 
+<img width="1206" height="768" alt="image" src="https://github.com/user-attachments/assets/5d1e2045-84b6-4876-bd28-b706fcfac845" />
+
+---
+
 If you want to seed the database run this command:
 ```bash
 mvn clean spring-boot:run -D spring-boot.run.arguments=--seed

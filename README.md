@@ -81,6 +81,14 @@ ShelfLife is a modern web application designed to help people efficiently manage
 | product_id | BIGINT | FK to products |
 | running_low | INT | Threshold quantity for alerts |
 
+#### `shopping_list_items`
+| Column | Type | Description |
+|--------|------|-------------|
+| id | BIGINT | Primary Key, Auto Increment |
+| storage_id | BIGINT | FK to storages |
+| product_id | BIGINT | FK to products |
+| amount_to_buy | DATE | Item's expiration date |
+
 #### `invalidjwts`
 | Column | Type | Description |
 |--------|------|-------------|

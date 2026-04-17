@@ -135,12 +135,14 @@ public class ProductService {
         }
 
         if (request.getBarcode() != null) {
-            if (!request.getBarcode().isBlank()) {
+            if (request.getBarcode().isBlank()) {
+                productDB.setBarcode(null);
+            } else {
                 if (productRepository.existsByBarcode(request.getBarcode()))
                     throw new BarcodeExistsException(request.getBarcode());
-            }
 
-            productDB.setBarcode(request.getBarcode());
+                productDB.setBarcode(request.getBarcode());
+            }
         }
 
         if (request.getExpirationDaysDelta() != null) {

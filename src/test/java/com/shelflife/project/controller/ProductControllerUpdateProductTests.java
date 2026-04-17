@@ -18,7 +18,9 @@ import com.shelflife.project.service.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.transaction.Transactional;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -120,6 +122,26 @@ public class ProductControllerUpdateProductTests {
     }
 
     @Test
+    void canRemoveBarcode() throws Exception {
+        String jwt = jwtService.generateToken(testUser.getEmail());
+        Cookie jwtCookie = new Cookie("jwt", jwt);
+
+        mockMvc.perform(patch("/api/products/" + testProduct.getId())
+                .cookie(jwtCookie)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"barcode\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").value(testProduct.getId()))
+                .andExpect(jsonPath("ownerId").value(testProduct.getOwnerId()))
+                .andExpect(jsonPath("name").value(testProduct.getName()))
+                .andExpect(jsonPath("category").value(testProduct.getCategory()))
+                .andExpect(jsonPath("barcode").value(nullValue()))
+                .andExpect(jsonPath("expirationDaysDelta").value(testProduct.getExpirationDaysDelta()));
+
+        assertTrue(productRepository.existsByBarcode(null));
+    }
+
+    @Test
     void forbiddenAsNonOwner() throws Exception {
         String jwt = jwtService.generateToken(testUser.getEmail());
         Cookie jwtCookie = new Cookie("jwt", jwt);
@@ -196,6 +218,7 @@ public class ProductControllerUpdateProductTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("expirationDaysDelta").exists());
 
-        assertEquals(testProduct.getExpirationDaysDelta(), productRepository.findById(testProduct.getId()).get().getExpirationDaysDelta());
+        assertEquals(testProduct.getExpirationDaysDelta(),
+                productRepository.findById(testProduct.getId()).get().getExpirationDaysDelta());
     }
 }

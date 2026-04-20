@@ -21,15 +21,20 @@ public class UserSeeder implements Seeder {
         user.setUsername("test user");
         user.setPassword(encoder.encode("test123"));
         user.setAdmin(false);
-
         repository.save(user);
+
+        User invite = new User();
+        invite.setEmail("invite@test.test");
+        invite.setUsername("invited user");
+        invite.setPassword(encoder.encode("test123"));
+        invite.setAdmin(false);
+        repository.save(invite);
 
         User admin = new User();
         admin.setEmail("admin@test.test");
         admin.setUsername("test admin");
         admin.setPassword(encoder.encode("test123"));
         admin.setAdmin(true);
-
         repository.save(admin);
     }
 

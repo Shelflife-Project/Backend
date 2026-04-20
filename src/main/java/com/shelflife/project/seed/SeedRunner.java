@@ -7,8 +7,6 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
 
-
-
 @Configuration
 public class SeedRunner implements ApplicationRunner {
 
@@ -27,7 +25,11 @@ public class SeedRunner implements ApplicationRunner {
     @Autowired
     private RunningLowSeeder runningLowSeeder;
 
-    
+    @Autowired
+    private MemberSeeder memberSeeder;
+
+    @Autowired
+    private ShoppingListSeeder shoppingListSeeder;
 
     private static final Logger log = LoggerFactory.getLogger(SeedRunner.class);
 
@@ -71,6 +73,20 @@ public class SeedRunner implements ApplicationRunner {
             log.info("Running low successfully seeded");
         } else {
             log.info("Running low settings already exist; skipping running low seeder.");
+        }
+
+        if (memberSeeder.shouldSeed()) {
+            memberSeeder.seed();
+            log.info("Members successfully seeded");
+        } else {
+            log.info("Members already exist; skipping Members seeder.");
+        }
+
+        if (shoppingListSeeder.shouldSeed()) {
+            shoppingListSeeder.seed();
+            log.info("Shopping List successfully seeded");
+        } else {
+            log.info("Shopping List already exist; skipping Shopping List seeder.");
         }
 
         log.info("Database seeding process finished");

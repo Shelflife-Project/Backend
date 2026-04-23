@@ -8,6 +8,7 @@ import com.shelflife.project.docs.StorageControllerDocs;
 import com.shelflife.project.dto.PaginatedResponse;
 import com.shelflife.project.dto.storage.ChangeStorageNameRequest;
 import com.shelflife.project.dto.storage.CreateStorageRequest;
+import com.shelflife.project.dto.storage.StorageSummary;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
@@ -69,6 +70,33 @@ public class StorageController implements StorageControllerDocs {
             Page<Storage> res = storageGetterService.getStorages(user, search, pageable);
 
             return ResponseEntity.ok(new PaginatedResponse<Storage>(res));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<PaginatedResponse<StorageSummary>> getStorageSummaries(Authentication auth,
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "true") boolean ascending) {
+        try {
+            Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+            Pageable pageable;
+
+            if (size == null) {
+                pageable = Pageable.unpaged();
+            } else {
+                pageable = PageRequest.of(page, size, sort);
+            }
+
+            User user = userService.getUserByAuth(auth);
+            Page<StorageSummary> res = storageGetterService.getStorageSummaries(user, search, pageable);
+
+            return ResponseEntity.ok(new PaginatedResponse<StorageSummary>(res));
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

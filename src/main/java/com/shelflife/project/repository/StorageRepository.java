@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import com.shelflife.project.dto.storage.StorageSummary;
 import com.shelflife.project.model.Storage;
 import java.util.List;
 
@@ -84,4 +85,38 @@ public interface StorageRepository extends JpaRepository<Storage, Long> {
 			lower(s.name) LIKE lower(concat('%', :search, '%'))
 			""")
 	Page<Storage> findAccessibleStorages(long userId, String search, Pageable pageable);
+
+	@Query(value = """
+			SELECT new com.shelflife.project.dto.storage.StorageSummary(
+				s.id, s.name, s.owner,
+				(SELECT COUNT(si) FROM StorageItem si WHERE si.storage = s),
+				(SELECT COUNT(sli) FROM ShoppingListItem sli WHERE sli.storage = s),
+				(SELECT COUNT(sm2) FROM StorageMember sm2 WHERE sm2.storage = s AND sm2.isAccepted = true)
+			)
+			FROM Storage s
+			WHERE (s.owner.id = :userId
+			       OR EXISTS (SELECT 1 FROM StorageMember m WHERE m.storage = s AND m.user.id = :userId AND m.isAccepted = true))
+			      AND lower(s.name) LIKE lower(concat('%', :search, '%'))
+			""", countQuery = """
+			SELECT COUNT(s) FROM Storage s
+			WHERE (s.owner.id = :userId
+			       OR EXISTS (SELECT 1 FROM StorageMember m WHERE m.storage = s AND m.user.id = :userId AND m.isAccepted = true))
+			      AND lower(s.name) LIKE lower(concat('%', :search, '%'))
+			""")
+	Page<StorageSummary> findAccessibleStorageSummaries(long userId, String search, Pageable pageable);
+
+	@Query(value = """
+			SELECT new com.shelflife.project.dto.storage.StorageSummary(
+				s.id, s.name, s.owner,
+				(SELECT COUNT(si) FROM StorageItem si WHERE si.storage = s),
+				(SELECT COUNT(sli) FROM ShoppingListItem sli WHERE sli.storage = s),
+				(SELECT COUNT(sm2) FROM StorageMember sm2 WHERE sm2.storage = s AND sm2.isAccepted = true)
+			)
+			FROM Storage s
+			WHERE lower(s.name) LIKE lower(concat('%', :search, '%'))
+			""", countQuery = """
+			SELECT COUNT(s) FROM Storage s
+			WHERE lower(s.name) LIKE lower(concat('%', :search, '%'))
+			""")
+	Page<StorageSummary> searchAllSummaries(String search, Pageable pageable);
 }

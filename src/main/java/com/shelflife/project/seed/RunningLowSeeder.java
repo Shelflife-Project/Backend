@@ -40,6 +40,12 @@ public class RunningLowSeeder implements Seeder {
 
     @Override
     public boolean shouldSeed() {
+        if (userRepository.findByEmail("test@test.test").isEmpty())
+            return false;
+
+        if (productRepository.searchProducts("Bread", Pageable.unpaged()).toList().size() == 0)
+            return false;
+
         return runningLowRepository.count() == 0;
     }
 }

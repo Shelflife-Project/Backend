@@ -31,6 +31,12 @@ public class StorageSeeder implements Seeder {
 
     @Override
     public boolean shouldSeed() {
+        if (userRepository.findByEmail("test@test.test").isEmpty())
+            return false;
+
+        if (userRepository.findByEmail("admin@test.test").isEmpty())
+            return false;
+
         return repository.count() == 0;
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import com.shelflife.project.dto.storage.StorageSummary;
 import com.shelflife.project.exception.ItemNotFoundException;
 import com.shelflife.project.model.Storage;
 import com.shelflife.project.model.User;
@@ -52,5 +53,17 @@ public class StorageGetterService {
             return storageRepository.searchAll(search, pageable);
 
         return storageRepository.findAccessibleStorages(user.getId(), search, pageable);
+    }
+
+    public Page<StorageSummary> getStorageSummaries(User user, String search, Pageable pageable)
+            throws AccessDeniedException {
+
+        if (user == null)
+            throw new AccessDeniedException(null);
+
+        if (user.isAdmin())
+            return storageRepository.searchAllSummaries(search, pageable);
+
+        return storageRepository.findAccessibleStorageSummaries(user.getId(), search, pageable);
     }
 }

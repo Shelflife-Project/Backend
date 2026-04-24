@@ -52,6 +52,18 @@ public class StorageItemSeeder implements Seeder {
 
     @Override
     public boolean shouldSeed() {
+        if (userRepository.findByEmail("test@test.test").isEmpty())
+            return false;
+
+        if (userRepository.findByEmail("admin@test.test").isEmpty())
+            return false;
+
+        if (productRepository.searchProducts("Bread", Pageable.unpaged()).toList().isEmpty())
+            return false;
+
+        if (productRepository.searchProducts("Milk", Pageable.unpaged()).toList().isEmpty())
+            return false;
+
         return storageItemRepository.count() == 0;
     }
 }

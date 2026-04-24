@@ -35,6 +35,12 @@ public class ShoppingListSeeder implements Seeder {
 
     @Override
     public boolean shouldSeed() {
+        if (storageRepository.findById(1L).isEmpty())
+            return false;
+
+        if (productRepository.findById(3L).isEmpty())
+            return false;
+
         return shoppingListItemRepository.count() == 0;
     }
 }

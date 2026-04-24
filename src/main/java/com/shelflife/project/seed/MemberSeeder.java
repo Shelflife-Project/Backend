@@ -35,6 +35,12 @@ public class MemberSeeder implements Seeder {
 
     @Override
     public boolean shouldSeed() {
+        if (repository.findByEmail("invite@test.test").isEmpty())
+            return false;
+
+        if (storageRepository.findById(1L).isPresent())
+            return false;
+
         return memberRepository.count() == 0;
     }
 }

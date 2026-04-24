@@ -38,7 +38,7 @@ public class MemberSeeder implements Seeder {
         if (repository.findByEmail("invite@test.test").isEmpty())
             return false;
 
-        if (storageRepository.findById(1L).isPresent())
+        if (storageRepository.findById(1L).isEmpty())
             return false;
 
         return memberRepository.count() == 0;
